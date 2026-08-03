@@ -1,0 +1,144 @@
+<!--
+   - SPDX-License-Identifier: AGPL-3.0-or-later
+   -
+   - Litbrown Creator Assistant
+   - Automation Software for Magic: the Gathering Online (TM) Content Creators
+   - Copyright (C) 2026 Reid Litbrown
+   - 
+   - This program is free software: you can redistribute it and/or modify
+   - it under the terms of the GNU Affero General Public License as published
+   - by the Free Software Foundation, either version 3 of the License, or
+   - (at your option) any later version.
+   - 
+   - This program is distributed in the hope that it will be useful,
+   - but WITHOUT ANY WARRANTY; without even the implied warranty of
+   - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   - GNU Affero General Public License for more details.
+   - 
+   - You should have received a copy of the GNU Affero General Public License
+   - along with this program.  If not, see <https://www.gnu.org/licenses/>.
+   - 
+   -->
+
+<!DOCTYPE html>
+<html><head>
+	<style>
+	
+		body {
+			margin: 0; border: 0; padding: 0;
+			background-image: linear-gradient(330deg, #006 0%, #09C 100%);
+			background-size: cover;
+			width: 100vw; height: 100vh;
+			font-family: Verdana, sans-serif;
+			color: white;
+			paint-order: stroke fill;
+			display: flex;
+			flex-direction: column;
+			overflow: clip;
+		}
+
+		header {
+			flex: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 12vh;
+			min-height: 12vh;
+			font-weight: bold;
+			font-size: 6vh;
+			text-align: center;
+			-webkit-text-stroke: 0.5vh black;
+		}
+		
+		main {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+		}
+		
+		stream-display {
+			display: flex;
+			border-top: 0.2vh solid white;
+			height: 10.8vh;
+			min-height: 10.8vh;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+		}
+		
+		stream-display div.datetime {
+			flex: 0;
+			text-align: center;
+			font-size: 2.5vh;
+			font-weight: bold;
+			padding: 0 1vh;
+			min-width: 20vh;
+		}
+		
+		stream-display div.hook {
+			flex: 1;
+			font-size: 4vh;
+			-webkit-text-stroke: 0.5vh black;
+			font-weight: bold;
+		}
+
+	</style><script>
+	
+		class StreamDisplay extends HTMLElement {
+		
+			constructor(multicast, settings) {
+				super();
+				const start = new Date(multicast.stream.start);
+					const datetime_el = document.createElement('div');
+						datetime_el.classList.add('datetime');
+						const date_el = document.createElement('div');
+						date_el.classList.add('date');
+						date_el.innerText = new Intl.DateTimeFormat(
+							'en-US',
+							{weekday: 'short', day: 'numeric', month: 'short'}
+						).format(start);
+					datetime_el.appendChild(date_el);
+						const time_el = document.createElement('div');
+						time_el.classList.add('time');
+						time_el.innerText = new Intl.DateTimeFormat(
+							'en-US',
+							{hour: '2-digit', minute: '2-digit', timeZoneName: 'short'}
+						).format(start);
+					datetime_el.appendChild(time_el);
+				this.appendChild(datetime_el);
+					const hook_el = document.createElement('div');
+					hook_el.classList.add('hook');
+					hook_el.innerHTML = multicast.stream.title_hook || this.build_default_title(multicast, settings);
+				this.appendChild(hook_el);
+			}
+			
+			build_default_title (multicast, settings) {
+				let series = null;
+				for (let oneseries of settings.series)
+					if (oneseries.id == multicast.series_id)
+						series = oneseries;
+				if (!series) {
+					return '';
+				}
+				let variant = null;
+				for (let onevariant of series.variants)
+					if (onevariant.id == multicast.variant_id)
+						variant = onevariant;
+				return `${series.name} #${multicast.entry_number}${variant ? '<br>' + variant.name : ''}`;
+			}
+			
+		} customElements.define('stream-display', StreamDisplay);
+
+		function process_data (data) {
+			document.querySelector('main').replaceChildren();
+			for (multicast of data.schedule) if (multicast.stream.start && multicast.stream.membertier_id != '~nostream') {
+				document.querySelector('main').appendChild(new StreamDisplay(multicast, data.settings));
+			}
+		}
+
+	</script>
+</head><body>
+	<header><div>Stream Schedule</div></header>
+	<main></main>
+</body></html>
+

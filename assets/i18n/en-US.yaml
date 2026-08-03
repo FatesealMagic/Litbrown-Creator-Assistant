@@ -1,0 +1,514 @@
+################################################################################
+# GENERAL
+
+LCAConnectionLabelWidget:
+  youtube: YouTube
+  twitch: Twitch
+  reddit: Reddit
+  twitter: Twitter
+  bluesky: Bluesky
+  patreon: Patreon
+  discord: Discord
+  moxfield: Moxfield
+  mymtgo: MyMTGO
+  obs: OBS
+  shotcut: Shotcut
+  vlc: VLC
+  cardhoarder: Cardhoarder
+  manapool: Mana Pool
+  tcgplayer: TCGplayer
+  cardkingdom: Card Kingdom
+  starcitygames: Star City Games
+  toamagic: TOAMagic
+
+LCAFilePickerWidget:
+  picker_btn: Choose File
+
+LCAMagicCardSelectorWidget:
+  search_placeholder: Search Scryfall...
+
+LCAPopupMessage:
+  info_title: "Info - Litbrown Creator Assistant"
+  warning_title: "Warning - Litbrown Creator Assistant"
+  error_title: "ERROR - Litbrown Creator Assistant"
+  noauth_text: Could not contact LCA microservices. Please make sure you are connected to the internet, then try again.
+
+LCATabbedDataViewWidget:
+  name_hint: New Name
+  add_btn: Add New
+  del_btn: Remove
+  need_different_name: The chosen name is too similar to one already in use. Please choose a different name and try again.
+  need_nonempty_name: Please choose a name and try again.
+  warning_delete: Are you sure you want to delete this?
+
+LCATaskTrackerWidget:
+  actionbtn:
+    disabled: ENABLE
+    staged: Unstage
+    unstaged: Stage
+    skipped: Skipped
+    running: Running
+    success: Success!
+    error: Retry
+  progressbar:
+    disabled: DISABLED
+    staged: Staged
+    unstaged: Unstaged
+    skipped: Skipped
+    running: ''
+    success: Success!
+    error: ERROR
+
+LCATextTemplate:
+  variables:
+    clip:
+      decklists:
+        Formatted decklists associated with the content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
+      description_hook:
+        A short custom text blurb, usually put at the beginning of the description, to explain the individual content piece or otherwise bring the viewer's attention to the description.
+      entry_number:
+        "The entry number for this piece of content within its content series. (For example: League #72)"
+      mtg_format:
+        "The name of the Magic format the stream is played in. (For example: Modern, Legacy, Standard, etc.)"
+      series_name:
+        The name of this content piece's content series.
+      stream_date:
+        The date the stream was scheduled for, in ISO 8601 format.
+      title_hook:
+        A short custom text blurb, usually put at the beginning of the title, to catch the viewer's attention and explain the individual content piece.
+      variant_description:
+        The variant description for the content piece, as set in the variant's Description field.
+      variant_name:
+        The variant name for the content piece, as shown in the tab bar under the content series's Variant tab.
+    decklists:
+      decklist:
+        The full decklist, including sideboard and commander as applicable.
+      decklist_link:
+        The link to the decklist as provided during multistream scheduling.
+      decklist_name:
+        The decklist's name, as pulled from the decklist host's website.
+      manapool_link:
+        The link to load this decklist into cart bulk entry on Mana Pool, formatted to include your affiliate code if you have one.
+    timestamps:
+    stream:
+      decklists:
+        Formatted decklists associated with the content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
+      description_hook:
+        A short custom text blurb, usually put at the beginning of the description, to explain the individual content piece or otherwise bring the viewer's attention to the description.
+      entry_number:
+        "The entry number for this piece of content within its content series. (For example: League #72)"
+      mtg_format:
+        "The name of the Magic format the stream is played in. (For example: Modern, Legacy, Standard, etc.)"
+      series_name:
+        The name of this content piece's content series.
+      stream_date:
+        The date the stream was scheduled for, in ISO 8601 format.
+      title_hook:
+        A short custom text blurb, usually put at the beginning of the title, to catch the viewer's attention and explain the individual content piece.
+      variant_description:
+        The variant description for the content piece, as set in the variant's Description field.
+      variant_name:
+        The variant name for the content piece, as shown in the tab bar under the content series's Variant tab.
+    video:
+      decklists:
+        Formatted decklists associated with the content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
+      description_hook:
+        A short custom text blurb, usually put at the beginning of the description, to explain the individual content piece or otherwise bring the viewer's attention to the description.
+      entry_number:
+        "The entry number for this piece of content within its content series. (For example: League #72)"
+      mtg_format:
+        "The name of the Magic format the stream is played in. (For example: Modern, Legacy, Standard, etc.)"
+      series_name:
+        The name of this content piece's content series.
+      timestamps:
+        Formatted timestamps automatically generated for this content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
+      title_hook:
+        A short custom text blurb, usually put at the beginning of the title, to catch the viewer's attention and explain the individual content piece.
+      variant_description:
+        The variant description for the content piece, as set in the variant's Description field.
+      variant_name:
+        The variant name for the content piece, as shown in the tab bar under the content series's Variant tab.
+
+LCATwitchIntegration:
+  tier_1_name: Tier 1
+  tier_2_name: Tier 2
+  tier_3_name: Tier 3
+
+################################################################################
+# LAUNCHER
+
+LCALMainWindow:
+  title: Litbrown Creator Assistant
+  tabs:
+    home:
+      title: About
+      tabs:
+        general: General
+        license: License
+        credits: Credits
+      intro: '<html>Welcome to the Litbrown Creator Assistant. This tool can help you schedule, manage, edit, render, and upload your Magic: the Gathering Online&trade; related content.</html>'
+      license: '<html>The Litbrown Creator Assistant is free, open-source software under the terms of the <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License, version 3</a>.</html>'
+      contact: '<html><a href="https://discord.com/invite/vkwBPfR4YS">Join Discord server for support</a></html>'
+    configure:
+      title: Configure
+      intro: Use the Configure Tool to set application settings and manage how LCA interacts with your various social media accounts and desktop applications.
+      launch: Launch Configure Tool
+    schedule:
+      title: Schedule
+      intro: Use the Schedule Tool to schedule your multicasts. If streaming, it will set up Youtube broadcasts, update your Twitch schedule, and generate an image it will post on your socials.
+      launch: Launch Schedule Tool
+    multicast:
+      title: Multicast
+      intro: A multicast is a recording session paired with zero, one, or multiple simultaneous livestreams. The Multicast tool assists you in managing multicasts in real time and sets up the Render tool for success.
+      launch: Launch Multicast Tool
+    edit:
+      title: Edit
+      intro: The Edit tool provides a structured workflow for editing your content.
+      launch: Launch Edit Tool
+    thumbnail:
+      title: Thumbnail
+      intro: Use the Thumbnail Tool to assist in generating a video thumbnail.
+      launch: Launch Thumbnail Tool
+    render:
+      title: Render
+      intro: Use the Render Tool to assist in editing, rendering, and uploading longform and shortform videos.
+      launch: Launch Render Tool
+
+################################################################################
+# DAEMON
+
+LCADHttpRequestHandler:
+  oauth_aborted: Authorization request aborted
+  oauth_successful: Authorization request was successful, you may safely close this tab
+
+################################################################################
+# CONFIGURE
+
+LCACConnectButton:
+  label: Create / Reset Connection
+
+LCACConnectionInfoDisplayWidget:
+  not_connected: Not Connected
+
+LCACFormatHelperWidget:
+  help_btn: Help
+  validate_btn: Validate
+  success: Validation successful. This template is ready to use!
+  keyerror: "Unknown variable:"
+  valueerror: "Mistake in template at:"
+  valueerror_line: Line
+  valueerror_col: Column/Character
+
+LCACFormatHelperDialog:
+  dialog_title: Text Template Help
+  close_btn: Close
+  directions:
+  - LCA substitutes bits of text and data into a template that you provide in order to generate titles, descriptions, and other blurbs for each piece of content you release.
+  - "To tell LCA to insert a variable into your template, use a dollar sign $ and curly braces {} like this:"
+  - "<html><h3><pre>${variable_name}</pre></h3></html>"
+  - "If you want to put a literal dollar sign in your template, you will have to double them like this:"
+  - "<html><h3><pre>$$</pre></h3></html>"
+  - "Select a variable to learn more:"
+
+LCACMainWindow:
+  title: LCA Configure Tool
+  tabs:
+    bluesky:  Bluesky
+    discord:  Discord
+    manapool: Mana Pool
+    moxfield: Moxfield
+    mymtgo:   MyMTGO
+    obs:      OBS
+    patreon:  Patreon
+    reddit:   Reddit
+    shotcut:  Shotcut
+    twitch:   Twitch
+    twitter:  Twitter
+    vlc:      VLC
+    youtube:  YouTube
+    settings:
+      title: Settings
+      tabs:
+        lcasettings:
+          title: LCA Settings
+        organization:
+          title: Content Organization
+          typename: Content Series
+          newname: New Content Series
+          newid: newseries
+        membership:
+          title: Membership Tiers
+          typename: Membership Tier
+          newname: New Membership Tier
+          newid: newtier
+          info: Organize your membership tiers in order, with your lowest tier on the left and your highest tier on the right. Whenever you tell LCA to distribute a piece of content to a membership tier, it will also automatically distribute that content to every tier above / right of it.
+        affiliates:
+          title: Affiliate Codes
+  replacements_help: Show Help Dialog for Creating Dynamic Titles && Descriptions
+
+LCACManapoolWidget:
+  include_in_decklists: Include a link to purchase deck on Mana Pool above each decklist in description
+  affiliate_code: "Your Mana Pool affiliate code:"
+
+LCACMoxfieldWidget:
+  info: LCA connects to Moxfield to pull decklists for various purposes, like inserting them into your video descriptions.
+  agent: <html>Your copy of LCA cannot connect to Moxfield without a "User-Agent", which is simply a unique identifier that you must ask Moxfield support to create for you. Send an email to <a href="mailto:support@moxfield.com">support@moxfield.com</a>, and explain who you are and that your copy of the Litbrown Creator Assistant needs a "User-Agent" to connect to Moxfield's API. You may need to agree to their terms; LCA will automatically respect them for you.</html>
+  copypaste: <html>Once you get your "User-Agent", copy-paste the <i>entire</i> thing into the box below:</html>
+  placeholder: Your "User-Agent", which starts with "MoxKey;"
+
+LCACMymtgoWidget:
+  info: If properly connected to MyMTGO, LCA can manipulate overlays in streams and videos to display real-time MTGO game data, like life totals and hand sizes.
+  link: Download MyMTGO from here if you haven't already.
+  refresh: Create / Refresh Connection to MyMTGO
+  is_mymtgo_installed: Could not locate MyMTGO's database. Please double check that MyMTGO is installed correctly. Reach out to me if this issue persists.
+  active: "Connection to MyMTGO is active. LCA is using MyMTGO to monitor games played on this machine with these MTGO accounts:"
+  inactive: Connection to MyMTGO is disabled.
+  remove: Remove Connection to MyMTGO
+
+LCACSettingsAffiliatesWidget:
+  affiliate_placeholder: Affiliate Code
+
+LCACSettingsLCAWidget:
+  tabs:
+    general:
+      title: General
+      project_location: "Location of LCA project files:"
+      www_location: "Directory to serve locally (OBS browser source, thumbnail creator, etc.):"
+      color_slider: "<html>Accent Hue: <br><i>Will force a slow repaint of all LCA windows when used</i></html>"
+    schedule:
+      title: Schedule
+      group_rendering: Render
+      lbl_htmlrenderfile: "<html>Location of schedule rendering HTML file:<br><i>Don't change unless you know what you're doing!</i></html>"
+      lbl_functocall: "<html>Name of render function to call upon document ready:<br><i>Don't change unless you know what you're doing!</i></html>"
+      lbl_outputfile: "Location of rendered schedule image:"
+      group_connection: Publish
+    multicast:
+      title: Multicast
+    edit:
+      title: Edit
+    thumbnail:
+      title: Thumbnail
+      render_file: "<html>Path to thumbnail rendering webpage within your serving directory:<br><i>Don't change unless you know what you're doing!</i></html>"
+      render_func: "<html>Name of function to call with thumbnail data updates:<br><i>Don't change unless you know what you're doing!</i></html>"
+    render:
+      title: Render
+
+LCACSettingsMembershipTierWidget:
+  id: Id
+  name: Name
+  remote_tiers:
+    header: "Analogous Tiers on Other Platforms:"
+    no_analogous_tier: = None =
+    twitch: Twitch
+    patreon: Patreon
+
+LCACSettingsOrganizationSeriesWidget:
+  tabs:
+    general:
+      tab_title: General
+      name: Name
+      id: Id (cannot be changed)
+      stream_duration: Stream Duration (minutes)
+    variants:
+      typename: Series Variant
+      tab_title: Variants
+      newid: newvariant
+      newname: New Series Variant
+    videoinfo:
+      tab_title: Output Info
+      format: Video Format
+      longform: Long Form (Horizontal)
+      shortform: Short Form (Vertical)
+      supported_outputs: "Supported Outputs:"
+      membership_nostream: "= Record Only, No Stream ="
+      membership_public: "= Public ="
+      membership_andup: "& Up"
+      streaminfo_tab_title: Streams
+      stream_title: Stream Title
+      stream_to: Stream To
+      stream_desc: Description
+      videoinfo_tab_title: Videos
+      video_title: Video Title
+      video_to: Release To
+      video_desc: Description
+      clipinfo_tab_title: Clips
+      clip_title: Clip Title
+      clip_to: Release To
+      clip_desc: Description
+    formatting:
+      tab_title: Variable Formatting
+      decklists:
+        tab_title: ${decklists}
+        info: "This form creates the ${decklists} variable used in other parts of LCA's text templating system. If a content piece has only one decklist, then ${decklists} will be replaced with the text in the Decklist field below. If there are multiple decklists, they will be separated by the text in the Separator field below. Make sure to add adequate line breaks in the Separator field!"
+        stream:
+          tab_title: Stream Decklists
+          separator: Separator
+          decklist: Decklist
+        video:
+          tab_title: Video Decklists
+          separator: Separator
+          decklist: Decklist
+        clip:
+          tab_title: Clip Decklists
+          separator: Separator
+          decklist: Decklist
+      timestamps:
+        tab_title: ${timestamps}
+  add_series: Add
+  del_series: Remove
+  id_lbl: Id
+  form_lbl: Format
+  longform: Long Form
+  shortform: Short Form
+  title_lbl: Title
+  id_default: newseries
+  title_default: New series
+
+LCACSettingsOrganizationSeriesVariantWidget:
+  mtgformat: Default MTG Format
+  name: Name
+  id: Id
+  desc: Description
+  thumbnail: Thumbnail
+
+LCACPatreonWidget:
+  info: LCA connects to your Patreon account to view your Patreon members and schedule livestreams. Due to limitations of Patreon's API, LCA cannot create posts for you.
+  refresh_tiers: Refresh Membership Tiers Info from Patreon
+
+LCACTwitchWidget:
+  info: LCA connects to your Twitch account to update your streaming schedule and automatically set stream titles.
+
+LCACYoutubeWidget:
+  info: LCA connects to your Youtube account to set up your livestreams, upload your videos, and manage your playlists.
+  no_channel_connected: "<html><i>No channel connected</i></html>"
+  blank_channel_connected: "<html><i>Blank channel connected</i></html>"
+  disallowed_channel_connected: Aborted attempt to connect to a channel not whitelisted under your license. Please contact me if this is in error.
+  other_error: LCA encountered an unknown error while attempting to connect to yout Youtube channel. Please contact me for assistance if this issue persists.
+  refresh: Create / Refresh Connection to Youtube
+
+################################################################################
+# SCHEDULE
+
+LCASDeckURLEdit:
+  url_add: Add Deck URL
+  url_placeholder: Deck URL
+
+LCASMainWindow:
+  title: LCA Schedule Tool
+  errors:
+    need_content_series: Please create a content series before attempting to create a schedule.
+    decklist_bad_url: Could not process unsupported decklist URL
+    decklist_other: Unexpected error encountered during decklist parsing.
+    bad_template: Encountered bad template for series ${series_name}. Please check your templates for this series and try again.
+  tabs:
+    create:
+      name: Create
+      preview_btn: Preview Schedule
+    preview:
+      name: Preview
+      back_btn: Revise Schedule
+      title_placeholder: Schedule title (displayed on some integrations)
+      notes_placeholder: Public notes to post with your schedule...
+      publish_btn: Publishing Settings
+      render_error: Schedule rendering failed. Please see the logs for details.
+    publish:
+      name: Publish
+      back_btn: Preview Schedule
+      publish_btn: FINALIZE AND PUBLISH
+      youtube_broadcastpublish: Schedule Livestreams
+      twitch_updatestreamschedule: Update Stream Schedule
+
+LCASPublishManagerWidget:
+  patreon:
+    createlives:
+      title: Schedule Lives
+      error_liveapi_not_working: The Patreon Lives API is not functioning. If this functionality is important to you, reach out to them and let them know. I will remove this message from LCA when they fix it.
+      error_unknown: Encountered an unknwon error while attempting to schedule lives on Patreon. If this error persists, please contact me.
+  twitch:
+    updatestreamschedule:
+      title: Update Stream Schedule
+      error_not_affiliate_partner: Twitch only allows Affiliates and Partners to schedule non-recurring streams. Try again when you reach Affiliate or Partner.
+      error_unknown: Encountered an unknwon error while attempting to publish stream schedule to Twitch. If this error persists, please contact me.
+  youtube:
+    broadcastpublish:
+      title: Schedule Livestreams
+
+LCASPublishScheduleThread:
+  updates:
+    publish_started: Publishing schedule...
+    publish_successful: Schedule published successfully!
+
+LCASPublishWidget:
+  done_button: Finish
+  retry_button: RETRY
+  next_steps: >-
+    Remember that LCA cannot create Youtube community posts. You must post the schedule manually if you wish to share it there.
+
+LCASScheduleEditingWidget:
+  series_hint: Select Multicast Series
+  add_multicast_btn: " Add New Multicast"
+  del_multicast_btn: " Remove Last Multicast"
+  err_select_series: Please select a series for the multicast and try again.
+
+LCASSingleMulticastEditingWidget:
+  recordonly_stream: "= Record Only, No Stream ="
+  public_stream: "= Public ="
+  titlehook_placeholder: Title Hook
+  deschook_placeholder: Description Hook
+  mtgformat_lbl: "Format:"
+  variant_lbl: "Variant:"
+  thumbnail: "Thumbnail:"
+
+################################################################################
+# THUMBNAIL
+
+LCATMainWindow:
+  title: LCA Thumbnail Tool
+
+LCATBottomControlsWidget:
+  formats:
+    stream: Stream
+    video: Video
+  methods:
+    channel: Channel Default
+    series: Series Default
+    variant: Variant Default
+    multicast: Single Multicast
+  save: ' Save Thumbnail'
+  placeholders:
+    multicast: = Multicast =
+    series: = Series =
+    variant: = Variant =
+
+LCATSideControlsWidget:
+  top_buttons:
+    unlock: Edit Controls
+    back: Back
+    new: New
+    load: Import
+    save: Export
+  default_name: New Control
+
+LCATSideControlEditorWidget:
+  supported_types:
+    mtgcard: Magic Card
+    text: Text Input
+    number: Number Input
+    combo: Choice Selector
+    checkbox: Checkbox
+    separator: Separator
+  edit_btns:
+    up: Move Up
+    down: Move Down
+    delete: Remove
+  text:
+    default: Default
+  number:
+    minimum: Minimum
+    maximum: Maximum
+    default: Default
+  combo:
+    add: Add New Choice
+    new_default: New Choice
+  warning_delete: Are you sure you wish to remove this control?
+

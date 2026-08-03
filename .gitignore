@@ -1,0 +1,13 @@
+/.git/**
+/.venv/**
+/logs/**
+/projects/**
+/microservice/secrets_*.json
+
+/.python-version
+/deploy-microservice.bat
+/schedule.png
+/settings.json
+
+*.lock
+__pycache__

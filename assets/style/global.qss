@@ -1,0 +1,292 @@
+* {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	outline: 0;
+	font-family: "Chiron GoRound TC";
+	letter-spacing: 0.03em;
+}
+
+QWidget {
+	color: ${foreground_lgt};
+} QWidget:disabled {
+	color: ${foreground_drk};
+}
+
+QMainWindow, QMessageBox, QDialog {
+	background-color: ${background_drk};
+}
+
+LCACardDisplayWidget, QStackedWidget[css_class="card_display"] {
+	min-width: 10em;
+	max-width: 10em;
+	min-height: 14em;
+	max-height: 14em;
+}
+
+LCACarouselWidget QGroupBox {
+	border: 0.1em solid ${background_lgt};
+	border-radius: 0.6em;
+} LCACarouselWidget QPushButton[css_class='decrement'] {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+} LCACarouselWidget QPushButton[css_class='increment'] {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+LCAFilePickerWidget QGroupBox {
+	border: 0.1em solid ${background_lgt};
+	border-radius: 0.6em;
+	padding-left: 0.5em;
+	padding-right: 0em;
+} LCAFilePickerWidget QLabel {
+	padding-right: 0.5em;
+}
+
+*[css_class="accent_bordered"], LCATBottomControlsWidget {
+	background-color: ${background_med};
+	border: 0.05em solid palette(mid);
+} 
+
+LCASideTabWidget QListView, LCASideTabWidget QListView:focus {
+	background-color: transparent;
+	border: 0.05em solid ${background_lgt};
+	font-size: 14pt;
+	font-weight: bold;
+	outline: 0;
+	padding: 0;
+} LCASideTabWidget QListView * {
+	font-size: 14pt;
+	font-weight: bold;
+	padding: 0;
+} LCASideTabWidget QListWidget::item {
+	background-color: ${background_med};
+	border: 0.05em solid ${background_lgt};
+	padding: 0;
+} LCASideTabWidget QListView::item[css_class='first'] {
+	margin-top: 0;
+	margin-left: 0;
+} LCASideTabWidget QListWidget::item:hover {
+	background-color: palette(dark);
+} LCASideTabWidget QListWidget::item:selected {
+	background-color: palette(mid);
+	color: ${text_drk};
+} LCASideTabWidget >QStackedWidget {
+	border: 0.05em solid palette(mid);
+	background-color: ${background_med};
+}
+
+QComboBox, QDateEdit, QLineEdit, QListWidget, QPlainTextEdit, QSpinBox, QTimeEdit {
+	background-color: ${background_lgt};
+	border: 0.05em solid palette(light);
+	padding: 0.15em;
+	placeholder-text-color: ${foreground_drk};
+	selection-background-color: palette(dark);
+} QComboBox:disabled, QDateEdit:disabled, QLineEdit:disabled, QListWidget:disabled, QPlainTextEdit:disabled, QSpinBox:disabled, QTimeEdit:disabled {
+	background-color: ${background_drk};
+	border-color: ${background_drk};
+} QComboBox:focus, QDateEdit:focus, QLineEdit:focus, QListWidget:focus, QPlainTextEdit:focus, QSpinBox:focus, QTimeEdit:focus {
+	border-color: ${foreground_lgt};
+}
+
+QComboBox {
+	padding-left: 0.2em;
+} QComboBox QAbstractItemView, QComboBox QListView {
+	font-size: 12pt;
+	font-weight: normal;
+	selection-background-color: palette(dark);
+} QComboBox::drop-down {
+	width: 1.4em;
+	border-left: 0.05em solid palette(mid);
+} QComboBox::drop-down:hover {
+	background: ${background_hilgt};
+} QComboBox::drop-down:pressed {
+	background: ${background_drk};
+} QComboBox::down-arrow {
+	image: url("assets/style/downarrow.svg");
+	width: 0.7em;
+	height: 0.35em;
+} QComboBox AbstractItemView {
+	background: ${background_lgt};
+}
+
+QDateEdit {
+	padding-left: 0.2em;
+} QDateEdit QAbstractItemView, QDateEdit QListView {
+	font-size: 12pt;
+	font-weight: normal;
+	selection-background-color: palette(dark);
+} QDateEdit::drop-down {
+	width: 1.4em;
+	border-left: 0.05em solid palette(mid);
+} QDateEdit::drop-down:hover {
+	background: ${background_hilgt};
+} QDateEdit::drop-down:pressed {
+	background: ${background_drk};
+} QDateEdit::down-arrow {
+	image: url("assets/style/downarrow.svg");
+	width: 0.7em;
+	height: 0.35em;
+} QDateEdit AbstractItemView {
+	background: ${background_lgt};
+}
+
+QFrame {
+} QFrame[frameShape="4"], QFrame[frameShape="5"] {
+	/* frameShape() in (QFrame.HLine, QFrame.VLine) */
+	background-color: ${background_lgt};
+}
+
+QListWidget {
+	background-color: ${background_lgt};
+	border: 0.05em solid palette(mid);
+	font-size: 12pt;
+} QListWidget::item {
+	background-color: transparent;
+	padding: 0.1em;
+} QListWidget::item:hover {
+	background-color: palette(dark);
+} QListWidget::item:selected {
+	background-color: palette(light);
+	color: ${text_drk};
+}
+
+QPushButton {
+	background-color: ${background_lgt};
+	border: 0.1em solid palette(light);
+	border-radius: 0.5em;
+	padding: 0.3em;
+	qproperty-iconSize: 20px;
+} QPushButton:hover {
+	background-color: ${background_hilgt};
+} QPushButton:checked {
+	background-color: palette(light);
+	color: ${text_drk};
+} QPushButton:pressed {
+	background-color: ${background_med};
+	color: ${foreground_lgt};
+} QPushButton:disabled {
+	border-color: ${background_drk};
+} QPushButton[css_class="big"] {
+	font-size: 14pt;
+	font-weight: bold;
+	qproperty-iconSize: 24px;
+}
+
+QScrollArea {
+	background: ${background_med};
+}
+
+QScrollBar {
+	background: ${background_drk};
+} QScrollBar::handle {
+	background: palette(mid);
+	border: 0.1em solid;
+	border-top-color: palette(light);
+	border-right-color: palette(light);
+	border-bottom-color: palette(dark);
+	border-left-color: palette(dark);
+} QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal, QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+	width: 0px;
+	height: 0px;
+	border: none;
+	background: none;
+}
+
+QSlider::groove:horizontal {
+	height: 0.2em;
+} QSlider::groove:horizontal {
+	border: 0.1em solid ${background_drk};
+	background: ${background_lgt};
+} QSlider::sub-page:horizontal {
+	border: 0.1em solid ${background_drk};
+	background: palette(dark);
+} QSlider::handle:horizontal {
+	background: palette(light);
+	border: 0.1em solid ${background_drk};
+	width: 0.6em;
+	height: 0.3em;
+	margin-top: -0.3em;
+	margin-bottom: -0.3em;
+} QSlider[css_class="rainbow"]::groove:horizontal {
+	height: 0.2em;
+	background: qlineargradient(x1: 0, y1: 0.5, x2: 1, y2: 0.5, ${rainbow});
+} QSlider[css_class="rainbow"]::sub-page:horizontal {
+	background: transparent;
+} QSlider[css_class="rainbow"]::handle:horizontal {
+	width: 0.4em;
+	height: 0.5em;
+	margin: -0.2em 0;
+	border: 0.1em solid ${background_drk};
+	background: palette(mid);
+}
+
+QSpinBox {
+} QSpinBox::down-button {
+	width: 1.0em;
+	border-left: 0.05em solid palette(mid);
+} QSpinBox::down-arrow {
+	image: url("assets/style/downarrow.svg");
+	width: 0.5em;
+	height: 0.25em;
+} QSpinBox::up-button {
+	width: 1.0em;
+	border-left: 0.05em solid palette(mid);
+	border-bottom: 0.05em solid palette(mid);
+} QSpinBox::up-arrow {
+	image: url("assets/style/uparrow.svg");
+	width: 0.5em;
+	height: 0.25em;
+} QSpinBox::down-button:hover, QSpinBox::up-button:hover {
+	background: ${background_hilgt};
+} QSpinBox::down-button:pressed, QSpinBox::up-button:pressed {
+	background: ${background_drk};
+}
+
+QTabBar {
+	qproperty-drawBase: 0;
+} QTabBar::tab {
+	border: 0.05em solid ${background_lgt};
+	border-bottom: 0;
+	background-color: ${background_med};
+	font-weight: bold;
+	outline: 0;
+	padding: 0.25em;
+	margin-left: -0.05em;
+} QTabBar::tab:first {
+	margin-left: 0;
+}QTabBar::tab:hover {
+	background-color: palette(dark);
+} QTabBar::tab:selected {
+	background-color: palette(mid);
+	color: ${text_drk};
+}
+
+QTabWidget::pane {
+	border: 0.05em solid palette(mid);
+}
+
+QTimeEdit {
+} QTimeEdit::down-button {
+	width: 1.0em;
+	border-top: 0;
+	border-left: 0.05em solid palette(mid);
+} QTimeEdit::down-arrow {
+	image: url("assets/style/downarrow.svg");
+	width: 0.5em;
+	height: 0.25em;
+} QTimeEdit::up-button {
+	width: 1.0em;
+	border-left: 0.05em solid palette(mid);
+	border-bottom: 0.05em solid palette(mid);
+} QTimeEdit::up-arrow {
+	image: url("assets/style/uparrow.svg");
+	width: 0.5em;
+	height: 0.25em;
+} QTimeEdit::down-button:hover, QTimeEdit::up-button:hover {
+	background: ${background_hilgt};
+} QTimeEdit::down-button:pressed, QTimeEdit::up-button:pressed {
+	background: ${background_drk};
+}
+

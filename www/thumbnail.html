@@ -50,7 +50,7 @@
 		mix-blend-mode: soft-light;
 	}
 	
-	div#Splash\ Text {
+	div#splash-text {
 		position: fixed;
 		top: 4vh;
 		left: 0;
@@ -68,9 +68,9 @@
 		translate: -50% -50%;
 	}
 	
-	img#Left\ Card   { left: 20vw; }
-	img#Center\ Card { left: 50vw; }
-	img#Right\ Card  { left: 80vw; }
+	img#left-card   { left: 20vw; }
+	img#center-card { left: 50vw; }
+	img#right-card  { left: 80vw; }
 
 	div#_variant {
 		position: fixed;
@@ -85,21 +85,21 @@
 </style><script>
 
 	function new_data_update (controls, series, variant, project) {
-		document.getElementById('Splash Text').innerText = controls.user['Splash Text'];
-		for (card of ['Left Card', 'Center Card', 'Right Card'])
+		document.getElementById('splash-text').innerText = controls.user['splash-text'];
+		for (card of ['left-card', 'center-card', 'right-card'])
 			document.getElementById(card).src = controls.user[card]?.image_uris?.png ||
 				controls.user[card]?.card_faces[controls.user[card].lca_selected_face].image_uris['png'] ||
 				'';
 		document.getElementById('_variant').innerText = variant?.name || '';
-		document.getElementById('filter').style.backgroundColor = `oklch(0.55 0.09 ${controls.user['Hue'] || 0} / 1)`;
+		document.getElementById('filter').style.backgroundColor = `oklch(0.55 0.09 ${controls.user['hue'] || 0} / 1)`;
 	}
 
 </script></head><body>
 	<div id='background'></div>
 	<div id='filter'></div>
-	<div id='Splash Text'></div>
-	<img id='Left Card' />
-	<img id='Center Card' />
-	<img id='Right Card' />
+	<div id='splash-text'></div>
+	<img id='left-card' />
+	<img id='center-card' />
+	<img id='right-card' />
 	<div id='_variant' />
 </body></html>

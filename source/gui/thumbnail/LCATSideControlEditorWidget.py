@@ -36,8 +36,13 @@ from ..LCAWidget import *
 
 class LCATSideControlEditorWidget (LCAWidget):
 
-	def __init__ (self, control_index: int, model_modified_callback: typing.Callable[[], Any]):
-		self.__control_index = control_index
+	def __init__ (self,
+		profile_index: int,
+		control_index: int,
+		model_modified_callback: typing.Callable[[], Any],
+	):
+		self.__pi = profile_index
+		self.__ci = control_index
 		self.__model_modified_callback = model_modified_callback
 		super().__init__()
 
@@ -48,7 +53,7 @@ class LCATSideControlEditorWidget (LCAWidget):
 			btns_layout.setContentsMargins(0, 0, 0, 0)
 			if up_btn := QPushButton(' ' + I18n(self).edit_btns.up):
 				up_btn.setIcon(Assets.QIcon('icons/up.png'))
-				up_btn.setEnabled(self.__control_index != 0)
+				up_btn.setEnabled(self.__ci != 0)
 				up_btn.clicked.connect(self.__evt_move_up)
 			btns_layout.addWidget(up_btn)
 			if delete_btn := QPushButton(' ' + I18n(self).edit_btns.delete):
@@ -57,7 +62,7 @@ class LCATSideControlEditorWidget (LCAWidget):
 			btns_layout.addWidget(delete_btn)
 			if down_btn := QPushButton(' ' + I18n(self).edit_btns.down):
 				down_btn.setIcon(Assets.QIcon('icons/down.png'))
-				down_btn.setEnabled(self.__control_index != len(Settings().tools.thumbnail.controls) - 1)
+				down_btn.setEnabled(self.__ci != len(Settings().tools.thumbnail.profiles[self.__pi].controls) - 1)
 				down_btn.clicked.connect(self.__evt_move_down)
 			btns_layout.addWidget(down_btn)
 		layout.addWidget(btns_widget)
@@ -66,13 +71,13 @@ class LCATSideControlEditorWidget (LCAWidget):
 			top_layout.setContentsMargins(0, 0, 0, 0)
 			if name_txt := QLineEdit():
 				self.__name_txt = name_txt
-				name_txt.setText(Settings().tools.thumbnail.controls[self.__control_index].name)
+				name_txt.setText(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].name)
 				name_txt.editingFinished.connect(self.__evt_name_changed)
 			top_layout.addWidget(name_txt)
 			if type_cbo := LCAComboBox():
 				for supported_type in ('mtgcard', 'text', 'number', 'combo', 'checkbox', 'separator'):
 					type_cbo.addItem(getattr(I18n(self).supported_types, supported_type), supported_type)
-				type_cbo.setData(Settings().tools.thumbnail.controls[self.__control_index].input_type)
+				type_cbo.setData(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].input_type)
 				type_cbo.currentDataChanged.connect(self.__evt_type_changed)
 			top_layout.addWidget(type_cbo)
 		layout.addWidget(top_widget)
@@ -82,13 +87,13 @@ class LCATSideControlEditorWidget (LCAWidget):
 
 	def __evt_type_changed (self, new_type: str) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index] = {
-				'mtgcard':   Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlMagicCardSelectorModel,
-				'text':      Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlTextModel,
-				'number':    Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlNumberModel,
-				'combo':     Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlComboModel,
-				'checkbox':  Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlCheckboxModel,
-				'separator': Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlSeparatorModel,
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci] = {
+				'mtgcard':   Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlMagicCardSelectorModel,
+				'text':      Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlTextModel,
+				'number':    Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlNumberModel,
+				'combo':     Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlComboModel,
+				'checkbox':  Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlCheckboxModel,
+				'separator': Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlSeparatorModel,
 			}[new_type](name = self.__name_txt.text())
 		self.__build_new_options_widget()
 
@@ -98,14 +103,14 @@ class LCATSideControlEditorWidget (LCAWidget):
 			self.__options_widget.setParent(None)
 			self.__options_widget.deleteLater()
 		self.__options_widget = QWidget()
-		match Settings().tools.thumbnail.controls[self.__control_index].input_type:
+		match Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].input_type:
 			case 'mtgcard':
 				pass
 			case 'text':
 				text_options_layout = QFormLayout(self.__options_widget)
 				text_options_layout.setContentsMargins(0, 0, 0, 0)
 				if text_default_input := QLineEdit():
-					text_default_input.setText(Settings().tools.thumbnail.controls[self.__control_index].default)
+					text_default_input.setText(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].default)
 					text_default_input.editingFinished.connect(lambda : self.__evt_text_default_changed(text_default_input.text()))
 				text_options_layout.addRow(I18n(self).text.default, text_default_input)
 			case 'number':
@@ -114,7 +119,7 @@ class LCATSideControlEditorWidget (LCAWidget):
 				for property in ('minimum', 'maximum', 'default'):
 					if property_spin := QSpinBox():
 						property_spin.setRange(-2147483648, 2147483647)
-						property_spin.setValue(getattr(Settings().tools.thumbnail.controls[self.__control_index], property))
+						property_spin.setValue(getattr(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci], property))
 						property_spin.valueChanged.connect(
 							lambda value, prop = property : self.__evt_number_option_changed(prop, value)
 						)
@@ -122,7 +127,7 @@ class LCATSideControlEditorWidget (LCAWidget):
 			case 'combo':
 				combo_options_layout = QVBoxLayout(self.__options_widget)
 				combo_options_layout.setContentsMargins(0, 0, 0, 0)
-				for i, option in enumerate(Settings().tools.thumbnail.controls[self.__control_index].options):
+				for i, option in enumerate(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].options):
 					if option_widget := QWidget():
 						option_layout = QHBoxLayout(option_widget)
 						option_layout.setContentsMargins(0, 0, 0, 0)
@@ -151,44 +156,44 @@ class LCATSideControlEditorWidget (LCAWidget):
 
 	def __evt_name_changed (self) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index].name = self.__name_txt.text()
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].name = self.__name_txt.text()
 
 	def __evt_text_default_changed (self, value: str) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index].default = value
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].default = value
 
 	def __evt_number_option_changed (self, property: str, value: int) -> None:
 		logger.warning(property)
 		logger.warning(value)
 		with Settings():
-			setattr(Settings().tools.thumbnail.controls[self.__control_index], property, value)
+			setattr(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci], property, value)
 
 	def __evt_combo_option_added (self) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index].options.append(I18n(self).combo.new_default)
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].options.append(I18n(self).combo.new_default)
 		self.__model_modified_callback()
 
 	def __evt_combo_option_removed (self, i: int) -> None:
 		logger.warning(i)
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index].options.pop(i)
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].options.pop(i)
 		self.__model_modified_callback()
 
 	def __evt_combo_option_changed (self, i: int, val: str) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls[self.__control_index].options[i] = val
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].options[i] = val
 
 	def __evt_move_up (self) -> None:
-		self.__swap_with_index(self.__control_index - 1)
+		self.__swap_with_index(self.__ci - 1)
 
 	def __evt_move_down (self) -> None:
-		self.__swap_with_index(self.__control_index + 1)
+		self.__swap_with_index(self.__ci + 1)
 
 	def __swap_with_index (self, new_index: int) -> None:
 		with Settings():
-			temp = Settings().tools.thumbnail.controls[new_index]
-			Settings().tools.thumbnail.controls[new_index] = Settings().tools.thumbnail.controls[self.__control_index]
-			Settings().tools.thumbnail.controls[self.__control_index] = temp
+			temp = Settings().tools.thumbnail.profiles[self.__pi].controls[new_index]
+			Settings().tools.thumbnail.profiles[self.__pi].controls[new_index] = Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci]
+			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci] = temp
 		self.__model_modified_callback()
 
 	def __evt_delete (self) -> None:
@@ -198,8 +203,8 @@ class LCATSideControlEditorWidget (LCAWidget):
 		) == QMessageBox.StandardButton.Cancel:
 			return
 		with Settings():
-			Settings().tools.thumbnail.controls = \
-				Settings().tools.thumbnail.controls[ : self.__control_index ] + \
-				Settings().tools.thumbnail.controls[ self.__control_index + 1 : ]
+			Settings().tools.thumbnail.profiles[self.__pi].controls = \
+				Settings().tools.thumbnail.profiles[self.__pi].controls[ : self.__ci ] + \
+				Settings().tools.thumbnail.profiles[self.__pi].controls[ self.__ci + 1 : ]
 		self.__model_modified_callback()
 

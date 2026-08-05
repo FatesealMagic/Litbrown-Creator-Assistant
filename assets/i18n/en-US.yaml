@@ -487,7 +487,9 @@ LCATSideControlsWidget:
     new: New
     load: Import
     save: Export
-  default_name: New Control
+  default_control_name: New Control
+  default_profile_name: New Profile
+  del_profile: Are you sure you wish to delete this profile?
 
 LCATSideControlEditorWidget:
   supported_types:

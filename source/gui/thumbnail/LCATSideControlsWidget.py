@@ -58,46 +58,64 @@ class LCATSideControlsWidget (LCAWidget):
 		self.__mapper.setModel(self.__model)
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		if topbar_widget := QWidget():
+		if topbar_widget := QStackedWidget():
+			self.__topbar_widget = topbar_widget
 			topbar_widget.setStyleSheet(self.__IMPORTANT_BUTTONS_STYLESHEET)
-			topbar_layout = QHBoxLayout(topbar_widget)
-			topbar_layout.setContentsMargins(0, 0, 0, 0)
-			if unlock_btn := QPushButton(I18n(self).top_buttons.unlock):
-				self.__unlock_btn = unlock_btn
-				unlock_btn.clicked.connect(self.__show_edit_panel)
-			topbar_layout.addWidget(unlock_btn)
-			if back_btn := QPushButton(' ' + I18n(self).top_buttons.back):
-				self.__back_btn = back_btn
-				back_btn.setIcon(Assets.QIcon('icons/undo.png'))
-				back_btn.setProperty('css_class', 'big')
-				back_btn.clicked.connect(self.__show_display_panel)
-			topbar_layout.addWidget(back_btn)
-			if save_btn := QPushButton(' ' + I18n(self).top_buttons.save):
-				self.__save_btn = save_btn
-				save_btn.setIcon(Assets.QIcon('icons/load.png'))
-			topbar_layout.addWidget(save_btn)
-			if load_btn := QPushButton(' ' + I18n(self).top_buttons.load):
-				self.__load_btn = load_btn
-				load_btn.setIcon(Assets.QIcon('icons/save.png'))
-			topbar_layout.addWidget(load_btn)
-			if new_btn := QPushButton(' ' + I18n(self).top_buttons.new):
-				self.__new_btn = new_btn
-				new_btn.setIcon(Assets.QIcon('icons/plus.png'))
-				new_btn.setProperty('css_class', 'big')
-				new_btn.clicked.connect(self.__add_new_control)
-			topbar_layout.addWidget(new_btn)
-		layout.addWidget(topbar_widget)
+			if using_widget := QWidget():
+				using_layout = QHBoxLayout(using_widget)
+				using_layout.setContentsMargins(0, 0, 0, 0)
+				if profile_carousel_widget := LCACarouselWidget():
+					self.__profile_carousel_widget = profile_carousel_widget
+					self.__rebuild_profile_carousel_widget()
+					profile_carousel_widget.set_value(0)
+					profile_carousel_widget.changed.connect(self.__build_display_widget)
+				using_layout.addWidget(profile_carousel_widget, 1)
+				if add_btn := QPushButton():
+					add_btn.setIcon(Assets.QIcon('icons/plus.png'))
+					add_btn.clicked.connect(self.__evt_add_profile)
+				using_layout.addWidget(add_btn, 0)
+				if unlock_btn := QPushButton():
+					unlock_btn.setIcon(Assets.QIcon('icons/edit.png'))
+					unlock_btn.clicked.connect(self.__show_edit_panel)
+				using_layout.addWidget(unlock_btn, 0)
+				if del_btn := QPushButton():
+					del_btn.setIcon(Assets.QIcon('icons/minus.png'))
+					del_btn.clicked.connect(self.__evt_del_profile)
+				using_layout.addWidget(del_btn, 0)
+			logger.warning(topbar_widget.addWidget(using_widget))
+			if editing_widget := QWidget():
+				editing_layout = QHBoxLayout(editing_widget)
+				editing_layout.setContentsMargins(0, 0, 0, 0)
+				if back_btn := QPushButton(' ' + I18n(self).top_buttons.back):
+					back_btn.setIcon(Assets.QIcon('icons/undo.png'))
+					back_btn.setProperty('css_class', 'big')
+					back_btn.clicked.connect(self.__show_display_panel)
+				editing_layout.addWidget(back_btn)
+				if save_btn := QPushButton(' ' + I18n(self).top_buttons.save):
+					save_btn.setIcon(Assets.QIcon('icons/load.png'))
+				editing_layout.addWidget(save_btn)
+				if load_btn := QPushButton(' ' + I18n(self).top_buttons.load):
+					load_btn.setIcon(Assets.QIcon('icons/save.png'))
+				editing_layout.addWidget(load_btn)
+				if new_btn := QPushButton(' ' + I18n(self).top_buttons.new):
+					new_btn.setIcon(Assets.QIcon('icons/plus.png'))
+					new_btn.setProperty('css_class', 'big')
+					new_btn.clicked.connect(self.__add_new_control)
+				editing_layout.addWidget(new_btn)
+			logger.warning(topbar_widget.addWidget(editing_widget))
+		layout.addWidget(topbar_widget, 0)
 		if side_scroll := QScrollArea():
 			self.__side_scroll = side_scroll
 			side_scroll.setWidgetResizable(True)
 			side_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-		layout.addWidget(side_scroll)
-		self.__show_display_panel() # TODO show edit if empty
+		layout.addWidget(side_scroll, 1)
+		self.__show_display_panel()
 
-	def __build_display_widget (self) -> None:
+	def __build_display_widget (self, profile_index: int) -> None:
+		self.__reset_thumbnail_user_info()
 		if display_widget := QWidget():
 			display_layout = QVBoxLayout(display_widget)
-			for control in Settings().tools.thumbnail.controls:
+			for control in Settings().tools.thumbnail.profiles[profile_index].controls:
 				if control_widget := QWidget():
 					control_layout = QVBoxLayout(control_widget)
 					match control.input_type:
@@ -186,39 +204,83 @@ class LCATSideControlsWidget (LCAWidget):
 			display_layout.addStretch()
 		self.__side_scroll.setWidget(display_widget)
 
-	def __show_display_panel (self) -> None:
-		self.__build_display_widget()
-		self.__unlock_btn.setVisible(True)
-		self.__back_btn.setVisible(False)
-		self.__save_btn.setVisible(False)
-		self.__load_btn.setVisible(False)
-		self.__new_btn.setVisible(False)
-
-	def __show_edit_panel (self) -> None:
-		self.__build_edit_widget()
-		self.__unlock_btn.setVisible(False)
-		self.__back_btn.setVisible(True)
-		self.__save_btn.setVisible(True)
-		self.__load_btn.setVisible(True)
-		self.__new_btn.setVisible(True)
-
-	def __build_edit_widget (self) -> None:
+	def __build_edit_widget (self, profile_index: int) -> None:
 		if edit_widget := QWidget():
 			edit_layout = QVBoxLayout(edit_widget)
-			for i, control in enumerate(Settings().tools.thumbnail.controls):
+			for control_index, control in enumerate(Settings().tools.thumbnail.profiles[profile_index].controls):
 				if edit_layout.count():
 					edit_layout.addWidget(self._build_hsep())
-				edit_layout.addWidget( LCATSideControlEditorWidget(i, self.__build_edit_widget) )
+				edit_layout.addWidget( LCATSideControlEditorWidget(
+					profile_index,
+					control_index,
+					lambda : self.__build_edit_widget(self.__profile_carousel_widget.get_value()),
+				) )
 			edit_layout.addStretch()
 		self.__side_scroll.setWidget(edit_widget)
 			
+	def __rebuild_profile_carousel_widget (self) -> None:
+		with QSignalBlocker(self.__profile_carousel_widget):
+			self.__profile_carousel_widget.clear()
+			for profile_index, profile in enumerate(Settings().tools.thumbnail.profiles):
+				name_edit = QLineEdit(profile.name)
+				name_edit.editingFinished.connect(
+					lambda edit = name_edit, i = profile_index : self.__evt_profile_name_changed(edit.text(), i)
+				)
+				self.__profile_carousel_widget.addItem(name_edit, profile_index, margins = False, alignment = Qt.Alignment())
+
+	def __evt_add_profile (self) -> None:
+		with Settings():
+			Settings().tools.thumbnail.profiles.append(
+				Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel(name = I18n(self).default_profile_name)
+			)
+		self.__rebuild_profile_carousel_widget()
+		self.__profile_carousel_widget.set_value(len(Settings().tools.thumbnail.profiles) - 1)
+
+	def __evt_del_profile (self) -> None:
+		if LCAPopupMessage.warning(
+			I18n(self).del_profile,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel
+		) == QMessageBox.StandardButton.Cancel:
+			return
+		old_index = self.__profile_carousel_widget.get_value()
+		with Settings():
+			Settings().tools.thumbnail.profiles.pop( old_index )
+		old_index = min(old_index, len(Settings().tools.thumbnail.profiles) - 1)
+		self.__rebuild_profile_carousel_widget()
+		self.__profile_carousel_widget.set_value(old_index)
+
+	def __evt_profile_name_changed (self, text: str, i: int) -> None:
+		with Settings():
+			Settings().tools.thumbnail.profiles[i].name = text
+		self.__update_thumbnail_user_profile_name(text)
+
+	def __show_display_panel (self) -> None:
+		self.__build_display_widget(self.__profile_carousel_widget.get_value())
+		self.__topbar_widget.setCurrentIndex(0)
+
+	def __show_edit_panel (self) -> None:
+		self.__build_edit_widget(self.__profile_carousel_widget.get_value())
+		self.__topbar_widget.setCurrentIndex(1)
+
 	def __add_new_control (self) -> None:
 		with Settings():
-			Settings().tools.thumbnail.controls.append(
-				Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailControlTextModel(name = I18n(self).default_name)
+			Settings().tools.thumbnail.profiles[self.__profile_carousel_widget.get_value()].controls.append(
+				Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel.ToolsThumbnailControlTextModel(
+					name = I18n(self).default_control_name
+				)
 			)
-		self.__build_edit_widget()
+		self.__build_edit_widget(self.__profile_carousel_widget.get_value())
+
+	def __reset_thumbnail_user_info (self) -> None:
+		self.__model.setData((0, 'user'), {
+			'Profile': Settings().tools.thumbnail.profiles[self.__profile_carousel_widget.get_value()].name,
+		})
 
 	def __update_thumbnail_user_info (self, info_update: dict) -> None:
-		self.__model.setData((0, 'user'), self.__model.data((0, 'user')) | info_update)
+		self.__model.setData((0, 'user'), self.__model.data((0, 'user')) | {
+			k.lower().replace(' ', '-'): v for k, v in info_update.items()
+		})
+
+	def __update_thumbnail_user_profile_name (self, new_name: str) -> None:
+		self.__model.setData((0, 'user'), self.__model.data((0, 'user')) | {'Profile': new_name})
 

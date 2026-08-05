@@ -204,35 +204,66 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 			render_file: str = 'thumbnail.html'
 			render_func: str = 'new_data_update'
 			
-			class ToolsThumbnailControlBaseModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
-				input_type: str
-				name: str
-			class ToolsThumbnailControlTextModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['text'] = 'text'
-				default: str = ''
-			class ToolsThumbnailControlNumberModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['number'] = 'number'
-				minimum: int = 0
-				maximum: int = 99
-				default: int = 0
-			class ToolsThumbnailControlComboModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['combo'] = 'combo'
-				options: list[str] = []
-			class ToolsThumbnailControlCheckboxModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['checkbox'] = 'checkbox'
-			class ToolsThumbnailControlSeparatorModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['separator'] = 'separator'
-			class ToolsThumbnailControlMagicCardSelectorModel (ToolsThumbnailControlBaseModel):
-				input_type: typing.Literal['mtgcard'] = 'mtgcard'
-			controls: list[typing.Annotated[ typing.Union[
-					ToolsThumbnailControlTextModel,
-					ToolsThumbnailControlNumberModel,
-					ToolsThumbnailControlComboModel,
-					ToolsThumbnailControlCheckboxModel,
-					ToolsThumbnailControlSeparatorModel,
-					ToolsThumbnailControlMagicCardSelectorModel,
-				], pydantic.Field(discriminator = 'input_type')
-			]] = []
+			class ToolsThumbnailProfileModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+				name: str = ''
+			
+				class ToolsThumbnailControlBaseModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+					input_type: str
+					name: str
+				class ToolsThumbnailControlTextModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['text'] = 'text'
+					default: str = ''
+				class ToolsThumbnailControlNumberModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['number'] = 'number'
+					minimum: int = 0
+					maximum: int = 99
+					default: int = 0
+				class ToolsThumbnailControlComboModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['combo'] = 'combo'
+					options: list[str] = []
+				class ToolsThumbnailControlCheckboxModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['checkbox'] = 'checkbox'
+				class ToolsThumbnailControlSeparatorModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['separator'] = 'separator'
+				class ToolsThumbnailControlMagicCardSelectorModel (ToolsThumbnailControlBaseModel):
+					input_type: typing.Literal['mtgcard'] = 'mtgcard'
+				controls: list[typing.Annotated[ typing.Union[
+						ToolsThumbnailControlTextModel,
+						ToolsThumbnailControlNumberModel,
+						ToolsThumbnailControlComboModel,
+						ToolsThumbnailControlCheckboxModel,
+						ToolsThumbnailControlSeparatorModel,
+						ToolsThumbnailControlMagicCardSelectorModel,
+					], pydantic.Field(discriminator = 'input_type')
+				]] = []
+			
+			profiles: list[ToolsThumbnailProfileModel] = [ ToolsThumbnailProfileModel(
+				name = 'Default Profile',
+				controls = [
+					ToolsThumbnailProfileModel.ToolsThumbnailControlTextModel(
+						name = 'Splash Text',
+						default = 'What a cool deck!',
+					),
+					ToolsThumbnailProfileModel.ToolsThumbnailControlNumberModel(
+						name = 'Hue',
+						minimum = 0,
+						maximum = 359,
+						default = 30,
+					),
+					ToolsThumbnailProfileModel.ToolsThumbnailControlSeparatorModel(
+						name = 'Cards',
+					),
+					ToolsThumbnailProfileModel.ToolsThumbnailControlMagicCardSelectorModel(
+						name = 'Left Card',
+					),
+					ToolsThumbnailProfileModel.ToolsThumbnailControlMagicCardSelectorModel(
+						name = 'Center Card',
+					),
+					ToolsThumbnailProfileModel.ToolsThumbnailControlMagicCardSelectorModel(
+						name = 'Right Card',
+					),
+				],
+			) ]
 		
 		thumbnail: ToolsThumbnailModel = ToolsThumbnailModel()
 

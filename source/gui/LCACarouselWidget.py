@@ -53,7 +53,7 @@ class LCACarouselWidget (LCAWidget):
 			group_layout.addWidget(decrement_btn)
 			if stacked_widget := QStackedWidget():
 				self.__stacked_widget = stacked_widget
-				self.__stacked_widget.currentChanged.connect(self.__evt_current_changed)
+				stacked_widget.currentChanged.connect(self.__evt_current_changed)
 			group_layout.addWidget(stacked_widget)
 			if increment_btn := QPushButton():
 				increment_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -63,12 +63,20 @@ class LCACarouselWidget (LCAWidget):
 			group_layout.addWidget(increment_btn)
 		layout.addWidget(group_widget)
 
-	def addItem (self, widget: QWidget, data: object) -> None:
+	def addItem (self,
+		widget: QWidget,
+		data: object,
+		/,
+		margins: bool = True,
+		alignment: Qt.Alignment = Qt.AlignHCenter,
+	) -> None:
 		self.__datas.append(data)
 		self.__widgets.append(widget)
 		wrapper_widget = QWidget()
 		wrapper_layout = QHBoxLayout(wrapper_widget)
-		wrapper_layout.addWidget(widget, alignment = Qt.AlignHCenter)
+		if not margins:
+			wrapper_layout.setContentsMargins(0, 0, 0, 0)
+		wrapper_layout.addWidget(widget, 1, alignment = alignment)
 		self.__stacked_widget.addWidget(wrapper_widget)
 
 	def clear (self) -> None:

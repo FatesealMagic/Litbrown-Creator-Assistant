@@ -33,5 +33,5 @@ class LCADThreadingHttpServer (http.server.ThreadingHTTPServer):
 
 	def __init__ (self, pid_deque: collections.deque[int]):
 		self.pid_deque = pid_deque
-		super().__init__( ('', Config().network.port), LCADHttpRequestHandler )
+		super().__init__( ('', Config().network.http_serve_port), LCADHttpRequestHandler )
 

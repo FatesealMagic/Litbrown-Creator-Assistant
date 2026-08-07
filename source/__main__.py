@@ -59,6 +59,8 @@ class LCA:
 			{ 'sink': './logs/{time}.log', 'format': self.__LOGGER_FORMAT, 'rotation': '5 MB' },
 		] )
 		I18n.load(Assets.yaml(f'i18n/{Settings().tools.general.language}.yaml'))
+		# TODO can't get this working well with multiple instances running
+		# os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = str(Config().network.chromium_debug_port)
 
 	def run (self) -> None:
 		logger.info(sys.argv)
@@ -70,7 +72,7 @@ class LCA:
 			self.__gui_launch(Util.app_name())
 
 	def __notify_daemon_of_pid (self) -> None:
-		rsp = requests.post(f'http://127.0.0.1:{Config().network.port}/-/register-lcapid/{os.getpid()}')
+		rsp = requests.post(f'http://127.0.0.1:{Config().network.http_serve_port}/-/register-lcapid/{os.getpid()}')
 		assert 200 <= rsp.status_code < 300
 
 	def __cli_launch (self, mode: str) -> None:

@@ -273,7 +273,7 @@ LCACSettingsLCAWidget:
     general:
       title: General
       project_location: "Location of LCA project files:"
-      www_location: "Directory to serve locally (OBS browser source, thumbnail creator, etc.):"
+      www_location: "<html>Directory to serve locally (OBS browser source, thumbnail creator, etc.):<br><i>Requires a <b>FULL RESTART</b> to take effect!</i></html>"
       color_slider: "<html>Accent Hue: <br><i>Will force a slow repaint of all LCA windows when used</i></html>"
     schedule:
       title: Schedule

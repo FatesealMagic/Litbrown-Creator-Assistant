@@ -88,7 +88,7 @@
 		document.getElementById('splash-text').innerText = controls.user['splash-text'];
 		for (card of ['left-card', 'center-card', 'right-card'])
 			document.getElementById(card).src = controls.user[card]?.image_uris?.png ||
-				controls.user[card]?.card_faces[controls.user[card].lca_selected_face].image_uris['png'] ||
+				controls.user[card]?.card_faces[controls.user[card].lca_selected_face].image_uris?.png ||
 				'';
 		document.getElementById('_variant').innerText = variant?.name || '';
 		document.getElementById('filter').style.backgroundColor = `oklch(0.55 0.09 ${controls.user['hue'] || 0} / 1)`;

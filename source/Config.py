@@ -139,7 +139,9 @@ class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
 	tools: ToolsModel = ToolsModel()
 	
 	class NetworkModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
-		port: int = 42967
+		http_serve_port: int = 42967
+		chromium_debug_port: int = 42968
+		websocket_port: int = 42969
 	network: NetworkModel = NetworkModel()
 	
 	class StyleModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):

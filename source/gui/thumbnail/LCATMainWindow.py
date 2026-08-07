@@ -20,6 +20,8 @@
   " 
   """
 
+import pathlib
+
 from loguru import logger
 
 from PySide6.QtCore import *
@@ -39,6 +41,7 @@ from ..LCAMainWindow import *
 from ..LCASideTabWidget import *
 from ..LCATableModel import *
 from ..LCAToggleButtonGroupWidget import *
+from ..LCAWebEngineView import *
 from ...models.LCAProjectFileModel import *
 from ...models.thumbnail.LCATThumbnailModel import *
 
@@ -65,7 +68,7 @@ class LCATMainWindow (LCAMainWindow):
 			main_layout.setContentsMargins(0, 0, 0, 0)
 			main_layout.setSpacing(main_layout.spacing() * 2)
 			main_layout.addStretch()
-			if viewer := QWebEngineView():
+			if viewer := LCAWebEngineView():
 				self.__viewer = viewer
 				viewer.setFixedSize(1280, 720)
 				viewer.setUrl(f'http://127.0.0.1:42967/{Settings().tools.thumbnail.render_file}')
@@ -74,7 +77,7 @@ class LCATMainWindow (LCAMainWindow):
 			if bottomcontainer_widget := QWidget():
 				bottomcontainer_widget.setProperty('css_class', 'accent_bordered')
 				bottomcontainer_layout = QVBoxLayout(bottomcontainer_widget)
-				bottomcontainer_layout.addWidget(LCATBottomControlsWidget(self.__model))
+				bottomcontainer_layout.addWidget(LCATBottomControlsWidget(self.__model, self.__evt_save))
 			main_layout.addWidget(bottomcontainer_widget, 0)
 			main_layout.addStretch()
 		layout.addWidget(main_widget, 0)
@@ -126,4 +129,21 @@ class LCATMainWindow (LCAMainWindow):
 				project = {project or 'null'}
 			);
 		''')
+
+	def __evt_save (self) -> None:
+		match self.__thumbnail_model.method:
+			case 'channel':
+				filename = ''
+			case 'series':
+				filename = f'{self.__thumbnail_model.series_id}/'
+			case 'variant':
+				filename = f'{self.__thumbnail_model.series_id}/{self.__thumbnail_model.variant_id}/'
+			case 'multicast':
+				slug = LCAProjectFileModel.create_slug(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number)
+				filename = f'{slug}/{slug}-'
+		fullpath = pathlib.Path(f'{Settings().tools.general.projects_location}/' +
+			f'{filename}{I18n(self).filename.thumbnail}-{getattr(I18n(self).filename, self.__thumbnail_model.format)}.png')
+		logger.info(f'Saving screenshot to: {fullpath}')
+		fullpath.parent.mkdir(parents = True, exist_ok = True)
+		self.__viewer.save_screenshot(str(pathlib.Path( fullpath )))
 

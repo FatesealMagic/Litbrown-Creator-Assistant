@@ -20,6 +20,8 @@
   " 
   """
 
+import typing
+
 from loguru import logger
 
 from PySide6.QtCore import *
@@ -43,10 +45,15 @@ class LCATBottomControlsWidget (LCAWidget):
 	__BUTTONS_STYLESHEET = 'QPushButton { font-size: 13pt; }'
 
 	__model: LCATableModel[LCATThumbnailModel]
+	__save_callback: typing.Callable[[], []]
 	__mapper: QDataWidgetMapper
 	
-	def __init__ (self, model: LCATableModel[LCATThumbnailModel], *args, **kwargs):
+	def __init__ (self,
+		model: LCATableModel[LCATThumbnailModel],
+		save_callback: typing.Callable[[], []],
+	*args, **kwargs):
 		self.__model = model
+		self.__save_callback = save_callback
 		super().__init__(*args, **kwargs)
 
 	def _setup_layout (self) -> None:
@@ -94,6 +101,7 @@ class LCATBottomControlsWidget (LCAWidget):
 			self.__variant_cbo = variant_cbo
 			self.__mapper.addMapping(variant_cbo, self.__model.get_column_index('variant_id'))
 			variant_cbo.setPlaceholderText(I18n(self).placeholders.variant)
+			variant_cbo.currentDataChanged.connect(self.__update_save_button)
 			variant_cbo.currentDataChanged.connect(self.__mapper.submit)
 		layout.addWidget(variant_cbo)
 		if entry_spin := QSpinBox():
@@ -110,6 +118,7 @@ class LCATBottomControlsWidget (LCAWidget):
 			save_btn.setProperty('css_class', 'big')
 			save_btn.setIcon(Assets.QIcon('icons/save.png'))
 			save_btn.setIconSize(QSize(32, 32))
+			save_btn.clicked.connect(self.__save_callback)
 		layout.addWidget(save_btn)
 		layout.addSpacing(layout.spacing())
 		self.__mapper.setCurrentIndex(0)
@@ -158,7 +167,8 @@ class LCATBottomControlsWidget (LCAWidget):
 					)
 				except ValueError:
 					continue
-			self.__multicast_cbo.setData(LCAProjectFileModel.create_slug(previous_series_id, previous_entry_number))
+			if previous_series_id:
+				self.__multicast_cbo.setData(LCAProjectFileModel.create_slug(previous_series_id, previous_entry_number))
 
 	def __refresh_series_cbo (self, _ = None) -> None:
 		old_series_id = self.__series_cbo.currentData()

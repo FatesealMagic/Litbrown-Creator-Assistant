@@ -464,6 +464,10 @@ LCASSingleMulticastEditingWidget:
 
 LCATMainWindow:
   title: LCA Thumbnail Tool
+  filename:
+    thumbnail: thumbnail
+    video: video
+    stream: stream
 
 LCATBottomControlsWidget:
   formats:

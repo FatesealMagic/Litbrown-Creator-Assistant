@@ -75,6 +75,9 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 
 	def model_post_init (self, __context) -> None:
 		logger.debug('project file model_post_init')
+		if not series_id:
+			import traceback
+			logger.warning(traceback.print_exc())
 		self._fullpath = self.get_fullpath(self.series_id, self.entry_number)
 		self._filelock = self.get_filelock(self.series_id, self.entry_number)
 		self._filelocklock = threading.Lock()
@@ -112,11 +115,14 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 
 	@classmethod
 	def load (cls, slug_or_series_id: str, entry_number: int | str | None = None) -> typing.Self | None:
+		if not slug_or_series_id:
+			return None
 		slug = cls.create_slug(slug_or_series_id, entry_number)
 		series_id, entry_number = cls.create_id(slug)
 		fullpath = cls.get_fullpath(slug)
 		filelock = cls.get_filelock(slug)
 		try:
+			import time
 			with filelock, open(fullpath, encoding='utf-8') as f:
 				data = json.loads(f.read()) or {}
 		except (FileNotFoundError,):
@@ -140,6 +146,8 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 
 	@classmethod
 	def create_slug (cls, slug_or_series_id: str, entry_number: int | str | None = None) -> str:
+		if not slug_or_series_id:
+			raise ValueError(f'create_slug called with falsey slug/series {slug_or_series_id}')
 		return slug_or_series_id if entry_number is None else f'{slug_or_series_id}-{int(entry_number):04d}'
 
 	def get_slug (self) -> str:

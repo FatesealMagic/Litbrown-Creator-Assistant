@@ -138,7 +138,7 @@ class LCATabbedDataViewWidget (LCAWidget):
 			self.__tab_widget.setTabText(i, self.__get_tabname_of_index(i))
 
 	def __name_to_id (self, name: str) -> str:
-		return re.sub(r'[^0-9a-zA-Z]', '', name).lower()
+		return re.sub(r'[\x00-\x1F\x7F<>:"/\\|?*. -]', '', name).lower()
 
 	def __evt_tab_moved (self, from_index: int, to_index: int) -> None:
 		self.model.moveRow(from_index, to_index)

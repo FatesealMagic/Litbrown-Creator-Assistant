@@ -28,6 +28,7 @@ import pydantic
 from .Util import *
 
 class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	disallowed_filename_characters_regex: str = r'[\x00-\x1F\x7F<>:"/\\|?*. -]'
 	
 	class IntegrationsModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
 		

@@ -21,6 +21,8 @@
   """
 
 import functools
+import pathlib
+import re
 
 from loguru import logger
 
@@ -47,6 +49,10 @@ class LCATSideControlsWidget (LCAWidget):
 	
 	__model: LCATableModel[LCATThumbnailModel]
 	__mapper: QDataWidgetMapper
+	
+	__topbar_widget: QStackedWidget
+	__profile_carousel_widget: LCACarouselWidget
+	__side_scroll: QScrollArea
 	
 	def __init__ (self, model: LCATableModel[LCATThumbnailModel], *args, **kwargs):
 		self.__model = model
@@ -91,12 +97,14 @@ class LCATSideControlsWidget (LCAWidget):
 					back_btn.setProperty('css_class', 'big')
 					back_btn.clicked.connect(self.__show_display_panel)
 				editing_layout.addWidget(back_btn)
-				if save_btn := QPushButton(' ' + I18n(self).top_buttons.save):
-					save_btn.setIcon(Assets.QIcon('icons/load.png'))
-				editing_layout.addWidget(save_btn)
-				if load_btn := QPushButton(' ' + I18n(self).top_buttons.load):
-					load_btn.setIcon(Assets.QIcon('icons/save.png'))
-				editing_layout.addWidget(load_btn)
+				if export_btn := QPushButton(' ' + I18n(self).top_buttons.export):
+					export_btn.setIcon(Assets.QIcon('icons/load.png'))
+					export_btn.clicked.connect(self.__evt_export)
+				editing_layout.addWidget(export_btn)
+				if import_btn := QPushButton(' ' + I18n(self).top_buttons.import_):
+					import_btn.setIcon(Assets.QIcon('icons/save.png'))
+					import_btn.clicked.connect(self.__evt_import)
+				editing_layout.addWidget(import_btn)
 				if new_btn := QPushButton(' ' + I18n(self).top_buttons.new):
 					new_btn.setIcon(Assets.QIcon('icons/plus.png'))
 					new_btn.setProperty('css_class', 'big')
@@ -283,4 +291,42 @@ class LCATSideControlsWidget (LCAWidget):
 
 	def __update_thumbnail_user_profile_name (self, new_name: str) -> None:
 		self.__model.setData((0, 'user'), self.__model.data((0, 'user')) | {'Profile': new_name})
+
+	def __evt_export (self) -> None:
+		profile = Settings().tools.thumbnail.profiles[self.__profile_carousel_widget.get_value()]
+		filename, _ = QFileDialog.getSaveFileName(
+			self,
+			I18n(self).export.title + profile.name,
+			f'{re.sub(Config().disallowed_filename_characters_regex, '', profile.name).lower()}.json',
+			I18n(self).export.filter,
+		)
+		if not filename:
+			return
+		logger.info(f'Dumping profile {profile.name} as {filename}')
+		filename = pathlib.Path(filename)
+		filename.parent.mkdir(parents = True, exist_ok = True)
+		with open(filename, 'w', encoding = 'utf-8') as f:
+			f.write(profile.model_dump_json())
+
+	def __evt_import (self) -> None:
+		filename, _ = QFileDialog.getOpenFileName(
+			self,
+			I18n(self).import_.title,
+			'',
+			I18n(self).import_.filter,
+		)
+		if not filename:
+			return
+		logger.info(f'Attempting to read profile located at: {filename}')
+		try:
+			with open(filename, encoding = 'utf-8') as f:
+				profile = Settings().ToolsModel.ToolsThumbnailModel.ToolsThumbnailProfileModel(**json.loads(f.read()))
+		except Exception as e:
+			logger.exception(e)
+			return
+		with Settings():
+			Settings().tools.thumbnail.profiles.append(profile)
+		self.__rebuild_profile_carousel_widget()
+		self.__profile_carousel_widget.set_value(len(Settings().tools.thumbnail.profiles) - 1)
+		self.__topbar_widget.setCurrentIndex(0)
 

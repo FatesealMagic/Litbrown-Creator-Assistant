@@ -489,8 +489,14 @@ LCATSideControlsWidget:
     unlock: Edit Controls
     back: Back
     new: New
-    load: Import
-    save: Export
+    import_: Import
+    export: Export
+  export:
+    title: "Export Profile: "
+    filter: "JSON file (*.json)"
+  import_:
+    title: Import Profile
+    filter: "JSON file (*.json);All Files (*.*)"
   default_control_name: New Control
   default_profile_name: New Profile
   del_profile: Are you sure you wish to delete this profile?

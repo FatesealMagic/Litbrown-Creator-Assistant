@@ -51,14 +51,6 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 			self._mapper.addMapping(mtgformat, self.model.get_column_index('mtgformat'), b'currentText')
 			mtgformat.currentTextChanged.connect(self._mapper.submit)
 		layout.addRow(QLabel(I18n(self).mtgformat), mtgformat)
-		if thumbnail_picker := LCAFilePickerWidget(
-			self.model.data(self.model.createIndex( self._mapper.currentIndex(), self.model.get_column_index('thumbnail') )),
-			LCAFilePickerWidget.Mode.OpenFile,
-			'Image Files (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*.*)',
-		):
-			self._mapper.addMapping(thumbnail_picker, self.model.get_column_index('thumbnail'))
-			thumbnail_picker.changed.connect(self._mapper.submit)
-		layout.addRow(QLabel(I18n(self).thumbnail), thumbnail_picker)
 		if desc_edit := QPlainTextEdit():
 			# TODO this is a hack, figure out why the description is overwritten to '' when the next statement is removed
 			desc_edit.setPlainText(self.model.data(self.model.createIndex(

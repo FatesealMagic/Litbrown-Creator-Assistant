@@ -26,12 +26,29 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWebEngineWidgets import *
 
+from ..common.LCAFileOverwriter import *
+
 class LCAWebEngineView (QWebEngineView):
 
 	def save_screenshot (self, filename: str) -> None:
+		bytearray = QByteArray()
+		buffer = QBuffer(bytearray)
+		buffer.open(QIODevice.OpenModeFlag.WriteOnly)
+		self.grab().save(buffer, 'PNG')
+		buffer.close()
+		with LCAFileOverwriter(filename, binary = True) as f:
+			f.write(bytes(bytearray))
+
+		
+		
+		
+		
+		#pixmap = self.grab()
+		#pixmap.save(filename)
+		'''
 		image = QImage(self.size(), QImage.Format_ARGB32)
 		painter = QPainter(image)
 		self.render(painter, QPoint())
 		painter.end()
-		image.save(filename)
+		image.save(filename)#'''
 

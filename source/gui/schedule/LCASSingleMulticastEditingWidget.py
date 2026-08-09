@@ -66,7 +66,7 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 		if basicinfo_widget := QWidget():
 			basicinfo_layout = QHBoxLayout(basicinfo_widget)
 			basicinfo_layout.setContentsMargins(0, 0, 0, 0)
-			basicinfo_layout.addWidget(QLabel( f'<html><h3>{self.__series.name} {self.__entry_number}' ))
+			basicinfo_layout.addWidget(QLabel( f'<html><h3>{self.__series.name} {self.__entry_number}</h3></html>' ))
 			basicinfo_layout.addStretch()
 			if self.__series.variants:
 				basicinfo_layout.addWidget(QLabel(I18n(self).variant_lbl))
@@ -98,7 +98,6 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 					( I18n(self).public_stream, '~public' ),
 				]:
 					member_combo.addItem(member_name, member_id)
-				member_combo.insertSeparator(2)
 				for tier in reversed(Settings().membership_tiers):
 					member_combo.addItem(tier.name, tier.id)
 				mapper.addMapping(member_combo, self.__model.get_column_index('stream.membertier_id'))
@@ -121,21 +120,6 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 			deschook_txt.setPlaceholderText(I18n(self).deschook_placeholder)
 			mapper.addMapping(deschook_txt, self.__model.get_column_index('stream.description_hook'))
 		layout.addWidget(deschook_txt)
-		if thumbnail_widget := QWidget():
-			self.__thumbnail_widget = thumbnail_widget
-			thumbnail_layout = QHBoxLayout(thumbnail_widget)
-			thumbnail_layout.setContentsMargins(0, 0, 0, 0)
-			thumbnail_layout.addWidget(QLabel(I18n(self).thumbnail + ' '), 0, alignment = Qt.AlignVCenter)
-			if thumbnail_picker := LCAFilePickerWidget(
-				self.__model.data(self.__model.createIndex(mapper.currentIndex(), self.__model.get_column_index('stream.thumbnail'))),
-				LCAFilePickerWidget.Mode.OpenFile,
-				'Image Files (*.png *.jpg *.jpeg *.bmp *.gif);;All Files (*.*)',
-			):
-				self.__thumbnail_picker = thumbnail_picker
-				mapper.addMapping(thumbnail_picker, self.__model.get_column_index('stream.thumbnail'))
-				thumbnail_picker.changed.connect(mapper.submit)
-			thumbnail_layout.addWidget(thumbnail_picker)
-		layout.addWidget(thumbnail_widget)
 		self.__evt_member_combo_data_changed(member_combo.currentData())
 		if url_txt := LCASDeckURLEdit():
 			mapper.addMapping(url_txt, self.__model.get_column_index('decklists'))
@@ -148,14 +132,12 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 	def __evt_variant_combo_index_changed (self, index: int) -> None:
 		logger.debug(index)
 		self.__mtgformat_combo.setCurrentText(self.__series.variants[index].mtgformat)
-		self.__thumbnail_picker.set_value(self.__series.variants[index].thumbnail)
 
 	def __evt_member_combo_data_changed (self, membertier_id: str) -> None:
 		for widget in (
 			self.__dateandtime_widget,
 			self.__titlehook_txt,
 			self.__deschook_txt,
-			self.__thumbnail_widget,
 		):
 			widget.hide() if (not membertier_id or membertier_id == '~nostream') else widget.show()
 

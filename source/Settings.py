@@ -129,7 +129,6 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 			id: str = 'newvariant'
 			mtgformat: str = ''
 			name: str = 'New Variant'
-			thumbnail: str = ''
 		variants: list[VariantModel] = []
 		
 	series: list[SeriesModel] = []

@@ -79,6 +79,8 @@ class LCAMoxfieldIntegration (LCAIntegration):
 					break
 				elif rsp.status_code in self._RETRIABLE_STATUS_CODES:
 					self._exponential_wait(attempt, rsp.status_code)
+				elif rsp.status_code == 403:
+					raise LCAIntegrationUserForbiddenError
 				else:
 					logger.error(f'Unexpected error while contacting Moxfield: {rsp.status_code} {rsp.text}')
 					logger.error(rsp.request.url)

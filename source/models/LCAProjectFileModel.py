@@ -75,9 +75,6 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 
 	def model_post_init (self, __context) -> None:
 		logger.debug('project file model_post_init')
-		if not series_id:
-			import traceback
-			logger.warning(traceback.print_exc())
 		self._fullpath = self.get_fullpath(self.series_id, self.entry_number)
 		self._filelock = self.get_filelock(self.series_id, self.entry_number)
 		self._filelocklock = threading.Lock()
@@ -200,8 +197,8 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 			LCATextTemplate.VariableGroup.DECKLISTS,
 		).substitute(
 			decklist = self.__decklist_to_text(decklist),
-			decklist_link = decklist.url,
-			decklist_name = decklist.title,
+			decklist_link = decklist.url or '',
+			decklist_name = decklist.title or '',
 			manapool_link = self.__decklist_to_manapool_link(decklist),
 		) for decklist in self.decklists ])
 
@@ -259,4 +256,55 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 
 	def save_file_text (self, file: str, contents: str) -> None:
 		return self.__save_file(file, contents, 'w', 'utf-8')
+
+	def update_thumbnail_path (self, format: str) -> tuple[pathlib.Path, str]:
+		if format not in ('stream', 'video'):
+			raise ValueError(f'Invalid format passed: {format}')
+		if (path := self.get_thumbnail_path(
+			format = format,
+			slug = self.get_slug(),
+		)).is_file():
+			return (path, 'multicast')
+		elif self.variant_id and (path := self.get_thumbnail_path(
+			format = format,
+			series_id = self.series_id,
+			variant_id = self.variant_id,
+		)).is_file():
+			return (path, 'variant')
+		elif (path := self.get_thumbnail_path(
+			format = format,
+			series_id = self.series_id,
+		)).is_file():
+			return (path, 'series')
+		elif (path := self.get_thumbnail_path(
+			format = format,
+		)).is_file():
+			return (path, 'channel')
+		return (None, None)
+
+	@classmethod
+	def get_thumbnail_path (cls, /,
+		format: str,
+		slug: str | None = None,
+		series_id: str | None = None,
+		variant_id: str | None = None,
+	) -> pathlib.Path:
+		if format not in ('stream', 'video'):
+			raise ValueError(f'Invalid format passed: {format}')
+		if slug:
+			# multicast
+			filename = f'{slug}/{slug}-'
+		elif series_id and variant_id:
+			# variant
+			filename = f'{series_id}/{variant_id}/'
+		elif series_id:
+			# series
+			filename = f'{series_id}/'
+		else:
+			# channel
+			filename = ''
+		return pathlib.Path(
+			f'{Settings().tools.general.projects_location}/' +
+				f'{filename}{I18n(cls).thumbnail.filename.thumbnail}-{getattr(I18n(cls).thumbnail.filename, format)}.png'
+		)
 

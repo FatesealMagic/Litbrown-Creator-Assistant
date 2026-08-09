@@ -20,23 +20,45 @@
   " 
   """
 
+import pathlib
+import shutil
+import tempfile
 import typing
 
-from loguru import logger
-import munch
-import yaml
+class LCAFileOverwriter:
 
-class I18n (munch.Munch):
+	__filename: str
+	__text: bool
+	__encoding: str | None
+	__file: typing.IO
 	
-	__i18n: munch.Munch
-	
-	def __init__ (self, key: typing.Type | object):
-		if type(key).__name__ in ('type', 'ObjectType', 'ModelMetaclass'):
-			super().__init__(self.__i18n[key.__name__])
-		else:
-			super().__init__(self.__i18n[type(key).__name__])
+	def __init__ (self,
+		filename: str,
+		/,
+		text: bool = False,
+		binary: bool = False,
+		encoding: str | None = None,
+	):
+		if not text ^ binary:
+			raise ValueError(f'Need one of text {text} or binary {binary} to be true, not both or neither')
+		self.__filename = filename
+		self.__text = text
+		self.__encoding = encoding
 
-	@classmethod
-	def load (cls, i18n_object: dict) -> None:
-		cls.__i18n = munch.munchify(i18n_object)
+	def __enter__ (self):
+		self.__file = tempfile.NamedTemporaryFile(
+			mode = 'w' if self.__text else 'wb',
+			encoding = self.__encoding,
+			delete = False,
+		)
+		return self.__file
+
+	def __exit__ (self, exc_type, exc_val, exc_tb):
+		tempname = self.__file.name
+		try:
+			self.__file.close()
+		except OsError:
+			pass
+		pathlib.Path(self.__filename).parent.mkdir(parents = True, exist_ok = True)
+		shutil.move(tempname, self.__filename)
 

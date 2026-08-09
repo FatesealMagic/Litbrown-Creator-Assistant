@@ -65,7 +65,7 @@ class LCACarouselWidget (LCAWidget):
 
 	def addItem (self,
 		widget: QWidget,
-		data: object,
+		data: object | None = None,
 		/,
 		margins: bool = True,
 		alignment: Qt.Alignment = Qt.AlignHCenter,

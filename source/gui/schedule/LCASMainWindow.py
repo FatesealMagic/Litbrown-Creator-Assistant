@@ -36,10 +36,13 @@ from ...I18n import *
 from ...Assets import *
 from ...Util import *
 
+from ..LCACarouselWidget import *
 from ..LCAMainWindow import *
 from ..LCAPopupMessage import *
 from ..LCASideTabWidget import *
+from ..LCATableModel import *
 from ..LCAWebEngineView import *
+from .LCASDetailsEditingWidget import *
 from .LCASScheduleEditingWidget import *
 from .LCASPublishManagerWidget import *
 from ...models.LCAProjectFileModel import *
@@ -48,7 +51,7 @@ from ...threads.common.LCADeckFetcherThread import *
 
 class LCASMainWindow (LCAMainWindow):
 	
-	__TAB_NAMES = ('create', 'preview', 'publish')
+	__TAB_NAMES = ('create', 'preview', 'details', 'publish')
 	__BTN_STYLESHEET = 'QPushButton { font-size: 14pt; font-weight: bold; qproperty-iconSize: 20px; }'
 	
 	__model: LCATableModel[LCAProjectFileModel]
@@ -60,7 +63,7 @@ class LCASMainWindow (LCAMainWindow):
 			sys.exit() # QCoreApplication.exit() doesn't work here...
 		self.setWindowIcon(Assets.QIcon('icons/schedule.ico'))
 		self.setWindowTitle(I18n(self).title)
-		self.resize(800, 800)
+		self.resize(820, 820)
 		self.__model = LCATableModel(LCAProjectFileModel)
 
 	def _setup_layout (self) -> None:
@@ -82,7 +85,7 @@ class LCASMainWindow (LCAMainWindow):
 			self.__preview_btn = preview_btn
 			preview_btn.setStyleSheet(self.__BTN_STYLESHEET)
 			preview_btn.setIcon(Assets.QIcon('icons/next.png'))
-			preview_btn.clicked.connect(self.__evt_preview_clicked)
+			preview_btn.clicked.connect(self.__evt_create_moveto_preview)
 		layout.addWidget(preview_btn)
 		return widget
 
@@ -102,29 +105,38 @@ class LCASMainWindow (LCAMainWindow):
 		if notes_text := QPlainTextEdit():
 			self.__notes_text = notes_text
 			notes_text.setPlaceholderText(I18n(self).tabs.preview.notes_placeholder)
-			'''doc = self.__notes_text.document()
-			fm = QFontMetrics(doc.defaultFont())
-			margins = self.__notes_text.contentsMargins()
-			self.__notes_text.setFixedHeight(
-				fm.lineSpacing() * 3 +
-				(doc.documentMargin() + self.__notes_text.frameWidth()) * 2 +
-				margins.top() + margins.bottom()
-			)'''
 		layout.addWidget(notes_text)
 		if buttons_widget := QWidget():
 			buttons_widget.setStyleSheet(self.__BTN_STYLESHEET)
 			buttons_layout = QHBoxLayout(buttons_widget)
 			buttons_layout.setContentsMargins(0, 0, 0, 0)
 			if back_btn := QPushButton(' ' + I18n(self).tabs.preview.back_btn):
-				back_btn.setIcon(Assets.QIcon('icons/undo.png'))
-				back_btn.clicked.connect(self.__evt_revise_clicked)
+				back_btn.setIcon(Assets.QIcon('icons/prev.png'))
+				back_btn.clicked.connect(self.__evt_preview_moveto_create)
 			buttons_layout.addWidget(back_btn)
-			if movetopublish_btn := QPushButton(' ' + I18n(self).tabs.preview.publish_btn):
-				self.__movetopublish_btn = movetopublish_btn
-				movetopublish_btn.setIcon(Assets.QIcon('icons/next.png'))
-				movetopublish_btn.setEnabled(False)
-				movetopublish_btn.clicked.connect(self.__evt_movetopublish_clicked)
-			buttons_layout.addWidget(movetopublish_btn)
+			if movetodetails_btn := QPushButton(' ' + I18n(self).tabs.preview.details_btn):
+				self.__movetodetails_btn = movetodetails_btn
+				movetodetails_btn.setIcon(Assets.QIcon('icons/save.png'))
+				movetodetails_btn.setEnabled(False)
+				movetodetails_btn.clicked.connect(self.__evt_preview_moveto_details)
+			buttons_layout.addWidget(movetodetails_btn)
+		layout.addWidget(buttons_widget)
+		return widget
+
+	def __build_details_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		if details_widget := LCASDetailsEditingWidget(self.__model):
+			self.__details_widget = details_widget
+		layout.addWidget(details_widget)
+		if buttons_widget := QWidget():
+			buttons_widget.setStyleSheet(self.__BTN_STYLESHEET)
+			buttons_layout = QHBoxLayout(buttons_widget)
+			buttons_layout.setContentsMargins(0, 0, 0, 0)
+			if publish_btn := QPushButton(' ' + I18n(self).tabs.details.publish_btn):
+				publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
+				publish_btn.clicked.connect(self.__evt_details_moveto_publish)
+			buttons_layout.addWidget(publish_btn)
 		layout.addWidget(buttons_widget)
 		return widget
 
@@ -138,25 +150,24 @@ class LCASMainWindow (LCAMainWindow):
 			buttons_widget.setStyleSheet(self.__BTN_STYLESHEET)
 			buttons_layout = QHBoxLayout(buttons_widget)
 			buttons_layout.setContentsMargins(0, 0, 0, 0)
-			if back_btn := QPushButton(' ' + I18n(self).tabs.publish.back_btn):
-				self.__back_btn = back_btn
-				back_btn.setIcon(Assets.QIcon('icons/undo.png'))
-				back_btn.clicked.connect(self.__evt_backbtn_clicked)
-			buttons_layout.addWidget(back_btn)
 			if publish_btn := QPushButton(' ' + I18n(self).tabs.publish.publish_btn):
 				self.__publish_btn = publish_btn
 				publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
-				publish_btn.clicked.connect(self.__evt_finalize_publish)
+				publish_btn.clicked.connect(self.__evt_publish_finalize)
 			buttons_layout.addWidget(publish_btn)
 		layout.addWidget(buttons_widget)
 		return widget
 
-	def __evt_preview_clicked (self) -> None:
+	def __evt_create_moveto_preview (self) -> None:
+		if not len(self.__model.get_data_reference()):
+			LCAPopupMessage.info(I18n(self).errors.need_a_multicast)
+			return
 		self.setEnabled(False)
 		logger.debug(self.__model)
 		self.__decklists_thread_group = LCAThreadGroup(self.__create_decklist_threads())
 		self.__decklists_thread_group.error.connect(self.__signal_decklists_error)
 		self.__decklists_thread_group.result.connect(self.__signal_decklists_result)
+		self.__decklists_thread_group.complete.connect(self.__signal_decklists_complete)
 		self.__decklists_thread_group.start()
 
 	def __create_decklist_threads (self) -> list[LCADeckFetcherThread]:
@@ -167,17 +178,25 @@ class LCASMainWindow (LCAMainWindow):
 		return ret
 
 	def __signal_decklists_error (self, error: tuple[LCAThread, Exception, dict[LCAThread, object]]) -> None:
-		self.setEnabled(True)
 		if type(error[1]) is ValueError:
 			LCAPopupMessage.error(f'{I18n(self).errors.decklist_bad_url} {error[1]}')
+		elif type(error[1]) is LCAIntegrationNotInitializedError:
+			if not self.isEnabled():
+				LCAPopupMessage.error(I18n(self).errors.decklist_notinitialized)
+		elif type(error[1]) is LCAIntegrationUserForbiddenError:
+			if not self.isEnabled():
+				LCAPopupMessage.error(I18n(self).errors.decklist_unauthorized)
 		else:
 			LCAPopupMessage.error(I18n(self).errors.decklist_other)
 
-	def __signal_decklists_result (self, result: dict[LCAThread, object]) -> None:
+	def __signal_decklists_result (self, _) -> None:
+		pass
+
+	def __signal_decklists_complete (self, _) -> None:
 		self.setEnabled(True)
 		if not self.__generate_stream_texts():
 			return
-		self.__movetopublish_btn.setEnabled(False)
+		self.__movetodetails_btn.setEnabled(False)
 		self.centralWidget().setCurrentIndex(1)
 		self.__set_viewer_data()
 
@@ -194,10 +213,6 @@ class LCASMainWindow (LCAMainWindow):
 				return False
 		return True
 
-	def __signal_decklists_complete (self, success: bool) -> None:
-		self.setEnabled(True)
-		self.centralWidget().setCurrentIndex(1 if success else 0)
-
 	def __set_viewer_data (self) -> None:
 		self.__viewer.page().runJavaScript(f'''
 			((data) => {Settings().tools.schedule.render_function}(data))({{
@@ -205,26 +220,47 @@ class LCASMainWindow (LCAMainWindow):
 				'settings': {Settings().model_dump_json()},
 			}});
 		''')
-		self.__movetopublish_btn.setEnabled(True)
+		self.__movetodetails_btn.setEnabled(True)
 
-	def __evt_revise_clicked (self) -> None:
-		self.__movetopublish_btn.setEnabled(False)
+	def __evt_preview_moveto_create (self) -> None:
+		self.__movetodetails_btn.setEnabled(False)
 		self.centralWidget().setCurrentIndex(0)
 
-	def __evt_backbtn_clicked (self) -> None:
-		self.centralWidget().setCurrentIndex(1)
-
-	def __evt_movetopublish_clicked (self) -> None:
-		self.__viewer.save_screenshot(Settings().tools.schedule.output_file)
-		self.centralWidget().setCurrentIndex(2)
-
-	def __evt_finalize_publish (self) -> None:
-		self.__back_btn.setEnabled(False)
-		self.__publish_btn.setEnabled(False)
+	def __evt_preview_moveto_details (self) -> None:
 		for project in self.__model.get_data_reference():
-			logger.debug(project)
 			with project:
 				pass # Save each project
+		self.__details_widget.refresh()
+		self.centralWidget().setCurrentIndex(2)
+		self.__take_viewer_screenshot()
+
+	def __take_viewer_screenshot (self) -> None:
+		# TODO See if there is a better way to accomplish this.
+		# I wanted to take 1024x1024 screenshots while only displaying a 512x512 view to the user.
+		# As far as I can tell, doing this requires an ugly resize of the underlying Chromium instance.
+		# Detach and resize
+		self.__viewer.setZoomFactor(1)
+		self.__viewer.setParent(None)
+		self.__viewer.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+		self.__viewer.setFixedSize(1024, 1024)
+		self.__viewer.show()
+		# Wait 2 seconds ... I couldn't figure out how to accurately see if the window had resized or not
+		loop = QEventLoop()
+		QTimer.singleShot(2000, loop.quit)
+		loop.exec()
+		# Save the screenshot and destroy the underlying instance
+		self.__viewer.save_screenshot(Settings().tools.schedule.output_file)
+		self.__viewer.setUrl('about:blank')
+		QCoreApplication.processEvents()
+		self.__viewer.deleteLater()
+		self.__viewer = None
+
+	def __evt_details_moveto_publish (self) -> None:
+		self.centralWidget().setCurrentIndex(3)
+
+	def __evt_publish_finalize (self) -> None:
+		self.__back_btn.setEnabled(False)
+		self.__publish_btn.setEnabled(False)
 		self.__publishmanager_widget.do_publish()
 
 	def __get_publish_thread_params (self) -> dict:

@@ -133,16 +133,25 @@ class LCATMainWindow (LCAMainWindow):
 	def __evt_save (self) -> None:
 		match self.__thumbnail_model.method:
 			case 'channel':
-				filename = ''
+				fullpath = LCAProjectFileModel.get_thumbnail_path(
+					format = self.__thumbnail_model.format,
+				)
 			case 'series':
-				filename = f'{self.__thumbnail_model.series_id}/'
+				fullpath = LCAProjectFileModel.get_thumbnail_path(
+					format = self.__thumbnail_model.format,
+					series_id = self.__thumbnail_model.series_id,
+				)
 			case 'variant':
-				filename = f'{self.__thumbnail_model.series_id}/{self.__thumbnail_model.variant_id}/'
+				fullpath = LCAProjectFileModel.get_thumbnail_path(
+					format = self.__thumbnail_model.format,
+					series_id = self.__thumbnail_model.series_id,
+					variant_id = self.__thumbnail_model.variant_id,
+				)
 			case 'multicast':
-				slug = LCAProjectFileModel.create_slug(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number)
-				filename = f'{slug}/{slug}-'
-		fullpath = pathlib.Path(f'{Settings().tools.general.projects_location}/' +
-			f'{filename}{I18n(self).filename.thumbnail}-{getattr(I18n(self).filename, self.__thumbnail_model.format)}.png')
+				fullpath = LCAProjectFileModel.get_thumbnail_path(
+					format = self.__thumbnail_model.format,
+					slug = LCAProjectFileModel.create_slug(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number),
+				)
 		logger.info(f'Saving screenshot to: {fullpath}')
 		fullpath.parent.mkdir(parents = True, exist_ok = True)
 		self.__viewer.save_screenshot(str(pathlib.Path( fullpath )))

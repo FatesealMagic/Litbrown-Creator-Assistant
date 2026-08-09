@@ -33,6 +33,13 @@ LCAPopupMessage:
   error_title: "ERROR - Litbrown Creator Assistant"
   noauth_text: Could not contact LCA microservices. Please make sure you are connected to the internet, then try again.
 
+LCAProjectFileModel:
+  thumbnail:
+    filename:
+      thumbnail: thumbnail
+      video: video
+      stream: stream
+
 LCATabbedDataViewWidget:
   name_hint: New Name
   add_btn: Add New
@@ -397,7 +404,10 @@ LCASMainWindow:
   title: LCA Schedule Tool
   errors:
     need_content_series: Please create a content series before attempting to create a schedule.
+    need_a_multicast: Please set up at least one multicast and try again.
     decklist_bad_url: Could not process unsupported decklist URL
+    decklist_notinitialized: You haven't yet entered your Moxfield User-Agent. Please update it in the Configure tool and try again.
+    decklist_unauthorized: Moxfield doesn't recognize your User-Agent. Please update it in the Configure tool and try again.
     decklist_other: Unexpected error encountered during decklist parsing.
     bad_template: Encountered bad template for series ${series_name}. Please check your templates for this series and try again.
   tabs:
@@ -409,14 +419,26 @@ LCASMainWindow:
       back_btn: Revise Schedule
       title_placeholder: Schedule title (displayed on some integrations)
       notes_placeholder: Public notes to post with your schedule...
-      publish_btn: Publishing Settings
+      details_btn: SAVE && Review Details
       render_error: Schedule rendering failed. Please see the logs for details.
+    details:
+      name: Details
+      publish_btn: FINALIZE && Review Publish Settings
     publish:
       name: Publish
-      back_btn: Preview Schedule
-      publish_btn: FINALIZE AND PUBLISH
+      publish_btn: PUBLISH SCHEDULE
       youtube_broadcastpublish: Schedule Livestreams
       twitch_updatestreamschedule: Update Stream Schedule
+
+LCASDetailsEditingWidget:
+  thumbnail:
+    launch: Launch Thumbnail Tool
+    source:
+      none: NO THUMBNAIL
+      channel: Default for Channel
+      series: Default for Series
+      variant: Default for Variant
+      multicast: Dedicated Thumbnail
 
 LCASPublishManagerWidget:
   patreon:

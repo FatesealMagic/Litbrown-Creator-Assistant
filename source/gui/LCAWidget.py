@@ -31,22 +31,3 @@ class LCAWidget (QWidget):
 	def _setup_layout (self) -> None:
 		raise NotImplementedError
 
-	def _build_hsep (self) -> QFrame:
-		return self._build_sep(QFrame.HLine)
-
-	def _build_vsep (self) -> QFrame:
-		return self._build_sep(QFrame.VLine)
-
-	def _build_sep (self, shape: QFrame.Shape) -> QFrame:
-		widget = QWidget()
-		layout = QVBoxLayout(widget)
-		if shape == QFrame.VLine:
-			layout.setContentsMargins(layout.spacing(), 0, layout.spacing(), 0)
-		else:
-			layout.setContentsMargins(0, layout.spacing(), 0, layout.spacing())
-		sep = QFrame()
-		sep.setFrameShape(shape)
-		sep.setFrameShadow(QFrame.Sunken)
-		layout.addWidget(sep)
-		return widget
-

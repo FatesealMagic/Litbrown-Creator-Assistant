@@ -31,6 +31,7 @@ from ....I18n import *
 from ....Settings import *
 from ....Util import *
 
+from ...LCASeparator import *
 from ...LCAWidget import *
 from ...LCAConnectionLabelWidget import *
 
@@ -52,7 +53,7 @@ class LCACSettingsAffiliatesWidget (LCAWidget):
 			affiliate_layout.setHorizontalSpacing(affiliate_layout.horizontalSpacing() * 3)
 			for i, affiliate in enumerate(('manapool', 'cardhoarder', 'cardkingdom', 'starcitygames', 'toamagic')):
 				if i:
-					affiliate_layout.addRow(self._build_hsep())
+					affiliate_layout.addRow(LCASeparator.horizontal())
 				if affiliate_text_widget := QWidget():
 					affiliate_text_layout = QVBoxLayout(affiliate_text_widget)
 					affiliate_text_layout.setContentsMargins(0, 0, 0, 0)

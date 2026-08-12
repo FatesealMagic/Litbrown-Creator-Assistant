@@ -36,15 +36,3 @@ class LCAMainWindow (QMainWindow):
 	def _setup_layout (self) -> None:
 		raise NotImplementedError
 
-	def _build_hsep (self) -> QFrame:
-		return self._build_sep(QFrame.HLine)
-
-	def _build_vsep (self) -> QFrame:
-		return self._build_sep(QFrame.VLine)
-
-	def _build_sep (self, shape: QFrame.Shape) -> QFrame:
-		sep = QFrame()
-		sep.setFrameShape(shape)
-		sep.setFrameShadow(QFrame.Sunken)
-		return sep
-

@@ -33,10 +33,11 @@ from ...I18n import *
 from ...Assets import *
 from ...Util import *
 
-from ...common.LCAProjectWatcher import *
 from ..LCAComboBox import *
 from ..LCATableModel import *
 from ..LCAToggleButtonGroupWidget import *
+from ..LCASeparator import *
+from ...common.LCAProjectWatcher import *
 from ...models.LCAProjectFileModel import *
 from ...models.thumbnail.LCATThumbnailModel import *
 
@@ -72,7 +73,7 @@ class LCATBottomControlsWidget (LCAWidget):
 			method_btns.changed.connect(lambda _ : self.__mapper.submit())
 			method_btns.changed.connect(self.__refresh_bottom_controls)
 		layout.addWidget(method_btns)
-		layout.addWidget(self._build_vsep())
+		layout.addWidget(LCASeparator.vertical())
 		if format_btns := LCAToggleButtonGroupWidget(rows = 2):
 			format_btns.setStyleSheet(self.__BUTTONS_STYLESHEET)
 			format_btns.addButton(I18n(self).formats.stream, 'stream')

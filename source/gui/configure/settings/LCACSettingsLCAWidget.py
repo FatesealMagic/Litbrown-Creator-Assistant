@@ -31,6 +31,7 @@ from ....I18n import *
 from ....Settings import *
 from ....Util import *
 
+from ...LCASeparator import *
 from ...LCAWidget import *
 from ...LCAFilePickerWidget import *
 
@@ -53,7 +54,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 		):
 			Settings().bind(projectdir_location, 'tools.general.projects_location')
 		layout.addWidget(projectdir_location)
-		layout.addWidget(self._build_hsep())
+		layout.addWidget(LCASeparator.horizontal())
 		layout.addWidget(QLabel(I18n(self).tabs.general.www_location))
 		if wwwdir_location := LCAFilePickerWidget(
 			Settings().tools.general.www_directory,
@@ -61,14 +62,14 @@ class LCACSettingsLCAWidget (LCAWidget):
 		):
 			Settings().bind(wwwdir_location, 'tools.general.www_directory')
 		layout.addWidget(wwwdir_location)
-		layout.addWidget(self._build_hsep())
+		layout.addWidget(LCASeparator.horizontal())
 		layout.addWidget(QLabel(I18n(self).tabs.general.color_slider))
 		if color_slider := QSlider(Qt.Orientation.Horizontal):
 			color_slider.setMaximum(359)
 			color_slider.setProperty('css_class', 'rainbow')
 			Settings().bind(color_slider, 'tools.general.accent_hue')
 		layout.addWidget(color_slider)
-		layout.addWidget(self._build_hsep())
+		layout.addWidget(LCASeparator.horizontal())
 		'''if timedisplay_cbo := LCAComboBox():
 			for text, val in (('9:23 AM', 'h:mm AP'), ('09:23', 'hh:mm')):
 				timedisplay_cbo.addItem(text, val)

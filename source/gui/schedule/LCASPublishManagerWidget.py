@@ -35,6 +35,7 @@ from ...Util import *
 
 from ..LCAConnectionLabelWidget import *
 from ..LCAPopupMessage import *
+from ..LCASeparator import *
 from ..LCATaskTrackerWidget import *
 from ..LCAWidget import *
 from ...integrations.LCAIntegrationErrors import *
@@ -77,7 +78,7 @@ class LCASPublishManagerWidget (LCAWidget):
 						self.__task_widgets.append(youtube_broadcastpublish_widget)
 					youtubemgr_layout.addWidget(youtube_broadcastpublish_widget)
 				publishmgr_layout.addWidget(youtubemgr_widget)
-				publishmgr_layout.addWidget(self._build_hsep())
+				publishmgr_layout.addWidget(LCASeparator.horizontal())
 				if twitchmgr_widget := QWidget():
 					twitchmgr_layout = QVBoxLayout(twitchmgr_widget)
 					twitchmgr_layout.setSpacing(twitchmgr_layout.spacing() * 2)
@@ -91,7 +92,7 @@ class LCASPublishManagerWidget (LCAWidget):
 						self.__task_widgets.append(twitch_updatestreamschedule_widget)
 					twitchmgr_layout.addWidget(twitch_updatestreamschedule_widget)
 				publishmgr_layout.addWidget(twitchmgr_widget)
-				publishmgr_layout.addWidget(self._build_hsep())
+				publishmgr_layout.addWidget(LCASeparator.horizontal())
 				if patreonmgr_widget := QWidget():
 					patreonmgr_layout = QVBoxLayout(patreonmgr_widget)
 					patreonmgr_layout.setSpacing(patreonmgr_layout.spacing() * 2)

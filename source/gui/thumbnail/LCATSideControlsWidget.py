@@ -38,6 +38,7 @@ from ...Util import *
 
 from .LCATSideControlEditorWidget import *
 from ..LCAMagicCardSelectorWidget import *
+from ..LCASeparator import *
 from ..LCATableModel import *
 from ..LCAToggleButtonGroupWidget import *
 from ..LCAWidget import *
@@ -138,7 +139,7 @@ class LCATSideControlsWidget (LCAWidget):
 							control_layout.addWidget(checkbox_widget)
 						case 'separator':
 							control_layout.addSpacing(control_layout.spacing())
-							control_layout.addWidget(self._build_hsep())
+							control_layout.addWidget(LCASeparator.horizontal())
 							if control_name := QLabel(control.name):
 								control_name.setWordWrap(True)
 								control_name.setStyleSheet('font-size: 13pt; font-weight: bold;')
@@ -217,7 +218,7 @@ class LCATSideControlsWidget (LCAWidget):
 			edit_layout = QVBoxLayout(edit_widget)
 			for control_index, control in enumerate(Settings().tools.thumbnail.profiles[profile_index].controls):
 				if edit_layout.count():
-					edit_layout.addWidget(self._build_hsep())
+					edit_layout.addWidget(LCASeparator.horizontal())
 				edit_layout.addWidget( LCATSideControlEditorWidget(
 					profile_index,
 					control_index,

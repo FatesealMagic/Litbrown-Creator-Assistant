@@ -20,34 +20,37 @@
   " 
   """
 
+import typing
+
 from loguru import logger
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ..I18n import *
+class LCASeparator (QWidget):
 
-from .LCAMainWindow import *
+	__shape: QFrame.Shape
 
-class LCADialog (QDialog):
-
-	def __init__ (self,
-		parent: QWidget | None = None,
-		title: str | None = None,
-		modality: Qt.WindowModality = Qt.WindowModality.ApplicationModal,
-	*args, **kwargs):
-		super().__init__(parent or self.__determine_parent_window())
-		self.setWindowTitle(title or I18n(self).dialog_title)
-		self.setWindowModality(modality)
-		self._setup_layout()
-
-	def __determine_parent_window (self) -> LCAMainWindow | None:
-		for widget in QApplication.topLevelWidgets():
-			if isinstance(widget, LCAMainWindow):
-				return widget
-		return None
+	def __init__ (self, shape: QFrame.Shape):
+		self.__shape = shape
 
 	def _setup_layout (self) -> None:
-		raise NotImplementedError
+		layout = QVBoxLayout(self)
+		layout.setContentsMargins(
+			layout.spacing() if self.__shape == QFrame.VLine else 0,
+			layout.spacing() if self.__shape == QFrame.HLine else 0,
+			layout.spacing() if self.__shape == QFrame.VLine else 0,
+			layout.spacing() if self.__shape == QFrame.HLine else 0,
+		)
+		if sep := QFrame():
+			sep.setFrameShape(self.__shape)
+			sep.setFrameShadow(QFrame.Sunken)
+		layout.addWidget(sep)
+
+	@classmethod
+	def horizontal (cls) -> typing.Self:
+		return cls(QFrame.HLine)
+
+	@classmethod
+	def vertical (cls) -> typing.Self:
+		return cls(QFrame.VLine)
 

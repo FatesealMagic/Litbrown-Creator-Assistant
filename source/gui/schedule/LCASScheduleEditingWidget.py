@@ -23,6 +23,7 @@
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 
+from ..LCASeparator import *
 from ..LCAWidget import *
 from ..LCAPopupMessage import *
 from .LCASSingleMulticastEditingWidget import *
@@ -104,7 +105,7 @@ class LCASScheduleEditingWidget (LCAWidget):
 			}
 		)
 		if self.__model.rowCount() > 1:
-			self.__multicasts_widget.layout().insertWidget(self.__multicasts_widget.layout().count() - 1, self._build_hsep())
+			self.__multicasts_widget.layout().insertWidget(self.__multicasts_widget.layout().count() - 1, LCASeparator.horizontal())
 		self.__multicasts_widget.layout().insertWidget(
 			self.__multicasts_widget.layout().count() - 1,
 			LCASSingleMulticastEditingWidget( self.__model, self.__model.rowCount() - 1 )

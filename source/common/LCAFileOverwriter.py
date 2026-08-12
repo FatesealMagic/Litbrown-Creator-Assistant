@@ -39,7 +39,7 @@ class LCAFileOverwriter:
 		binary: bool = False,
 		encoding: str | None = None,
 	):
-		if not text ^ binary:
+		if not (text ^ binary):
 			raise ValueError(f'Need one of text {text} or binary {binary} to be true, not both or neither')
 		self.__filename = filename
 		self.__text = text

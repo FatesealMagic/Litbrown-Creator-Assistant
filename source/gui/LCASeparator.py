@@ -26,7 +26,9 @@ from loguru import logger
 
 from PySide6.QtWidgets import *
 
-class LCASeparator (QWidget):
+from .LCAWidget import *
+
+class LCASeparator (LCAWidget):
 
 	__shape: QFrame.Shape
 

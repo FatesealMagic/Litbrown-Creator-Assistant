@@ -32,6 +32,7 @@ class LCASeparator (QWidget):
 
 	def __init__ (self, shape: QFrame.Shape):
 		self.__shape = shape
+		super().__init__()
 
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)

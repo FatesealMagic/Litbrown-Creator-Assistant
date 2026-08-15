@@ -97,6 +97,10 @@ LCATextTemplate:
       manapool_link:
         The link to load this decklist into cart bulk entry on Mana Pool, formatted to include your affiliate code if you have one.
     timestamps:
+      segment_name:
+        The name of this segment.
+      timestamp:
+        "The timestamp for the beginning of this segment, in H:mm:ss format."
     stream:
       decklists:
         Formatted decklists associated with the content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
@@ -314,13 +318,16 @@ LCACSettingsOrganizationSeriesWidget:
     general:
       tab_title: General
       name: Name
-      id: Id (cannot be changed)
+      id: Id (immutable)
       stream_duration: Stream Duration (minutes)
     variants:
       typename: Series Variant
       tab_title: Variants
       newid: newvariant
       newname: New Series Variant
+    segments:
+      typename: Segment
+      tab_title: Segments
     videoinfo:
       tab_title: Output Info
       format: Video Format
@@ -371,12 +378,28 @@ LCACSettingsOrganizationSeriesWidget:
   id_default: newseries
   title_default: New series
 
+LCACSettingsOrganizationSeriesSegmentWidget:
+  name: Name
+  id: Id (immutable)
+
 LCACSettingsOrganizationSeriesVariantWidget:
   mtgformat: Default MTG Format
   name: Name
-  id: Id
+  id: Id (immutable)
   desc: Description
   thumbnail: Thumbnail
+
+LCACObsWidget:
+  info: <html>LCA requires access to at least two separate portably-installed OBS instances &mdash; one for recording, and another for streaming and rendering videos and clips. You may also separate out streaming, video rendering, and clip rendering into their own separate portable OBS installations as you see fit. Please ensure the Websocket servers for each of these instances are properly configured, then enter their Connect Info below. You will not need to change the Host unless you are running OBS and LCA on separate machines.
+  connect:
+    host: Host
+    port: Port
+    pswd: Password
+  instances:
+    record: Recording
+    stream: Streaming
+    video: Video Rendering
+    clip: Clip Rendering
 
 LCACPatreonWidget:
   info: LCA connects to your Patreon account to view your Patreon members and schedule livestreams. Due to limitations of Patreon's API, LCA cannot create posts for you.

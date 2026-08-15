@@ -40,6 +40,13 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 	def _setup_layout (self) -> None:
 		layout = QFormLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
+		if name_input := QLineEdit():
+			self._mapper.addMapping(name_input, self.model.get_column_index('name'))
+		layout.addRow(QLabel(I18n(self).name), name_input)
+		if id_input := QLineEdit():
+			id_input.setReadOnly(True)
+			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
+		layout.addRow(QLabel(I18n(self).id), id_input)
 		if mtgformat := QComboBox():
 			mtgformat.setEditable(True)
 			mtgformat.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)

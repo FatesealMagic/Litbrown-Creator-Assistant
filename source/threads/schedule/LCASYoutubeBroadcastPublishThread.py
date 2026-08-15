@@ -49,5 +49,5 @@ class LCASYoutubeBroadcastPublishThread (LCAThread):
 				with LCAYoutubeIntegration() as yt:
 					yt.set_thumbnail( video_id = broadcast_id, thumbnail_path = project.stream.thumbnail )
 			with project:
-				project.remote_ids.youtube = broadcast_id
+				project.stream.remote_ids.youtube = broadcast_id
 

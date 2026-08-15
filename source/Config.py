@@ -27,15 +27,15 @@ import pydantic
 
 from .Util import *
 
-class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+class _ConfigModel (pydantic.BaseModel, frozen = True):
 	disallowed_filename_characters_regex: str = r'[\x00-\x1F\x7F<>:"/\\|?*. -]'
 	
-	class IntegrationsModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class IntegrationsModel (pydantic.BaseModel, frozen = True):
 		
-		class RemoteModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+		class RemoteModel (pydantic.BaseModel, frozen = True):
 			oauth_service_url: str = 'https://us-central1-lca-mtgo.cloudfunctions.net/microservice/oauth'
 			
-			class OauthModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+			class OauthModel (pydantic.BaseModel, frozen = True):
 				api_url_base: str
 				client_id: str
 				disallowed_characters: str
@@ -95,17 +95,17 @@ class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
 		
 		remote: RemoteModel = RemoteModel()
 
-		class LocalModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+		class LocalModel (pydantic.BaseModel, frozen = True):
 
-			class ObsModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+			class ObsModel (pydantic.BaseModel, frozen = True):
 				pass
 			obs: ObsModel = ObsModel()
 			
-			class ShotcutModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+			class ShotcutModel (pydantic.BaseModel, frozen = True):
 				pass
 			shotcut: ShotcutModel = ShotcutModel()
 			
-			class VlcModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+			class VlcModel (pydantic.BaseModel, frozen = True):
 				pass
 			vlc: VlcModel = VlcModel()
 
@@ -113,7 +113,7 @@ class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
 		
 	integrations: IntegrationsModel = IntegrationsModel()
 	
-	class MtgModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class MtgModel (pydantic.BaseModel, frozen = True):
 		formats: tuple[str | None] = (
 			'Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage', 'Pauper', 'Premodern', None,
 			'Commander', 'Duel Commander', None,
@@ -122,29 +122,29 @@ class _ConfigModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
 		)
 	mtg: MtgModel = MtgModel()
 	
-	class ProjectModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class ProjectModel (pydantic.BaseModel, frozen = True):
 		slug_regex: str = r'^(\w+)-(\d{4})$'
 	project: ProjectModel = ProjectModel()
 
-	class ToolsModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class ToolsModel (pydantic.BaseModel, frozen = True):
 		
-		class DaemonModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+		class DaemonModel (pydantic.BaseModel, frozen = True):
 			filelock: str = 'lock_daemon.lock'
 		daemon: DaemonModel = DaemonModel()
 		
-		class ScheduleModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+		class ScheduleModel (pydantic.BaseModel, frozen = True):
 			image_size: dict = {'width': 1080, 'height': 1080}
 		schedule: ScheduleModel = ScheduleModel()
 	
 	tools: ToolsModel = ToolsModel()
 	
-	class NetworkModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class NetworkModel (pydantic.BaseModel, frozen = True):
 		http_serve_port: int = 42967
 		chromium_debug_port: int = 42968
 		websocket_port: int = 42969
 	network: NetworkModel = NetworkModel()
 	
-	class StyleModel (pydantic.BaseModel, frozen = True, extra = 'forbid'):
+	class StyleModel (pydantic.BaseModel, frozen = True):
 		text_lgt: str = '#ffffff'
 		text_drk: str = '#000000'
 		background_hilgt: str = '#505050'

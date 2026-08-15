@@ -244,9 +244,9 @@ class LCASMainWindow (LCAMainWindow):
 		self.__viewer.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
 		self.__viewer.setFixedSize(1024, 1024)
 		self.__viewer.show()
-		# Wait 2 seconds ... I couldn't figure out how to accurately see if the window had resized or not
+		# Wait 5 seconds ... I couldn't figure out how to accurately see if the window had resized or not
 		loop = QEventLoop()
-		QTimer.singleShot(2000, loop.quit)
+		QTimer.singleShot(5000, loop.quit)
 		loop.exec()
 		# Save the screenshot and destroy the underlying instance
 		self.__viewer.save_screenshot(Settings().tools.schedule.output_file)
@@ -259,7 +259,6 @@ class LCASMainWindow (LCAMainWindow):
 		self.centralWidget().setCurrentIndex(3)
 
 	def __evt_publish_finalize (self) -> None:
-		self.__back_btn.setEnabled(False)
 		self.__publish_btn.setEnabled(False)
 		self.__publishmanager_widget.do_publish()
 

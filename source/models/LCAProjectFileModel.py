@@ -41,7 +41,7 @@ from ..common.LCATextTemplate import *
 
 # Model ########################################################################
 
-class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	
 	series_id: str
 	entry_number: int
@@ -50,22 +50,26 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 	
 	decklists: list[LCADecklistModel] = []
 
-	class StreamModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class StreamModel (pydantic.BaseModel, validate_assignment = True):
 		start: str = ''
 		membertier_id: str = ''
 		title_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
 		description_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
-		thumbnail: str = ''
+		thumbnail: pathlib.Path | None = None
 		full_title: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 100))] = ''
 		full_description: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 5000))] = ''
 		
-		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
 			youtube: str = ''
 			twitch: str = ''
 			patreon: str = ''
 		remote_ids: RemoteIdsModel = RemoteIdsModel()
 
 	stream: StreamModel = StreamModel()
+	
+	class VideoModel (pydantic.BaseModel, validate_assignment = True):
+		thumbnail: pathlib.Path | None = None
+	video: VideoModel = VideoModel()
 
 # Implementation ###############################################################
 
@@ -257,30 +261,34 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True, extra
 	def save_file_text (self, file: str, contents: str) -> None:
 		return self.__save_file(file, contents, 'w', 'utf-8')
 
-	def update_thumbnail_path (self, format: str) -> tuple[pathlib.Path, str]:
+	def update_thumbnail_path (self, format: str) -> tuple[pathlib.Path | None, str]:
 		if format not in ('stream', 'video'):
 			raise ValueError(f'Invalid format passed: {format}')
+		thumbnail_path, thumbnail_type = (None, None)
 		if (path := self.get_thumbnail_path(
 			format = format,
 			slug = self.get_slug(),
 		)).is_file():
-			return (path, 'multicast')
+			thumbnail_path, thumbnail_type = (path, 'multicast')
 		elif self.variant_id and (path := self.get_thumbnail_path(
 			format = format,
 			series_id = self.series_id,
 			variant_id = self.variant_id,
 		)).is_file():
-			return (path, 'variant')
+			thumbnail_path, thumbnail_type = (path, 'variant')
 		elif (path := self.get_thumbnail_path(
 			format = format,
 			series_id = self.series_id,
 		)).is_file():
-			return (path, 'series')
+			thumbnail_path, thumbnail_type = (path, 'series')
 		elif (path := self.get_thumbnail_path(
 			format = format,
 		)).is_file():
-			return (path, 'channel')
-		return (None, None)
+			thumbnail_path, thumbnail_type = (path, 'channel')
+		if getattr(self, format).thumbnail != thumbnail_path:
+			with self:
+				getattr(self, format).thumbnail = thumbnail_path
+		return (thumbnail_path, thumbnail_type)
 
 	@classmethod
 	def get_thumbnail_path (cls, /,

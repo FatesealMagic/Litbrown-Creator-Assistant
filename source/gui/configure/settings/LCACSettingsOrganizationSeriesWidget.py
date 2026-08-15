@@ -32,6 +32,7 @@ from ....Assets import *
 from ....Settings import *
 from ....Util import *
 
+from .LCACSettingsOrganizationSeriesSegmentWidget import *
 from .LCACSettingsOrganizationSeriesVariantWidget import *
 from ..LCACFormatHelperWidget import *
 from ...LCATabbedDataViewWidget import *
@@ -44,7 +45,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 	def _setup_layout (self) -> None:
 		layout = QHBoxLayout(self)
 		tab_widget = QTabWidget()
-		for tab in ('general', 'variants', 'videoinfo', 'formatting',):
+		for tab in ('general', 'variants', 'segments', 'videoinfo', 'formatting',):
 			tab_widget.addTab(
 				getattr(self, f'__build_{tab}_tab')(),
 				I18n(self).tabs[tab].tab_title
@@ -78,6 +79,14 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 			LCATableModel( Settings().SeriesModel.VariantModel, lambda : Settings().series[self._model_row].variants, Settings ),
 			LCACSettingsOrganizationSeriesVariantWidget,
 			I18n(self).tabs.variants.typename,
+			'name'
+		)
+
+	def __build_segments_tab (self) -> QWidget:
+		return LCATabbedDataViewWidget(
+			LCATableModel( Settings().SeriesModel.SegmentModel, lambda : Settings().series[self._model_row].segments, Settings ),
+			LCACSettingsOrganizationSeriesSegmentWidget,
+			I18n(self).tabs.segments.typename,
 			'name'
 		)
 

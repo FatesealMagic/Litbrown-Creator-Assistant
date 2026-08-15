@@ -189,7 +189,7 @@ class LCAYoutubeIntegration (LCAIntegration):
 		start: str,
 		public: bool,
 	) -> str:
-		return self.__execute_request( self.yt().liveBroadcasts().insert(
+		return self.__execute_request( lambda : self.yt().liveBroadcasts().insert(
 			part = 'snippet,status',
 			body = {
 				'snippet': {

@@ -45,11 +45,11 @@ from .models.LCAScryfallCardModel import *
 
 # Model ########################################################################
 	
-class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 	
-	class AffiliatesModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class AffiliatesModel (pydantic.BaseModel, validate_assignment = True):
 		
-		class AffiliateModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class AffiliateModel (pydantic.BaseModel, validate_assignment = True):
 			code: str = ''
 		manapool:      AffiliateModel = AffiliateModel()
 		cardhoarder:   AffiliateModel = AffiliateModel()
@@ -59,13 +59,13 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 		
 	affiliates: AffiliatesModel = AffiliatesModel()
 	
-	class SeriesModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class SeriesModel (pydantic.BaseModel, validate_assignment = True):
 		id: str = 'newseries'
 		name: str = 'New Series'
 		
 		stream_duration: int = 180
 		
-		class OutputTypeModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class OutputTypeModel (pydantic.BaseModel, validate_assignment = True):
 			decklist_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			decklist_separator: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			description_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
@@ -124,33 +124,53 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 			publish_to_membership_id = '~public',
 			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}' )
 
-		class VariantModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class VariantModel (pydantic.BaseModel, validate_assignment = True):
 			description: str = ''
 			id: str = 'newvariant'
 			mtgformat: str = ''
 			name: str = 'New Variant'
 		variants: list[VariantModel] = []
+
+		class SegmentModel (pydantic.BaseModel, validate_assignment = True):
+			id: str
+			name: str
+			obs_scene_name: str = ''
+			timestamp_template: str = '${timestamp} ${segment_name}'
+			repeatable: bool = False
+			# TODO implement ad reads, link here, account for pluralability
+		segments: list[SegmentModel] = []
 		
 	series: list[SeriesModel] = []
 
-	class IntegrationsModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class IntegrationsModel (pydantic.BaseModel, validate_assignment = True):
 		
-		class MoxfieldIntegrationModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class MoxfieldIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			user_agent: str = ''
 		moxfield: MoxfieldIntegrationModel = MoxfieldIntegrationModel()
 		
-		class MymtgoIntegrationModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class MymtgoIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			accounts: list[str] = []
 		mymtgo: MymtgoIntegrationModel = MymtgoIntegrationModel()
 
-		class RemoteIntegrationModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class ObsIntegrationModel (pydantic.BaseModel, validate_assignment = True):
+			class ObsInstanceIntegrationModel (pydantic.BaseModel, validate_assignment = True):
+				host: str = '127.0.0.1'
+				port: int = 4455
+				pswd: str = ''
+			record: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel(port = 4444)
+			stream: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
+			video: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
+			clip: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
+		obs: ObsIntegrationModel = ObsIntegrationModel()
+
+		class RemoteIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			remote_id: str = ''
 			handle: str = ''
 			display_name: str = ''
 			profile_pic_url: str = ''
 			auth: dict | None = None
 			
-			class RemoteMembershipTierModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+			class RemoteMembershipTierModel (pydantic.BaseModel, validate_assignment = True):
 				remote_id: str
 				remote_name: str
 				cents: int
@@ -171,11 +191,11 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 
 	integrations: IntegrationsModel = IntegrationsModel()
 
-	class MembershipTierModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class MembershipTierModel (pydantic.BaseModel, validate_assignment = True):
 		id: str
 		name: str
 		
-		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
 			youtube: str | None = None
 			twitch: str | None = None
 			patreon: str | None = None
@@ -183,9 +203,9 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 
 	membership_tiers: list[MembershipTierModel] = []
 
-	class ToolsModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	class ToolsModel (pydantic.BaseModel, validate_assignment = True):
 		
-		class ToolsGeneralModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class ToolsGeneralModel (pydantic.BaseModel, validate_assignment = True):
 			language: str = 'en-US'
 			projects_location: str = 'projects'
 			www_directory: str = 'www'
@@ -193,20 +213,20 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True, extra = 'f
 			accent_hue: int = 300
 		general: ToolsGeneralModel = ToolsGeneralModel()
 
-		class ToolsScheduleModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class ToolsScheduleModel (pydantic.BaseModel, validate_assignment = True):
 			output_file: str = 'schedule.png'
 			render_file: str = 'schedule.html'
 			render_function: str = 'process_data'
 		schedule: ToolsScheduleModel = ToolsScheduleModel()
 
-		class ToolsThumbnailModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+		class ToolsThumbnailModel (pydantic.BaseModel, validate_assignment = True):
 			render_file: str = 'thumbnail.html'
 			render_func: str = 'new_data_update'
 			
-			class ToolsThumbnailProfileModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+			class ToolsThumbnailProfileModel (pydantic.BaseModel, validate_assignment = True):
 				name: str = ''
 			
-				class ToolsThumbnailControlBaseModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+				class ToolsThumbnailControlBaseModel (pydantic.BaseModel, validate_assignment = True):
 					input_type: str
 					name: str
 				class ToolsThumbnailControlTextModel (ToolsThumbnailControlBaseModel):

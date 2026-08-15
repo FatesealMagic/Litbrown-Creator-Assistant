@@ -20,23 +20,32 @@
   " 
   """
 
-import typing
-
 from loguru import logger
-import pydantic
 
-from .LCAScryfallCardModel import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
-class LCADecklistModel (pydantic.BaseModel, validate_assignment = True):
-	url: str = ''
-	updated: datetime.datetime = pydantic.Field(default_factory = datetime.datetime.now)
-	title: typing.Optional[str] = None
-	description: typing.Optional[str] = None
-	
-	class BoardsModel (pydantic.BaseModel, validate_assignment = True):
-		mainboard: list[LCAScryfallCardModel] = []
-		sideboard: list[LCAScryfallCardModel] = []
-		command:   list[LCAScryfallCardModel] = []
-		companion: list[LCAScryfallCardModel] = []
-	boards: BoardsModel = BoardsModel()
+from ....Config import *
+from ....I18n import *
+from ....Assets import *
+from ....Settings import *
+from ....Util import *
+
+from ...LCAFilePickerWidget import *
+from ...LCATabbedDataViewPanelWidget import *
+
+class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget):
+
+	def _setup_layout (self) -> None:
+		layout = QFormLayout(self)
+		layout.setSpacing(layout.spacing() * 2)
+		if name_input := QLineEdit():
+			self._mapper.addMapping(name_input, self.model.get_column_index('name'))
+		layout.addRow(QLabel(I18n(self).name), name_input)
+		if id_input := QLineEdit():
+			id_input.setReadOnly(True)
+			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
+		layout.addRow(QLabel(I18n(self).id), id_input)
+		self._finalize_mapper()
 

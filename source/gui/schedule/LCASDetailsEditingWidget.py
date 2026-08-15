@@ -55,7 +55,6 @@ class LCASDetailsEditingWidget (LCAWidget):
 	
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
-		#layout.setContentsMargins(0, 0, 0, 0)
 		if carousel_widget := LCACarouselWidget():
 			self.__carousel_widget = carousel_widget
 		layout.addWidget(carousel_widget)

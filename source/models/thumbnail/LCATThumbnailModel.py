@@ -30,7 +30,7 @@ from PySide6.QtCore import *
 
 # Model ########################################################################
 
-class LCATThumbnailModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+class LCATThumbnailModel (pydantic.BaseModel, validate_assignment = True):
 	user: dict = pydantic.Field(default_factory = lambda : {})
 	method: str = 'multicast'
 	format: str = 'video'

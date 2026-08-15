@@ -26,10 +26,10 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
 from ....I18n import *
-from ....Util import *
+from ....Settings import *
 
+from ...LCASeparator import *
 from ...LCAWidget import *
 
 class LCACObsWidget (LCAWidget):
@@ -37,6 +37,29 @@ class LCACObsWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel('obs'))
+		if info_lbl := QLabel(I18n(self).info):
+			info_lbl.setWordWrap(True)
+		layout.addWidget(info_lbl)
+		if grid_widget := QWidget():
+			grid_layout = QGridLayout(grid_widget)
+			grid_layout.addWidget(QLabel(I18n(self).connect.host), 0, 1, alignment = Qt.AlignHCenter)
+			grid_layout.addWidget(QLabel(I18n(self).connect.port), 0, 2, alignment = Qt.AlignHCenter)
+			grid_layout.addWidget(QLabel(I18n(self).connect.pswd), 0, 3, alignment = Qt.AlignHCenter)
+			grid_layout.addWidget(LCASeparator.horizontal(),           1, 0, 1, 4)
+			grid_layout.addWidget(QLabel(I18n(self).instances.record + ' '), 2, 0, alignment = Qt.AlignRight)
+			grid_layout.addWidget(LCASeparator.horizontal(),           3, 0, 1, 4)
+			grid_layout.addWidget(QLabel(I18n(self).instances.stream + ' '), 4, 0, alignment = Qt.AlignRight)
+			grid_layout.addWidget(QLabel(I18n(self).instances.video  + ' '), 5, 0, alignment = Qt.AlignRight)
+			grid_layout.addWidget(QLabel(I18n(self).instances.clip   + ' '), 6, 0, alignment = Qt.AlignRight)
+			for i, instance in enumerate(('record', 'stream', 'video', 'clip')):
+				for p, property in enumerate(('host', 'port', 'pswd')):
+					line_edit = QLineEdit()
+					Settings().bind(line_edit, f'integrations.obs.{instance}.{property}')
+					grid_layout.addWidget(
+						line_edit,
+						i + 2 if instance == 'record' else i + 3,
+						p + 1,
+					)
+		layout.addWidget(grid_widget)
 		layout.addStretch(1)
 

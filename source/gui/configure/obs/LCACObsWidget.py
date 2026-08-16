@@ -47,19 +47,14 @@ class LCACObsWidget (LCAWidget):
 			grid_layout.addWidget(QLabel(I18n(self).connect.pswd), 0, 3, alignment = Qt.AlignHCenter)
 			grid_layout.addWidget(LCASeparator.horizontal(),           1, 0, 1, 4)
 			grid_layout.addWidget(QLabel(I18n(self).instances.record + ' '), 2, 0, alignment = Qt.AlignRight)
-			grid_layout.addWidget(LCASeparator.horizontal(),           3, 0, 1, 4)
-			grid_layout.addWidget(QLabel(I18n(self).instances.stream + ' '), 4, 0, alignment = Qt.AlignRight)
-			grid_layout.addWidget(QLabel(I18n(self).instances.video  + ' '), 5, 0, alignment = Qt.AlignRight)
-			grid_layout.addWidget(QLabel(I18n(self).instances.clip   + ' '), 6, 0, alignment = Qt.AlignRight)
+			grid_layout.addWidget(QLabel(I18n(self).instances.stream + ' '), 3, 0, alignment = Qt.AlignRight) # TODO do i need this?
+			grid_layout.addWidget(QLabel(I18n(self).instances.video  + ' '), 4, 0, alignment = Qt.AlignRight)
+			grid_layout.addWidget(QLabel(I18n(self).instances.clip   + ' '), 5, 0, alignment = Qt.AlignRight)
 			for i, instance in enumerate(('record', 'stream', 'video', 'clip')):
 				for p, property in enumerate(('host', 'port', 'pswd')):
 					line_edit = QLineEdit()
 					Settings().bind(line_edit, f'integrations.obs.{instance}.{property}')
-					grid_layout.addWidget(
-						line_edit,
-						i + 2 if instance == 'record' else i + 3,
-						p + 1,
-					)
+					grid_layout.addWidget( line_edit, i + 2, p + 1 )
 		layout.addWidget(grid_widget)
 		layout.addStretch(1)
 

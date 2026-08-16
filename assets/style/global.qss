@@ -44,7 +44,7 @@ LCAFilePickerWidget QGroupBox {
 	padding-right: 0.5em;
 }
 
-*[css_class="accent_bordered"], LCATBottomControlsWidget {
+*[css_class="accent_bordered"] {
 	background-color: ${background_med};
 	border: 0.05em solid palette(mid);
 } 

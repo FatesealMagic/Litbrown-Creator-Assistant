@@ -58,7 +58,6 @@ class LCATBottomControlsWidget (LCAWidget):
 		super().__init__(*args, **kwargs)
 
 	def _setup_layout (self) -> None:
-		self.setProperty('css_class', 'accent_bordered')
 		self.__mapper = QDataWidgetMapper(self)
 		self.__mapper.setModel(self.__model)
 		layout = QHBoxLayout(self)

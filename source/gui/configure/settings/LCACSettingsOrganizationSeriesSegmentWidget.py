@@ -32,8 +32,12 @@ from ....Assets import *
 from ....Settings import *
 from ....Util import *
 
+from ..LCACFormatHelperWidget import *
 from ...LCAFilePickerWidget import *
+from ...LCASeparator import *
 from ...LCATabbedDataViewPanelWidget import *
+from ...LCAToggleButtonGroupWidget import *
+from ....common.LCATextTemplate import *
 
 class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget):
 
@@ -47,5 +51,26 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 			id_input.setReadOnly(True)
 			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
 		layout.addRow(QLabel(I18n(self).id), id_input)
+		if repeatable_input := LCAToggleButtonGroupWidget(rows = 1):
+			repeatable_input.addButton(I18n(self).repeatable.option_yes, True)
+			repeatable_input.addButton(I18n(self).repeatable.option_no,  False)
+			self._mapper.addMapping(repeatable_input, self.model.get_column_index('repeatable'))
+			repeatable_input.set_value(self.model.data((self._model_row, 'repeatable')))
+			repeatable_input.changed.connect(self._mapper.submit)
+		layout.addRow(QLabel(I18n(self).repeatable.label), repeatable_input)
+		layout.addRow(LCASeparator.horizontal())
+		layout.addRow(QLabel(I18n(self).chapter))
+		if chapter_widget := QWidget():
+			chapter_layout = QHBoxLayout(chapter_widget)
+			chapter_layout.setContentsMargins(0, 0, 0, 0)
+			if chapter_input := QLineEdit():
+				self._mapper.addMapping(chapter_input, self.model.get_column_index('chapter_name'))
+			chapter_layout.addWidget(chapter_input)
+			chapter_layout.addWidget( LCACFormatHelperWidget(
+				LCATextTemplate.VariableGroup.CHAPTERS,
+				chapter_input,
+				Qt.Orientation.Horizontal,
+			) )
+		layout.addRow(chapter_widget)
 		self._finalize_mapper()
 

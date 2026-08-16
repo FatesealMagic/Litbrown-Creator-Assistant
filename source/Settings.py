@@ -135,8 +135,8 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			id: str
 			name: str
 			obs_scene_name: str = ''
-			timestamp_template: str = '${timestamp} ${segment_name}'
 			repeatable: bool = False
+			chapter_name: str = '${segment_name}'
 			# TODO implement ad reads, link here, account for pluralability
 		segments: list[SegmentModel] = []
 		
@@ -218,6 +218,15 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			render_file: str = 'schedule.html'
 			render_function: str = 'process_data'
 		schedule: ToolsScheduleModel = ToolsScheduleModel()
+
+		class ToolsMulticastModel (pydantic.BaseModel, validate_assignment = True):
+			
+			class ToolsMulticastProfileModel (pydantic.BaseModel, validate_assignment = True):
+				geometry: pydantic.Base64Bytes = b''
+				state: pydantic.Base64Bytes = b''
+			profile: dict[typing.Annotated[str, 'series_id'], ToolsMulticastProfileModel] = {}
+
+		multicast: ToolsMulticastModel = ToolsMulticastModel()
 
 		class ToolsThumbnailModel (pydantic.BaseModel, validate_assignment = True):
 			render_file: str = 'thumbnail.html'

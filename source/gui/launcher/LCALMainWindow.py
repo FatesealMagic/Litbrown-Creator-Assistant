@@ -32,19 +32,21 @@ from ...Assets import *
 from ...I18n import *
 from ...Util import *
 
+from ..LCAComboBox import *
 from ..LCAMainWindow import *
 from ..LCASideTabWidget import *
+from ...common.LCAProjectWatcher import *
+from ...models.LCAProjectFileModel import *
 
 class LCALMainWindow (LCAMainWindow):
 	
 	__LAUNCHBTN_STYLESHEET = 'QPushButton { font-size: 14pt; font-weight: bold; padding: 0.2em; }'
 	
-	__multicast_combo: QComboBox
-
 	def _initialize_window (self) -> None:
 		self.setWindowIcon(Assets.QIcon('icons/assistant.ico'))
 		self.setWindowTitle(I18n(self).title)
 		self.resize(500, 400)
+		self.__project_watcher = LCAProjectWatcher()
 
 	def _setup_layout (self) -> None:
 		central_widget = LCASideTabWidget()
@@ -133,10 +135,19 @@ class LCALMainWindow (LCAMainWindow):
 			content_label.setWordWrap(True)
 		layout.addWidget(content_label)
 		layout.addStretch(1)
+		if multicast_selector := LCAComboBox():
+			self.__multicast_selector = multicast_selector
+			multicast_selector.setPlaceholderText(I18n(self).tabs.multicast.selector_placeholder)
+			self.__project_watcher.directoryChanged.connect(self.__rebuild_multicast_selector)
+			self.__project_watcher.fileChanged.connect(self.__rebuild_multicast_selector)
+		layout.addWidget(multicast_selector)
 		if launch_btn := QPushButton(I18n(self).tabs.multicast.launch):
+			self.__multicast_launch_btn = launch_btn
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
 			launch_btn.clicked.connect(self.__evt_multicast_launched)
 		layout.addWidget(launch_btn)
+		self.__rebuild_multicast_selector()
+		multicast_selector.currentDataChanged.connect(lambda : launch_btn.setEnabled(True))
 		return widget
 
 	def __build_edit_tab (self) -> QWidget:
@@ -178,6 +189,19 @@ class LCALMainWindow (LCAMainWindow):
 		layout.addWidget(launch_btn)
 		return widget
 
+	def __rebuild_multicast_selector (self) -> None:
+		self.__multicast_launch_btn.setEnabled(False)
+		with QSignalBlocker(self.__multicast_selector):
+			self.__multicast_selector.clear()
+			for series_id, entry_number in LCAProjectFileModel.find_all_ids():
+				try:
+					series = Settings().series_from_id(series_id)
+					self.__multicast_selector.addItem(
+						f'{series.name} #{entry_number}',
+						LCAProjectFileModel.create_slug(series_id, entry_number),
+					)
+				except ValueError:
+					continue
 
 	def __evt_configure_launched (self) -> None:
 		Util.launch_new_instance('configure')
@@ -186,7 +210,7 @@ class LCALMainWindow (LCAMainWindow):
 		Util.launch_new_instance('schedule')
 
 	def __evt_multicast_launched (self) -> None:
-		Util.launch_new_instance('multicast', [self.__multicast_combo.currentData()])
+		Util.launch_new_instance('multicast', [self.__multicast_selector.currentData()])
 
 	def __evt_edit_launched (self) -> None:
 		Util.launch_new_instance('edit', [self.__edit_combo.currentData()])

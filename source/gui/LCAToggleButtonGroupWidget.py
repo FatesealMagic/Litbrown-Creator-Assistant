@@ -36,7 +36,7 @@ from .LCAWidget import *
 
 class LCAToggleButtonGroupWidget (LCAWidget):
 	
-	changed = Signal(str)
+	changed = Signal(object)
 	
 	__STYLESHEET = 'QPushButton:checked { border: 1px solid #f69; }'
 	
@@ -58,7 +58,7 @@ class LCAToggleButtonGroupWidget (LCAWidget):
 		self.__button_group = QButtonGroup(self)
 		self.__button_group.setExclusive(True)
 
-	def addButton (self, label: str, value: str | None = None) -> None:
+	def addButton (self, label: str, value: object | None = None) -> None:
 		if value is None:
 			value = label
 		button = QPushButton(label)
@@ -74,20 +74,18 @@ class LCAToggleButtonGroupWidget (LCAWidget):
 		elif self.__rows:
 			row = self.layout().count()  % self.__rows
 			col = self.layout().count() // self.__rows
-		#self.layout().setRowStretch(row, 1)
-		#self.layout().setColumnStretch(col, 1)
 		self.layout().addWidget(button, row, col)
 
 	def __evt_button_clicked (self) -> None:
 		self.changed.emit(self.get_value())
 
-	def get_value (self) -> str | None:
+	def get_value (self) -> object | None:
 		checked_button = self.__button_group.checkedButton()
 		if not checked_button:
 			return None
 		return checked_button.lca_value
 
-	def set_value (self, value: str) -> None:
+	def set_value (self, value: object) -> None:
 		if value == self.get_value():
 			return
 		for button in self.__button_group.buttons():
@@ -95,7 +93,7 @@ class LCAToggleButtonGroupWidget (LCAWidget):
 		self.changed.emit(self.get_value())
 
 	val = Property(
-		str,
+		object,
 		fget = get_value,
 		fset = set_value,
 		notify = changed,

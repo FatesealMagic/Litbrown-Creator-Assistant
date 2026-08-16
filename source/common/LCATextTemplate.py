@@ -30,11 +30,11 @@ from ..I18n import *
 class LCATextTemplate:
 	
 	class VariableGroup (enum.Enum):
-		DECKLISTS  = 'decklists'
-		TIMESTAMPS = 'timestamps'
-		CLIP       = 'clip'
-		STREAM     = 'stream'
-		VIDEO      = 'video'
+		DECKLISTS = 'decklists'
+		CHAPTERS  = 'chapters'
+		CLIP      = 'clip'
+		STREAM    = 'stream'
+		VIDEO     = 'video'
 
 	__template: string.Template
 	

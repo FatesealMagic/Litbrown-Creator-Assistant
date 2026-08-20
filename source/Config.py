@@ -142,6 +142,7 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 		http_serve_port: int = 42967
 		chromium_debug_port: int = 42968
 		websocket_port: int = 42969
+		websocket_name: str = 'LCA Project State Server'
 	network: NetworkModel = NetworkModel()
 	
 	class StyleModel (pydantic.BaseModel, frozen = True):

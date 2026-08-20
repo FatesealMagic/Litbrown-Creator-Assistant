@@ -25,10 +25,10 @@ import requests
 
 from ...Settings import *
 
-from ..LCAThread import *
+from ..LCATaskThread import *
 from ...integrations.youtube.LCAYoutubeIntegration import *
 
-class LCACYoutubeAuthorizationThread (LCAThread):
+class LCACYoutubeAuthorizationTaskThread (LCATaskThread):
 
 	def _run (self) -> dict:
 		with LCAYoutubeIntegration(suppress_checks = True) as yt:

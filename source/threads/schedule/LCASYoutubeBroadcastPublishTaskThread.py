@@ -27,11 +27,11 @@ from loguru import logger
 from ...Config import *
 from ...I18n import *
 
-from ..LCAThread import *
+from ..LCATaskThread import *
 from ...integrations.youtube.LCAYoutubeIntegration import *
 from ...models.LCAProjectFileModel import *
 
-class LCASYoutubeBroadcastPublishThread (LCAThread):
+class LCASYoutubeBroadcastPublishTaskThread (LCATaskThread):
 
 	def _run (self, data: list[LCAProjectFileModel], schedule_title: str, schedule_desc: str) -> None:
 		operables = [ p for p in data if p.stream.membertier_id != '~nostream' ]

@@ -20,33 +20,29 @@
   " 
   """
 
-import inspect # TODO
-import re
+import time
 
 from loguru import logger
 
 from ...Config import *
-from ...Assets import *
-from ...Settings import *
+from ...I18n import *
 
-from ..LCAThread import *
-from ...integrations.moxfield.LCAMoxfieldIntegration import *
+from ..LCATaskThread import *
+from ...integrations.twitch.LCATwitchIntegration import *
 from ...models.LCAProjectFileModel import *
-from ...models.LCADecklistModel import *
 
-class LCADeckFetcherThread (LCAThread):
-	
-	def _run (self, project: LCAProjectFileModel, deck_index: int, save_project: bool = True) -> LCADecklistModel:
-		for handler, regex in (
-			(self.__moxfield, r'^https:\/\/moxfield\.com\/decks\/(?P<id>[a-zA-Z0-9_-]{22})\/?$'),
-		):
-			if match := re.match(regex, project.decklists[deck_index].url):
-				decklist = handler(match)
-				with (project if save_project else project.mutex()):
-					project.decklists[deck_index] = decklist
-				return decklist
+class LCASTwitchUpdateStreamScheduleTaskThread (LCATaskThread):
 
-	def __moxfield (self, match: re.Match) -> LCADecklistModel:
-		with LCAMoxfieldIntegration() as moxfield:
-			return moxfield.get_decklist(match.group(1))
+	def _run (self, data: list[LCAProjectFileModel], schedule_title: str, schedule_desc: str) -> None:
+		operables = [ p for p in data if p.stream.membertier_id != '~nostream' ]
+		for i, project in enumerate(operables):
+			self._emit_progress( i / len(operables) )
+			with LCATwitchIntegration() as twitch:
+				broadcast_id = twitch.schedule_broadcast(
+					title =    project.stream.full_title,
+					start =    project.stream.start,
+					duration = Settings().series_from_id(project.series_id).stream_duration,
+				)
+			with project:
+				project.remote_ids.twitch = broadcast_id
 

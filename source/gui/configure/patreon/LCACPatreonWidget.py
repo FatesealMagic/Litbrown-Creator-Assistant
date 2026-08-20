@@ -36,11 +36,11 @@ from ....Settings import *
 from ...LCAWidget import *
 from ..LCACConnectButton import *
 from ..LCACConnectionInfoDisplayWidget import *
-from ....threads.configure.LCACPatreonRefreshTiersThread import *
+from ....threads.configure.LCACPatreonRefreshTiersTaskThread import *
 
 class LCACPatreonWidget (LCAWidget):
 	
-	__refresh_tiers_thread: LCACPatreonRefreshTiersThread
+	__refresh_tiers_thread: LCACPatreonRefreshTiersTaskThread
 	
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
@@ -65,6 +65,6 @@ class LCACPatreonWidget (LCAWidget):
 		webbrowser.open(Config().integrations.remote.patreon.oauth_url)
 
 	def __refresh_tiers (self) -> None:
-		self.__refresh_tiers_thread = LCACPatreonRefreshTiersThread()
+		self.__refresh_tiers_thread = LCACPatreonRefreshTiersTaskThread()
 		self.__refresh_tiers_thread.start()
 

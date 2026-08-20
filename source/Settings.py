@@ -391,6 +391,15 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		raise ValueError(f'Could not find variant with id {id} in series {s.id}')
 
 	@staticmethod
+	def series_segment_from_id (s: SeriesModel | str, id: str) -> SeriesModel.SegmentModel:
+		if type(s) is str:
+			s = Settings().series_from_id(s)
+		for v in s.segments:
+			if v.id == id:
+				return v
+		raise ValueError(f'Could not find segment with id {id} in series {s.id}')
+
+	@staticmethod
 	def membership_tier_from_id (id: str) -> MembershipTierModel:
 		for t in Settings().membership_tiers:
 			if t.id == id:

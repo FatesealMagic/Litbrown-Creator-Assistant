@@ -58,6 +58,9 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 			repeatable_input.set_value(self.model.data((self._model_row, 'repeatable')))
 			repeatable_input.changed.connect(self._mapper.submit)
 		layout.addRow(QLabel(I18n(self).repeatable.label), repeatable_input)
+		if obsname_input := QLineEdit():
+			self._mapper.addMapping(obsname_input, self.model.get_column_index('obs_scene_name'))
+		layout.addRow(QLabel(I18n(self).obs_scene_name), obsname_input)
 		layout.addRow(LCASeparator.horizontal())
 		layout.addRow(QLabel(I18n(self).chapter))
 		if chapter_widget := QWidget():

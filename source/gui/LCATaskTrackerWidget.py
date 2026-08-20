@@ -37,7 +37,7 @@ from ..Settings import *
 from ..Util import *
 
 from .LCAWidget import *
-from ..threads.LCAThread import *
+from ..threads.LCATaskThread import *
 from ..integrations.LCAIntegration import *
 
 class LCATaskTrackerWidget (LCAWidget):
@@ -72,7 +72,7 @@ class LCATaskTrackerWidget (LCAWidget):
 
 	def __init__ (self,
 		label: str,
-		thread_factory: Callable[[], [LCAThread]],
+		thread_factory: Callable[[], [LCATaskThread]],
 		integration: type[LCAIntegration],
 		*args, **kwargs
 	):

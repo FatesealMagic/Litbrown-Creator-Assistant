@@ -46,8 +46,8 @@ from .LCASDetailsEditingWidget import *
 from .LCASScheduleEditingWidget import *
 from .LCASPublishManagerWidget import *
 from ...models.LCAProjectFileModel import *
-from ...threads.LCAThreadGroup import *
-from ...threads.common.LCADeckFetcherThread import *
+from ...threads.LCATaskThreadGroup import *
+from ...threads.common.LCADeckFetcherTaskThread import *
 
 class LCASMainWindow (LCAMainWindow):
 	
@@ -164,20 +164,20 @@ class LCASMainWindow (LCAMainWindow):
 			return
 		self.setEnabled(False)
 		logger.debug(self.__model)
-		self.__decklists_thread_group = LCAThreadGroup(self.__create_decklist_threads())
+		self.__decklists_thread_group = LCATaskThreadGroup(self.__create_decklist_threads())
 		self.__decklists_thread_group.error.connect(self.__signal_decklists_error)
 		self.__decklists_thread_group.result.connect(self.__signal_decklists_result)
 		self.__decklists_thread_group.complete.connect(self.__signal_decklists_complete)
 		self.__decklists_thread_group.start()
 
-	def __create_decklist_threads (self) -> list[LCADeckFetcherThread]:
+	def __create_decklist_threads (self) -> list[LCADeckFetcherTaskThread]:
 		ret = []
 		for project in self.__model.get_data_reference():
 			for i in range(len(project.decklists)):
-				ret.append(LCADeckFetcherThread(project = project, deck_index = i, save_project = False))
+				ret.append(LCADeckFetcherTaskThread(project = project, deck_index = i, save_project = False))
 		return ret
 
-	def __signal_decklists_error (self, error: tuple[LCAThread, Exception, dict[LCAThread, object]]) -> None:
+	def __signal_decklists_error (self, error: tuple[LCATaskThread, Exception, dict[LCATaskThread, object]]) -> None:
 		if type(error[1]) is ValueError:
 			LCAPopupMessage.error(f'{I18n(self).errors.decklist_bad_url} {error[1]}')
 		elif type(error[1]) is LCAIntegrationNotInitializedError:

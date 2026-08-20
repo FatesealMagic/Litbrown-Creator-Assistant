@@ -20,19 +20,26 @@
   " 
   """
 
-import oauthlib.oauth2
-import requests
+from PySide6.QtCore import *
 
-from ...Settings import *
+from .LCAWorkerObject import *
 
-from ..LCAThread import *
-from ...integrations.patreon.LCAPatreonIntegration import *
+class LCAWorkerThread (QThread):
 
-class LCACPatreonRefreshTiersThread (LCAThread):
+	worker: LCAWorkerObject
 
-	def _run (self) -> None:
-		with LCAPatreonIntegration() as patreon:
-			tiers = patreon.get_membertiers_info()
-		with Settings():
-			Settings().integrations.patreon.remote_membership_tiers = tiers
+	def __init__ (self, worker: LCAWorkerObject):
+		super().__init__()
+		self.worker = worker
+		worker.moveToThread(self)
+		worker.construct.connect(worker.slot_construct)
+		worker.destruct.connect(worker.slot_destruct)
+
+	def start (self) -> None:
+		super().start()
+		self.worker.construct.emit()
+
+	def quit (self) -> None:
+		self.worker.destruct.emit()
+		super().quit()
 

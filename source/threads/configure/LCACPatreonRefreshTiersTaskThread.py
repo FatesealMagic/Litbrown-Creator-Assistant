@@ -20,30 +20,19 @@
   " 
   """
 
-import time
+import oauthlib.oauth2
+import requests
 
-from loguru import logger
+from ...Settings import *
 
-from ...Config import *
-from ...I18n import *
-
-from ..LCAThread import *
+from ..LCATaskThread import *
 from ...integrations.patreon.LCAPatreonIntegration import *
-from ...models.LCAProjectFileModel import *
 
-class LCASPatreonCreateLivesThread (LCAThread):
+class LCACPatreonRefreshTiersTaskThread (LCATaskThread):
 
-	def _run (self, data: list[LCAProjectFileModel], schedule_title: str, schedule_desc: str) -> None:
-		operables = [ p for p in data if p.stream.membertier_id != '~nostream' ]
-		for i, project in enumerate(operables):
-			self._emit_progress( i / len(operables) )
-			with LCAPatreonIntegration() as patreon:
-				live_id = patreon.schedule_broadcast(
-					title       = project.stream.full_title,
-					description = project.stream.full_description,
-					start       = project.stream.start,
-					for_member_tier_id = project.stream.membertier_id,
-				)
-			with project:
-				project.stream.remote_ids.patreon = live_id
+	def _run (self) -> None:
+		with LCAPatreonIntegration() as patreon:
+			tiers = patreon.get_membertiers_info()
+		with Settings():
+			Settings().integrations.patreon.remote_membership_tiers = tiers
 

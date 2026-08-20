@@ -24,21 +24,21 @@ import typing
 
 from PySide6.QtCore import *
 
-from .LCAThread import *
+from .LCATaskThread import *
 
-class LCAThreadGroup (QObject):
+class LCATaskThreadGroup (QObject):
 	
 	complete = Signal(bool)
-	error    = Signal(tuple) # [LCAThread, Exception, dict[LCAThread, object]]
-	result   = Signal(dict) # [LCAThread, object]
+	error    = Signal(tuple) # [LCATaskThread, Exception, dict[LCATaskThread, object]]
+	result   = Signal(dict) # [LCATaskThread, object]
 
-	__threads: tuple[LCAThread]
-	__results: dict[LCAThread, object]
+	__threads: tuple[LCATaskThread]
+	__results: dict[LCATaskThread, object]
 	__handlers: list[tuple[Signal, typing.Callable[[object | Exception], None]]]
 	
 	NO_RESULT = QObject()
 
-	def __init__ (self, threads: list[LCAThread] | tuple[LCAThread]):
+	def __init__ (self, threads: list[LCATaskThread] | tuple[LCATaskThread]):
 		super().__init__()
 		self.__threads = tuple(threads)
 		self.__results = {thread: self.NO_RESULT for thread in threads}
@@ -62,7 +62,7 @@ class LCAThreadGroup (QObject):
 				pass
 		self.__handlers = []
 
-	def __evt_thread_result (self, val: object, thread: LCAThread) -> None:
+	def __evt_thread_result (self, val: object, thread: LCATaskThread) -> None:
 		self.__results[thread] = val
 		for _, result in self.__results.items():
 			if result is self.NO_RESULT:
@@ -72,7 +72,7 @@ class LCAThreadGroup (QObject):
 			self.result.emit(self.__results)
 			self.complete.emit(True)
 
-	def __evt_thread_error (self, e: Exception, thread: LCAThread) -> None:
+	def __evt_thread_error (self, e: Exception, thread: LCATaskThread) -> None:
 		self.__results[thread] = e
 		self.__teardown_thread_signal_connections()
 		self.error.emit((thread, e, self.__results))

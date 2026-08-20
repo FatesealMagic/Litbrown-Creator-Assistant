@@ -42,9 +42,9 @@ from ...integrations.LCAIntegrationErrors import *
 from ...integrations.patreon.LCAPatreonIntegration import *
 from ...integrations.twitch.LCATwitchIntegration import *
 from ...integrations.youtube.LCAYoutubeIntegration import *
-from ...threads.schedule.LCASPatreonCreateLivesThread import *
-from ...threads.schedule.LCASYoutubeBroadcastPublishThread import *
-from ...threads.schedule.LCASTwitchUpdateStreamScheduleThread import *
+from ...threads.schedule.LCASPatreonCreateLivesTaskThread import *
+from ...threads.schedule.LCASYoutubeBroadcastPublishTaskThread import *
+from ...threads.schedule.LCASTwitchUpdateStreamScheduleTaskThread import *
 
 class LCASPublishManagerWidget (LCAWidget):
 	
@@ -72,7 +72,7 @@ class LCASPublishManagerWidget (LCAWidget):
 					youtubemgr_layout.addWidget(LCAConnectionLabelWidget('youtube'))
 					if youtube_broadcastpublish_widget := LCATaskTrackerWidget(
 						label = I18n(self).youtube.broadcastpublish.title,
-						thread_factory = lambda : LCASYoutubeBroadcastPublishThread( ** self.__publish_thread_params_factory() ),
+						thread_factory = lambda : LCASYoutubeBroadcastPublishTaskThread( ** self.__publish_thread_params_factory() ),
 						integration = LCAYoutubeIntegration,
 					):
 						self.__task_widgets.append(youtube_broadcastpublish_widget)
@@ -85,7 +85,7 @@ class LCASPublishManagerWidget (LCAWidget):
 					twitchmgr_layout.addWidget(LCAConnectionLabelWidget('twitch'))
 					if twitch_updatestreamschedule_widget := LCATaskTrackerWidget(
 						label = I18n(self).twitch.updatestreamschedule.title,
-						thread_factory = lambda : LCASTwitchUpdateStreamScheduleThread( ** self.__publish_thread_params_factory() ),
+						thread_factory = lambda : LCASTwitchUpdateStreamScheduleTaskThread( ** self.__publish_thread_params_factory() ),
 						integration = LCATwitchIntegration,
 					):
 						twitch_updatestreamschedule_widget.error.connect(self.__evt_error_twitch_updatestreamschedule)
@@ -99,7 +99,7 @@ class LCASPublishManagerWidget (LCAWidget):
 					patreonmgr_layout.addWidget(LCAConnectionLabelWidget('patreon'))
 					if patreon_createlives_widget := LCATaskTrackerWidget(
 						label = I18n(self).patreon.createlives.title,
-						thread_factory = lambda : LCASPatreonCreateLivesThread( ** self.__publish_thread_params_factory() ),
+						thread_factory = lambda : LCASPatreonCreateLivesTaskThread( ** self.__publish_thread_params_factory() ),
 						integration = LCAPatreonIntegration,
 					):
 						patreon_createlives_widget.error.connect(self.__evt_error_patreon_createlives)

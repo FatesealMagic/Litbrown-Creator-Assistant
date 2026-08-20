@@ -36,7 +36,7 @@ from .LCACardDisplayWidget import *
 from .LCACarouselWidget import *
 from .LCAWidget import *
 from ..models.LCAScryfallCardModel import *
-from ..threads.common.LCAScryfallSearchThread import *
+from ..threads.common.LCAScryfallSearchTaskThread import *
 
 class LCAMagicCardSelectorWidget (LCAWidget):
 	
@@ -117,7 +117,7 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 		self.setEnabled(False)
 		self.__cardsearch_results.clear()
 		self.__search_results = []
-		self.__search_thread = LCAScryfallSearchThread(query = query)
+		self.__search_thread = LCAScryfallSearchTaskThread(query = query)
 		self.__search_thread.error.connect( self.__evt_search_thread_error )
 		self.__search_thread.update.connect( self.__evt_search_thread_update )
 		self.__search_thread.complete.connect( self.__evt_search_thread_complete )

@@ -20,54 +20,18 @@
   " 
   """
 
-import copy
-import functools
-import sys
-import traceback
-import typing
-
-from loguru import logger
-
 from PySide6.QtCore import *
 
-from ..Config import *
-
-class LCAThread (QThread):
+class LCAWorkerObject (QObject):
 	
-	complete = Signal(bool)
-	error    = Signal(Exception)
-	result   = Signal(object)
-	update   = Signal(object)
-	progress = Signal(float)
+	construct = Signal()
+	destruct = Signal()
 
-	def __init__ (self, **kwargs):
-		super().__init__()
-		self.__kwargs = QObject()
-		self.__kwargs.kwargs = kwargs
-
-	def run (self) -> None:
-		success = True
-		try:
-			result = self._run(**self.__kwargs.kwargs)
-		except Exception as e:
-			success = False
-			logger.exception(e)
-			self.error.emit(e)
-		else:
-			self.result.emit(result)
-		finally:
-			self.complete.emit(success)
-
-	def _run (self) -> object:
+	@Slot()
+	def slot_construct (self) -> None:
 		raise NotImplementedError
 
-	def _emit_update (self, update: object) -> None:
-		self.update.emit(update)
-
-	def _emit_progress (self, progress: float) -> None:
-		if progress < 0:
-			progress = 0.0
-		if progress > 1:
-			progress = 1.0
-		self.progress.emit(float(progress))
+	@Slot()
+	def slot_destruct (self) -> None:
+		raise NotImplementedError
 

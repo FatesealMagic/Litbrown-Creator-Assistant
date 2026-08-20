@@ -20,19 +20,13 @@
   " 
   """
 
-from loguru import logger
+# https://stackoverflow.com/a/6798042
+class LCASingleton (type):
 
-from ..LCAThread import *
-from ...integrations.scryfall.LCAScryfallIntegration import *
-from ...models.LCAScryfallCardModel import *
+	_instances = {}
 
-class LCAScryfallSearchThread (LCAThread):
-	
-	def _run (self, query: str) -> list[LCAScryfallCardModel]:
-		results = []
-		with LCAScryfallIntegration() as scryfall:
-			for page in scryfall.search(query):
-				results += page
-				self._emit_update(page)
-		return results
+	def __call__ (cls, *args, **kwargs):
+		if cls not in cls._instances:
+			cls._instances[cls] = super(LCASingleton, cls).__call__(*args, **kwargs)
+		return cls._instances[cls]
 

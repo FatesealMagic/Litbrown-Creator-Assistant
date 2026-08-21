@@ -20,22 +20,18 @@
   " 
   """
 
-from loguru import logger
+import types
 
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from PySide6.QtWebEngineWidgets import *
+class LCAHybridMethod:
 
-from ..common.LCAFileOverwriter import *
+	__fn: typing.Callable
 
-class LCAWebEngineView (QWebEngineView):
+	def __init__ (self, fn):
+		self.__fn = fn
 
-	def save_screenshot (self, filename: str) -> None:
-		bytearray = QByteArray()
-		buffer = QBuffer(bytearray)
-		buffer.open(QIODevice.OpenModeFlag.WriteOnly)
-		self.grab().save(buffer, 'PNG')
-		buffer.close()
-		with LCAFileOverwriter(filename, binary = True) as f:
-			f.write(bytes(bytearray))
+	def __get__ (self, instance, owner = None):
+		if instance is None:
+			return types.MethodType(self.__fn, owner)
+		else:
+			return types.MethodType(self.__fn, instance)
 

@@ -89,7 +89,7 @@ class LCATSideControlsWidget (LCAWidget):
 					del_btn.setIcon(Assets.QIcon('icons/minus.png'))
 					del_btn.clicked.connect(self.__evt_del_profile)
 				using_layout.addWidget(del_btn, 0)
-			logger.warning(topbar_widget.addWidget(using_widget))
+			topbar_widget.addWidget(using_widget)
 			if editing_widget := QWidget():
 				editing_layout = QHBoxLayout(editing_widget)
 				editing_layout.setContentsMargins(0, 0, 0, 0)
@@ -111,7 +111,7 @@ class LCATSideControlsWidget (LCAWidget):
 					new_btn.setProperty('css_class', 'big')
 					new_btn.clicked.connect(self.__add_new_control)
 				editing_layout.addWidget(new_btn)
-			logger.warning(topbar_widget.addWidget(editing_widget))
+			topbar_widget.addWidget(editing_widget)
 		layout.addWidget(topbar_widget, 0)
 		if side_scroll := QScrollArea():
 			self.__side_scroll = side_scroll

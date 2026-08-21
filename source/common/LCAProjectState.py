@@ -53,7 +53,7 @@ class LCAProjectState (metaclass = LCASingleton):
 
 	def __start_ws_server (self) -> None:
 		loop = QEventLoop()
-		self.__thread = LCAWorkerThread(LCAProjectStateWebsocketWorkerObject(self.__project.get_slug()))
+		self.__thread = LCAWorkerThread(LCAProjectStateWebsocketWorkerObject(self.__project.slug()))
 		self.__thread.worker.on_listen.connect(lambda success : loop.exit(0 if success else 1))
 		self.__signals.updated.connect(self.__thread.worker.slot_project_state_updated)
 		self.__thread.start()

@@ -37,7 +37,7 @@ class LCAFileOverwriter:
 		/,
 		text: bool = False,
 		binary: bool = False,
-		encoding: str | None = None,
+		encoding: str | None = 'utf-8',
 	):
 		if not (text ^ binary):
 			raise ValueError(f'Need one of text {text} or binary {binary} to be true, not both or neither')
@@ -48,7 +48,7 @@ class LCAFileOverwriter:
 	def __enter__ (self):
 		self.__file = tempfile.NamedTemporaryFile(
 			mode = 'w' if self.__text else 'wb',
-			encoding = self.__encoding,
+			encoding = self.__encoding if self.__text else None,
 			delete = False,
 		)
 		return self.__file

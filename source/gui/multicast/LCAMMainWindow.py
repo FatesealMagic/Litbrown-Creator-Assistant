@@ -61,7 +61,7 @@ class LCAMMainWindow (LCAMainWindow):
 		if len(sys.argv) <= 2:
 			LCAPopupMessage.error(I18n(self).errors.need_slug)
 			sys.exit()
-		self.__project = LCAProjectFileModel.load(sys.argv[2])
+		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
 		self.__attempt_initialize_project_state()
 		self.__setup_obs_thread()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
@@ -96,9 +96,7 @@ class LCAMMainWindow (LCAMainWindow):
 				))
 				if segment_cbo := LCAComboBox():
 					self.__segment_cbo = segment_cbo
-					for segment in Settings().series_from_id(self.__project.series_id).segments:
-						# TODO do this more intelligently, accounting for existing recorded segments
-						segment_cbo.addItem(f'{segment.name} #1' if segment.repeatable else segment.name, segment.id)
+					self.__rebuild_segment_cbo()
 					segment_cbo.currentDataChanged.connect(self.__evt_segment_changed)
 				layout.addWidget(segment_cbo, 1)
 				if controls_widget := QWidget():
@@ -118,6 +116,17 @@ class LCAMMainWindow (LCAMainWindow):
 		self.setCentralWidget(wrapper_widget)
 		self.__setup_status_bar()
 		self.__obs_thread.start()
+
+	def __rebuild_segment_cbo (self) -> None:
+		with QSignalBlocker(self.__segment_cbo):
+			self.__segment_cbo.clear()
+			for segment in Settings().series_from_id(self.__project.series_id).segments:
+				if segment.repeatable:
+					pass
+				else:
+					if 
+				segment_cbo.addItem(f'{segment.name} #1' if segment.repeatable else segment.name, segment.id)
+
 
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)

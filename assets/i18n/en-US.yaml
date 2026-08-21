@@ -522,7 +522,7 @@ LCAMMainWindow:
     stop: STOP
   errors:
     need_slug: Please select a project when opening the Multicast Tool.
-    state_server_already_running: Only one instance of either the Multicast Render Tools can be running at once. Please close out the running Multicast or Render Tool instance and try again.
+    state_server_already_running: Only one instance of either the Multicast or Render Tools can be running at once. Please close out the running Multicast or Render Tool instance and try again.
   statuses:
     obs_connecting: Connecting to OBS...
     obs_connected: Successfully connected to OBS.

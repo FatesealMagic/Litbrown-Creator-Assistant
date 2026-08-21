@@ -113,7 +113,7 @@ class LCASScheduleEditingWidget (LCAWidget):
 
 	def __determine_entry_number_for_series (self, series_id: str) -> int:
 		entry_number = 1
-		for existing_series_id, existing_entry_number in LCAProjectFileModel.find_all_ids():
+		for existing_series_id, existing_entry_number in LCAProjectFileModel.get_existing_slugs_split():
 			if existing_series_id == series_id and existing_entry_number >= entry_number:
 				entry_number = 1 + existing_entry_number
 		for i in range(self.__model.rowCount()):

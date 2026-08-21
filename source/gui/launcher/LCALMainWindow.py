@@ -193,12 +193,12 @@ class LCALMainWindow (LCAMainWindow):
 		self.__multicast_launch_btn.setEnabled(False)
 		with QSignalBlocker(self.__multicast_selector):
 			self.__multicast_selector.clear()
-			for series_id, entry_number in LCAProjectFileModel.find_all_ids():
+			for series_id, entry_number in LCAProjectFileModel.get_existing_slugs_split():
 				try:
 					series = Settings().series_from_id(series_id)
 					self.__multicast_selector.addItem(
 						f'{series.name} #{entry_number}',
-						LCAProjectFileModel.create_slug(series_id, entry_number),
+						LCAProjectFileModel.slug(series_id, entry_number),
 					)
 				except ValueError:
 					continue

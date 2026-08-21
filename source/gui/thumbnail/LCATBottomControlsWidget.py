@@ -68,6 +68,7 @@ class LCATBottomControlsWidget (LCAWidget):
 			method_btns.addButton(I18n(self).methods.series,    'series')
 			method_btns.addButton(I18n(self).methods.variant,   'variant')
 			method_btns.addButton(I18n(self).methods.multicast, 'multicast')
+			method_btns.set_value(self.__model.data((0, 'method')))
 			self.__mapper.addMapping(method_btns, self.__model.get_column_index('method'))
 			method_btns.changed.connect(lambda _ : self.__mapper.submit())
 			method_btns.changed.connect(self.__refresh_bottom_controls)
@@ -158,17 +159,17 @@ class LCATBottomControlsWidget (LCAWidget):
 		previous_entry_number = self.__entry_spin.value()
 		with QSignalBlocker(self.__multicast_cbo):
 			self.__multicast_cbo.clear()
-			for series_id, entry_number in LCAProjectFileModel.find_all_ids():
+			for series_id, entry_number in LCAProjectFileModel.get_existing_slugs_split():
 				try:
 					series = Settings().series_from_id(series_id)
 					self.__multicast_cbo.addItem(
 						f'{series.name} #{entry_number}',
-						LCAProjectFileModel.create_slug(series_id, entry_number),
+						LCAProjectFileModel.slug(series_id, entry_number),
 					)
 				except ValueError:
 					continue
 			if previous_series_id:
-				self.__multicast_cbo.setData(LCAProjectFileModel.create_slug(previous_series_id, previous_entry_number))
+				self.__multicast_cbo.setData(LCAProjectFileModel.slug(previous_series_id, previous_entry_number))
 
 	def __refresh_series_cbo (self, _ = None) -> None:
 		old_series_id = self.__series_cbo.currentData()
@@ -207,7 +208,7 @@ class LCATBottomControlsWidget (LCAWidget):
 		self.__save_btn.setEnabled(enabled)
 
 	def __update_series_entry_values (self, _ = None) -> None:
-		series_id, entry_number = LCAProjectFileModel.create_id(self.__multicast_cbo.currentData())
+		series_id, entry_number = LCAProjectFileModel.split_slug(self.__multicast_cbo.currentData())
 		with QSignalBlocker(self.__series_cbo):
 			self.__series_cbo.setData(series_id)
 		with QSignalBlocker(self.__entry_spin):
@@ -215,5 +216,5 @@ class LCATBottomControlsWidget (LCAWidget):
 
 	def __update_multicast_cbo_value (self, _ = None) -> None:
 		with QSignalBlocker(self.__multicast_cbo):
-			self.__multicast_cbo.setData(LCAProjectFileModel.create_slug(self.__series_cbo.currentData(), self.__entry_spin.value()))
+			self.__multicast_cbo.setData(LCAProjectFileModel.slug(self.__series_cbo.currentData(), self.__entry_spin.value()))
 

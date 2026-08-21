@@ -112,7 +112,14 @@ class LCATMainWindow (LCAMainWindow):
 				).model_dump_json() if self.__thumbnail_model.variant_id else None
 				project = None
 			case 'multicast':
-				raw_project = LCAProjectFileModel.load(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number)
+				raw_project = None
+				try:
+					raw_project = LCAProjectFileModel.from_slug(LCAProjectFileModel.slug(
+						self.__thumbnail_model.series_id,
+						self.__thumbnail_model.entry_number,
+					))
+				except ValueError:
+					logger.debug('None-type series id')
 				series = Settings().series_from_id(
 					self.__thumbnail_model.series_id
 				).model_dump_json() if self.__thumbnail_model.series_id else None
@@ -150,7 +157,7 @@ class LCATMainWindow (LCAMainWindow):
 			case 'multicast':
 				fullpath = LCAProjectFileModel.get_thumbnail_path(
 					format = self.__thumbnail_model.format,
-					slug = LCAProjectFileModel.create_slug(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number),
+					slug = LCAProjectFileModel.slug(self.__thumbnail_model.series_id, self.__thumbnail_model.entry_number),
 				)
 		logger.info(f'Saving screenshot to: {fullpath}')
 		fullpath.parent.mkdir(parents = True, exist_ok = True)

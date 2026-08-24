@@ -20,40 +20,48 @@
   " 
   """
 
+import time
+
 from loguru import logger
 
 from ..LCAWorkerObject import *
+from ...common.LCAProjectState import *
+from ...models.LCAProjectStateModel import *
 from ...integrations.obs.LCAObsIntegration import *
 
 class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 	
-	do_scene_change = Signal(str)
-	do_scene_change_complete = Signal(str)
-	
 	on_connected = Signal(bool)
 	on_scene_changed = Signal(str)
+	on_active_toggled = Signal(bool)
 
 	__HEARTBEAT_INTERVAL = 500
 
-	__instance: str
 	__obs: LCAObsIntegration | None = None
 	__timer: QTimer
 
-	def __init__ (self, instance: str):
-		self.__instance = instance
+	__old_state: dict | None = None
+
+	def __init__ (self):
 		super().__init__()
-		self.do_scene_change.connect(self.slot_do_scene_change)
 
 	@Slot()
 	def slot_construct (self) -> None:
+		self.__reset_old_state()
 		self.__initiate_obs_connection()
+		self.__hookup_slots()
 		self.__register_callbacks()
 		self.__start_heartbeat_timer()
+
+	def __reset_old_state (self) -> dict:
+		ret = self.__old_state
+		self.__old_state = LCAProjectState().model.model_dump(mode = 'json')
+		return ret
 
 	def __initiate_obs_connection (self) -> None:
 		logger.info('Attempting OBS connection...')
 		self.on_connected.emit(False)
-		self.__obs = LCAObsIntegration(self.__instance)
+		self.__obs = LCAObsIntegration('record')
 		while True:
 			try:
 				self.__obs.connect()
@@ -63,8 +71,11 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 				self.on_connected.emit(False)
 		logger.info('OBS connection successful')
 
+	def __hookup_slots (self) -> None:
+		LCAProjectState().updated_model.connect(self.slot_state_updated)
+
 	def __register_callbacks (self) -> None:
-		self.__obs.evt_client.callback.register(self.on_current_program_scene_changed)
+		pass
 
 	def __start_heartbeat_timer (self) -> None:
 		self.__timer = QTimer(self)
@@ -87,12 +98,76 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 			self.slot_destruct()
 			self.slot_construct()
 
-	@Slot(str)
-	def slot_do_scene_change (self, scene_name: str) -> None:
+	@Slot(LCAProjectStateModel)
+	def slot_state_updated (self, state: LCAProjectStateModel) -> None:
+		old_state = self.__reset_old_state()
+		if (
+			state.segment_id and (
+				(old_state['segment_id'] != state.segment_id) or
+				(old_state['segment_number'] != state.segment_number)
+			)
+		):
+			self.__handle_segment_updated(state)
+		if old_state['active'] != state.active:
+			self.__handle_active_toggle(state)
+
+	def __handle_segment_updated (self, state: LCAProjectStateModel) -> None:
+		scene_name = Settings().series_segment_from_id(state.project.series_id, state.segment_id).obs_scene_name
+		if state.active:
+			self.__stop_recording()
+		self.__set_segment_recording_filename(state)
 		self.__obs.req_client.set_current_program_scene(scene_name)
-		self.do_scene_change_complete.emit(scene_name)
+		if state.active:
+			self.__start_recording()
+			self.__update_recording_start_time(state)
 		self.on_scene_changed.emit(scene_name)
 
-	def on_current_program_scene_changed (self, data: dict) -> None:
-		self.on_scene_changed.emit(data.scene_name)
+	def __handle_active_toggle (self, state: LCAProjectStateModel) -> None:
+		self.__stop_recording()
+		if state.active:
+			self.__set_segment_recording_filename(state)
+			self.__start_recording()
+			self.__update_recording_start_time(state)
+		self.on_active_toggled.emit(state.active)
+
+	def __stop_recording (self) -> None:
+		try:
+			self.__obs.req_client.stop_record()
+		except obsws_python.error.OBSSDKRequestError:
+			pass
+		else:
+			time.sleep(3) # Wait for OBS to actually stop recording
+
+	def __start_recording (self) -> None:
+		self.__obs.req_client.start_record()
+		time.sleep(1) # Wait for OBS to create the output file
+
+	def __set_segment_recording_filename (self, state: LCAProjectStateModel) -> None:
+		target_recording_path = state.project.path_footage(
+			segment_id = state.segment_id,
+			segment_number = state.segment_number,
+		).resolve()
+		self.__obs.req_client.set_profile_parameter(
+			'SimpleOutput',
+			'FilePath',
+			str(target_recording_path.parent),
+		)
+		self.__obs.req_client.set_profile_parameter(
+			'AdvOut',
+			'RecFilePath',
+			str(target_recording_path.parent),
+		)
+		self.__obs.req_client.set_profile_parameter(
+			'Output',
+			'FilenameFormatting',
+			str(target_recording_path.parts[-1]).split('.')[0],
+		)
+
+	def __update_recording_start_time (self, state: LCAProjectStateModel) -> None:
+		req_start_ts = time.time()
+		duration = self.__obs.req_client.get_record_status().output_duration / 1000.0
+		req_end_ts = time.time()
+		start_ts = req_start_ts + ((req_end_ts - req_start_ts) / 2) - duration
+		with LCAProjectState():
+			LCAProjectState().model.start_timestamps[f'{state.segment_id}-{state.segment_number}'] = start_ts
 

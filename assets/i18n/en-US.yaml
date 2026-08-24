@@ -518,14 +518,20 @@ LCAMMainWindow:
   title: LCA Multicast Tool
   buttons:
     start: START
-    next: NEXT
     stop: STOP
+  confirm:
+    stop: Are you sure you wish to stop recording?
+    start: Are you sure you wish to start recording?
   errors:
     need_slug: Please select a project when opening the Multicast Tool.
     state_server_already_running: Only one instance of either the Multicast or Render Tools can be running at once. Please close out the running Multicast or Render Tool instance and try again.
+  segment:
+    select_placeholder: Select a segment...
+    startnew_placeholder: Start a new segment...
   statuses:
     obs_connecting: Connecting to OBS...
     obs_connected: Successfully connected to OBS.
+    obs_recording: Recording footage and stream state changes...
 
 ################################################################################
 # THUMBNAIL

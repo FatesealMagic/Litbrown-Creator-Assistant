@@ -48,9 +48,9 @@ class LCAMMainWindow (LCAMainWindow):
 	
 	__project: LCAProjectFileModel
 	
+	__id_label: QLabel
 	__segment_cbo: LCAComboBox
-	__start_btn: QPushButton
-	__stop_btn: QPushButton
+	__startstop_btn: QPushButton
 	__status_lbl: QLabel
 	
 	__obs_thread: LCAWorkerThread
@@ -62,7 +62,7 @@ class LCAMMainWindow (LCAMainWindow):
 			LCAPopupMessage.error(I18n(self).errors.need_slug)
 			sys.exit()
 		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
-		self.__attempt_initialize_project_state()
+		self.__initialize_project_state()
 		self.__setup_obs_thread()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(I18n(self).title)
@@ -71,7 +71,7 @@ class LCAMMainWindow (LCAMainWindow):
 			self.restoreState(profile.state)
 		self.setEnabled(False)
 
-	def __attempt_initialize_project_state (self) -> None:
+	def __initialize_project_state (self) -> None:
 		try:
 			LCAProjectState(self.__project)
 		except RuntimeError:
@@ -79,9 +79,10 @@ class LCAMMainWindow (LCAMainWindow):
 			sys.exit()
 
 	def __setup_obs_thread (self) -> None:
-		self.__obs_thread = LCAWorkerThread(LCAMObsRecordPuppeteerWorkerObject('record'))
+		self.__obs_thread = LCAWorkerThread(LCAMObsRecordPuppeteerWorkerObject())
 		self.obs().on_connected.connect(self.__slot_obs_connected)
-		self.obs().do_scene_change_complete.connect(self.__slot_obs_do_scene_change_complete)
+		self.obs().on_scene_changed.connect(self.__slot_obs_on_scene_changed)
+		self.obs().on_active_toggled.connect(self.__slot_obs_on_active_toggled)
 
 	def _setup_layout (self) -> None:
 		if wrapper_widget := QWidget():
@@ -90,10 +91,14 @@ class LCAMMainWindow (LCAMainWindow):
 			if widget := QFrame():
 				widget.setProperty('css_class', 'accent_bordered')
 				layout = QVBoxLayout(widget)
-				layout.addWidget(QLabel(
-					f'<h3 style="text-align: center;">{Settings().series_from_id(self.__project.series_id).name} '
-						+ f'#{self.__project.entry_number}</h3>'
-				))
+				if id_label := QLabel(
+					'<html><h3 style="text-align: center;">'
+					+ f'{Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}'
+					+ '</h3></html>'
+				):
+					self.__id_label = id_label
+					LCAProjectState().updated_model.connect(self.__update_id_label)
+				layout.addWidget(id_label)
 				if segment_cbo := LCAComboBox():
 					self.__segment_cbo = segment_cbo
 					self.__rebuild_segment_cbo()
@@ -103,30 +108,44 @@ class LCAMMainWindow (LCAMainWindow):
 					controls_widget.setStyleSheet(self.__BUTTONS_STYLESHEET)
 					controls_layout = QHBoxLayout(controls_widget)
 					controls_layout.setContentsMargins(0, 0, 0, 0)
-					if start_btn := QPushButton(I18n(self).buttons.start):
-						self.__start_btn = start_btn
-						start_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-					controls_layout.addWidget(start_btn, 1)
-					if stop_btn := QPushButton(I18n(self).buttons.stop):
-						self.__stop_btn = stop_btn
-						stop_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-					controls_layout.addWidget(stop_btn, 1)
+					if startstop_btn := QPushButton(I18n(self).buttons.start):
+						self.__startstop_btn = startstop_btn
+						startstop_btn.setEnabled(False)
+						startstop_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+						startstop_btn.clicked.connect(self.__evt_startstop_clicked)
+					controls_layout.addWidget(startstop_btn, 1)
 				layout.addWidget(controls_widget, 1)
 			wrapper_layout.addWidget(widget)
 		self.setCentralWidget(wrapper_widget)
 		self.__setup_status_bar()
 		self.__obs_thread.start()
 
+	def __update_id_label (self, state: LCAProjectStateModel) -> None:
+		text  = f'<html><h3 style="text-align: center;">'
+		text += f'{Settings().series_from_id(state.project.series_id).name} #{state.project.entry_number}'
+		if state.segment_id:
+			text += ' &nbsp;&mdash;&nbsp; '
+			text += Settings().series_segment_from_id(state.project.series_id, state.segment_id).name
+			if state.segment_number:
+				text += f' #{state.segment_number}'
+		text += '</h3></html>'
+		self.__id_label.setText(text)
+
 	def __rebuild_segment_cbo (self) -> None:
 		with QSignalBlocker(self.__segment_cbo):
 			self.__segment_cbo.clear()
+			self.__segment_cbo.setPlaceholderText(I18n(self).segment.select_placeholder)
 			for segment in Settings().series_from_id(self.__project.series_id).segments:
 				if segment.repeatable:
-					pass
+					i = 1
+					while True:
+						if f'{segment.id}-{i}' not in LCAProjectState().model.start_timestamps.keys():
+							break
+						i += 1
+					self.__segment_cbo.addItem(f'{segment.name} #{i}', (segment.id, i))
 				else:
-					if 
-				segment_cbo.addItem(f'{segment.name} #1' if segment.repeatable else segment.name, segment.id)
-
+					if f'{segment.id}-0' not in LCAProjectState().model.start_timestamps.keys():
+						self.__segment_cbo.addItem(segment.name, (segment.id, 0))
 
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
@@ -138,8 +157,6 @@ class LCAMMainWindow (LCAMainWindow):
 	def closeEvent (self, event: QCloseEvent) -> None:
 		LCAProjectState().shutdown()
 		self.__obs_thread.quit()
-		logger.debug(self.saveGeometry())
-		logger.debug(self.saveState())
 		with Settings():
 			Settings().tools.multicast.profile[self.__project.series_id] = \
 				Settings().ToolsModel.ToolsMulticastModel.ToolsMulticastProfileModel(
@@ -149,12 +166,28 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__obs_thread.wait()
 		event.accept()
 
-	def __evt_segment_changed (self, segment_id: str) -> None:
+	def __evt_segment_changed (self, segment_info: tuple[str, int | None]) -> None:
+		segment_id, segment_number = segment_info
+		if (LCAProjectState().model.segment_id == segment_id) and (LCAProjectState().model.segment_number == segment_number):
+			return
 		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
 		self.setEnabled(False)
-		self.obs().do_scene_change.emit(segment.obs_scene_name)
 		with LCAProjectState() as state:
 			state.model.segment_id = segment_id
+			state.model.segment_number = segment_number
+
+	def __evt_startstop_clicked (self) -> None:
+		if LCAPopupMessage.info(
+			I18n(self).confirm.stop if LCAProjectState().model.active else I18n(self).confirm.start,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+		) != QMessageBox.StandardButton.Ok:
+			return
+		self.setEnabled(False)
+		with LCAProjectState() as state:
+			state.model.active = not state.model.active
+			if not state.model.active:
+				state.model.segment_id = None
+				state.model.segment_number = 0
 
 	def __set_status_message (self, msg: str) -> None:
 		self.__status_lbl.setText(f'{msg}')
@@ -163,12 +196,25 @@ class LCAMMainWindow (LCAMainWindow):
 	def __slot_obs_connected (self, success: bool) -> None:
 		self.setEnabled(success)
 		self.__set_status_message(I18n(self).statuses.obs_connected if success else I18n(self).statuses.obs_connecting)
-		self.__evt_segment_changed(self.__segment_cbo.currentData())
+
+	@Slot(str)
+	def __slot_obs_on_scene_changed (self, scene_name: str) -> None:
+		self.setEnabled(True)
+		self.__rebuild_segment_cbo()
+		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
+		self.__startstop_btn.setEnabled(True)
 
 	@Slot(bool)
-	def __slot_obs_do_scene_change_complete (self, scene_name: str) -> None:
+	def __slot_obs_on_active_toggled (self, active: bool) -> None:
 		self.setEnabled(True)
+		self.__rebuild_segment_cbo()
+		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
+		self.__set_status_message(I18n(self).statuses.obs_recording if active else I18n(self).statuses.obs_connected)
 
 	def obs (self) -> LCAMObsRecordPuppeteerWorkerObject:
 		return self.__obs_thread.worker
+
+	def setEnabled (self, enabled: bool) -> None:
+		super().setEnabled(enabled)
+		# Also disable floating docks
 

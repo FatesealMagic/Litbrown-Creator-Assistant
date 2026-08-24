@@ -20,6 +20,8 @@
   " 
   """
 
+import typing
+
 from loguru import logger
 import pydantic
 
@@ -28,8 +30,11 @@ from .LCAProjectFileModel import *
 class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 
 	project: LCAProjectFileModel
+
 	segment_id: str | None = None
-	segment_number: int | None = None
+	segment_number: int = 0
+	active: bool = False
+	start_timestamps: dict[	typing.Annotated[str, 'segment_id-segment_number'], float ] = pydantic.Field( default_factory = dict )
 
 	class _Core (pydantic.BaseModel, validate_assignment = True):
 		pass

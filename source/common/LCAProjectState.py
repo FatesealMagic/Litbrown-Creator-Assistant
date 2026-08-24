@@ -20,6 +20,7 @@
   " 
   """
 
+import json
 import typing
 
 from loguru import logger
@@ -35,7 +36,8 @@ from ..threads.common.LCAProjectStateWebsocketWorkerObject import *
 class LCAProjectState (metaclass = LCASingleton):
 	
 	class _LCAProjectStateSignals (QObject):
-		updated = Signal(dict)
+		updated_model = Signal(LCAProjectStateModel)
+		updated_dict = Signal(dict)
 
 	__project: LCAProjectFileModel
 	__signals: _LCAProjectStateSignals
@@ -48,21 +50,36 @@ class LCAProjectState (metaclass = LCASingleton):
 		self.__project = project
 		self.__signals = self._LCAProjectStateSignals()
 		self.__mutex = threading.Lock()
-		self.__model = LCAProjectStateModel(project = project)
+		self.__model = LCAProjectStateModel( **( self.__load_previous_state() | {
+			'project': project,
+			'active': False,
+			'segment_id': None,
+			'segment_number': 0,
+		} ) )
 		self.__start_ws_server()
+
+	def __load_previous_state (self) -> dict:
+		state_paths = self.__project.path_state_all()
+		if not state_paths:
+			return {}
+		return json.loads(self.__project.read_file(state_paths[-1], text = True))
 
 	def __start_ws_server (self) -> None:
 		loop = QEventLoop()
 		self.__thread = LCAWorkerThread(LCAProjectStateWebsocketWorkerObject(self.__project.slug()))
 		self.__thread.worker.on_listen.connect(lambda success : loop.exit(0 if success else 1))
-		self.__signals.updated.connect(self.__thread.worker.slot_project_state_updated)
+		self.__signals.updated_dict.connect(self.__thread.worker.slot_project_state_updated)
 		self.__thread.start()
 		if ret := loop.exec():
 			raise RuntimeError(f'Project state server already running {ret}')
 
 	@property
-	def updated (self) -> Signal:
-		return self.__signals.updated
+	def updated_dict (self) -> Signal:
+		return self.__signals.updated_dict
+
+	@property
+	def updated_model (self) -> Signal:
+		return self.__signals.updated_model
 
 	@property
 	def model (self) -> LCAProjectStateModel:
@@ -77,6 +94,13 @@ class LCAProjectState (metaclass = LCASingleton):
 		return self
 
 	def __exit__ (self, exc_type, exc_val, exc_tb):
+		model_dict = self.__model.model_dump(mode = 'json')
+		self.__project.overwrite_file(
+			self.__project.path_state(),
+			json.dumps({k: v for k, v in model_dict.items() if k not in ('project',)}),
+			text = True,
+		)
 		self.__mutex.release()
-		self.updated.emit(self.__model.model_dump(mode = 'json'))
+		self.updated_model.emit(self.__model)
+		self.updated_dict.emit(model_dict)
 

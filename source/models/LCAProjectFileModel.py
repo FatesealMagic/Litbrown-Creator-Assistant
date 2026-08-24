@@ -25,6 +25,7 @@ import datetime
 import pathlib
 import re
 import threading
+import time
 import typing
 import urllib
 
@@ -37,6 +38,7 @@ from ..Settings import *
 from .LCADecklistModel import *
 from .LCAScryfallCardModel import *
 from .LCAIntegrationSafeTextValidator import *
+from ..common.LCAFileOverwriter import *
 from ..common.LCAHybridMethod import *
 from ..common.LCATextTemplate import *
 
@@ -102,7 +104,6 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	def _save (self) -> None:
 		dump = self.model_dump_json()
 		logger.debug('\n' + ''.join(traceback.format_stack()))
-		logger.debug(dump)
 		self._fullpath.parent.mkdir(parents = True, exist_ok = True)
 		with open(self._fullpath, 'w', encoding='utf-8') as f:
 			f.write(dump)
@@ -117,11 +118,9 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	) -> typing.Self | None:
 		if not slug:
 			return None
-		series_id, entry_number = cls.split_slug(slug)
 		fullpath = cls.path(slug)
 		filelock = cls.filelock(slug)
 		try:
-			import time
 			with filelock, open(fullpath, encoding='utf-8') as f:
 				data = json.loads(f.read()) or {}
 		except (FileNotFoundError,):
@@ -168,7 +167,67 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 			slug = self.slug()
 			filename = filename_or_slug
 		filename = filename or '.lca'
-		return pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(f'{slug}/{slug}-{filename}')
+		if slug in str(filename):
+			return pathlib.Path(filename)
+		filename = ('' if filename[0] == '.' else '-') + filename
+		return pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(f'{slug}/{slug}{filename}')
+
+	@LCAHybridMethod
+	def path_footage (obj,
+		slug: str | None = None,
+		/, *,
+		segment_id: str,
+		segment_number: int | None = None,
+	) -> pathlib.Path:
+		filename = f'footage-{segment_id}'
+		if segment_number:
+			filename += f'-{segment_number:04}'
+		filename += '.mkv'
+		if isinstance(obj, type) and (cls := obj):
+			return cls.path(slug, filename)
+		elif self := obj:
+			return self.path(filename)
+
+	@LCAHybridMethod
+	def path_state (obj,
+		slug: str | None = None,
+		/, *,
+		ms: int | str | None = None,
+	) -> pathlib.Path:
+		if ms is None:
+			ms = time.time() * 1000
+		ms = int(ms)
+		filename = f'~state-{ms}.json'
+		if isinstance(obj, type) and (cls := obj):
+			return cls.path(slug, filename)
+		elif self := obj:
+			return self.path(filename)
+
+	@LCAHybridMethod
+	def path_state_all (obj,
+		slug: str | None = None,
+		/,
+	) -> list[pathlib.Path]:
+		if not isinstance(obj, type) and (self := obj):
+			slug = self.slug()
+		project_directory = pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(slug)
+		return sorted(list(project_directory.glob(f'{slug}-~state-*.json')))
+
+	@LCAHybridMethod
+	def filename (obj,
+		slug_or_path: str | pathlib.Path,
+		path: str | pathlib.Path | None = None,
+	) -> str:
+		if isinstance(obj, type) and (cls := obj):
+			slug = str(slug_or_path)
+			path = pathlib.Path(path).as_posix()
+		elif self := obj:
+			slug = self.slug()
+			path = pathlib.Path(slug_or_path).as_posix()
+		filename = pathlib.Path(pathlib.Path(path).as_posix().split(f'{slug}/{slug}')[-1])
+		if filename[0] == '-':
+			filename = filename[1:]
+		return filename
 
 	@LCAHybridMethod
 	def filelock (obj,
@@ -256,7 +315,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		)
 
 	def read_file (self,
-		filename: str,
+		filename: str | pathlib.Path,
 		/, *,
 		text: bool = False,
 		binary: bool = False,

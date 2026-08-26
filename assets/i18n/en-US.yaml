@@ -296,6 +296,13 @@ LCACSettingsLCAWidget:
       group_connection: Publish
     multicast:
       title: Multicast
+      hotkeys:
+        title: Hotkeys
+        startstop: Start/Stop Recording
+        mistake: Mark Mistake
+        mute: Begin Cut from Video
+        unmute: End Cut from Video
+        clip: Mark Clip
     edit:
       title: Edit
     thumbnail:

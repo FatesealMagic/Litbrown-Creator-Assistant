@@ -107,7 +107,34 @@ class LCACSettingsLCAWidget (LCAWidget):
 		return widget
 
 	def __build_multicast_tab (self) -> QWidget:
-		return QLabel('multicast')
+		widget = QWidget()
+		layout = QFormLayout(widget)
+		layout.addWidget(QLabel(f'<html><h3 style="text-align: center;">{I18n(self).tabs.multicast.hotkeys.title}</h3></html>'))
+		for hotkey in ('startstop', 'mistake', 'mute', 'unmute', 'clip'):
+			if key_edit := QKeySequenceEdit(QKeySequence(getattr(Settings().tools.multicast.hotkeys, hotkey))):
+				key_edit.setClearButtonEnabled(True)
+				key_edit.keySequenceChanged.connect( lambda l_seq, l_hotkey = hotkey, l_key_edit = key_edit : (
+					self.__evt_multicast_hotkey_changed(l_hotkey, l_key_edit, l_seq)
+				) )
+				Settings().signals().changed.connect( lambda l_hotkey = hotkey, l_key_edit = key_edit : (
+					self.__evt_settings_change_hotkey(l_hotkey, l_key_edit)
+				) )
+			layout.addRow( getattr(I18n(self).tabs.multicast.hotkeys, hotkey), key_edit )
+		return widget
+
+	def __evt_multicast_hotkey_changed (self, hk: str, key_edit: QKeySequenceEdit, seq: QKeySequence) -> None:
+		str_seq = seq.toString().split(', ')[0]
+		with QSignalBlocker(key_edit):
+			key_edit.setKeySequence(QKeySequence(str_seq))
+		if str_seq != getattr(Settings().tools.multicast.hotkeys, hk):
+			with Settings():
+				setattr(Settings().tools.multicast.hotkeys, hk, str_seq)
+
+	def __evt_settings_change_hotkey (self, hotkey: str, key_edit: QKeySequenceEdit) -> None:
+		new_seq = getattr(Settings().tools.multicast.hotkeys, hotkey)
+		if new_seq != key_edit.keySequence().toString():
+			with QSignalBlocker(key_edit):
+				key_edit.setKeySequence(QKeySequence(new_seq))
 
 	def __build_edit_tab (self) -> QWidget:
 		return QLabel('edit')

@@ -24,6 +24,7 @@ import base64
 import sys
 
 from loguru import logger
+import pynput
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -40,12 +41,15 @@ from ..LCAComboBox import *
 from ..LCAMainWindow import *
 from ..LCAPopupMessage import *
 from ...common.LCAProjectState import *
+from ...common.LCAKeySequence import *
 from ...models.LCAProjectFileModel import *
 from ...threads.LCAWorkerThread import *
 from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import *
 
 class LCAMMainWindow (LCAMainWindow):
-	
+
+	hotkey_pressed = Signal(str)
+
 	__project: LCAProjectFileModel
 	
 	__id_label: QLabel
@@ -64,6 +68,8 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
 		self.__initialize_project_state()
 		self.__setup_obs_thread()
+		self.__setup_keyboard_hotkey_signals()
+		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(I18n(self).title)
 		if profile := Settings().tools.multicast.profile.get(self.__project.series_id, None):
@@ -83,6 +89,35 @@ class LCAMMainWindow (LCAMainWindow):
 		self.obs().on_connected.connect(self.__slot_obs_connected)
 		self.obs().on_scene_changed.connect(self.__slot_obs_on_scene_changed)
 		self.obs().on_active_toggled.connect(self.__slot_obs_on_active_toggled)
+
+	def __setup_keyboard_hotkey_signals (self) -> None:
+		self.__hotkey_combos = {}
+		self.hotkey_pressed.connect(self.__evt_hotkey_pressed)
+		Settings().signals().changed.connect(self.__setup_keyboard_hotkeys)
+
+	def __setup_keyboard_hotkeys (self) -> None:
+		for hotkey in Settings().tools.multicast.hotkeys.model_fields.keys():
+			if hotkey not in self.__hotkey_combos.get(getattr(Settings().tools.multicast.hotkeys, hotkey), ()):
+				break
+		else:
+			return
+		logger.info('Registering hotkeys')
+		try:
+			self.__keyboard_listener.stop()
+		except AttributeError:
+			pass
+		self.__hotkey_combos = {}
+		for hotkey in Settings().tools.multicast.hotkeys.model_fields.keys():
+			combo = LCAKeySequence(getattr(Settings().tools.multicast.hotkeys, hotkey)).to_keyboard_string()
+			if not combo:
+				continue
+			self.__hotkey_combos[combo] = self.__hotkey_combos.get(combo, ()) + (hotkey,)
+		logger.warning(self.__hotkey_combos)
+		self.__keyboard_listener = pynput.keyboard.GlobalHotKeys({
+			combo: ( lambda l_combo = combo : self.hotkey_pressed.emit(','.join(self.__hotkey_combos[l_combo])) )
+				for combo in self.__hotkey_combos.keys()
+		})
+		self.__keyboard_listener.start()
 
 	def _setup_layout (self) -> None:
 		if wrapper_widget := QWidget():
@@ -177,6 +212,8 @@ class LCAMMainWindow (LCAMainWindow):
 			state.model.segment_number = segment_number
 
 	def __evt_startstop_clicked (self) -> None:
+		if not LCAProjectState().model.segment_id and not LCAProjectState().model.active:
+			return
 		if LCAPopupMessage.info(
 			I18n(self).confirm.stop if LCAProjectState().model.active else I18n(self).confirm.start,
 			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
@@ -210,6 +247,26 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__rebuild_segment_cbo()
 		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
 		self.__set_status_message(I18n(self).statuses.obs_recording if active else I18n(self).statuses.obs_connected)
+
+	def __evt_mistake_clicked (self) -> None:
+		logger.warning('mistake')
+
+	def __evt_mute_clicked (self) -> None:
+		logger.warning('mute')
+
+	def __evt_unmute_clicked (self) -> None:
+		logger.warning('unmute')
+
+	def __evt_clip_clicked (self) -> None:
+		logger.warning('clip')
+
+	@Slot(str)
+	def __evt_hotkey_pressed (self, hotkeys: str) -> None:
+		logger.debug(f'Pressed hotkeys: {hotkeys}')
+		if not self.isEnabled():
+			return
+		for hotkey in hotkeys.split(','):
+			getattr(self, f'__evt_{hotkey}_clicked')()
 
 	def obs (self) -> LCAMObsRecordPuppeteerWorkerObject:
 		return self.__obs_thread.worker

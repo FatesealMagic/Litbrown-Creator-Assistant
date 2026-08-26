@@ -221,6 +221,14 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 
 		class ToolsMulticastModel (pydantic.BaseModel, validate_assignment = True):
 			
+			class ToolsMulticastHotkeysModel (pydantic.BaseModel, validate_assignment = True):
+				startstop: str = 'Ctrl+Alt+Shift+Num+Enter'
+				mistake: str = 'Pause'
+				mute: str = 'ScrollLock'
+				unmute: str = 'ScrollLock'
+				clip: str = ''
+			hotkeys: ToolsMulticastHotkeysModel = ToolsMulticastHotkeysModel()
+			
 			class ToolsMulticastProfileModel (pydantic.BaseModel, validate_assignment = True):
 				geometry: pydantic.Base64Bytes = b''
 				state: pydantic.Base64Bytes = b''

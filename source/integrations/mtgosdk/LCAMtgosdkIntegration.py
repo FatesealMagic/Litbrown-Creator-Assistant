@@ -64,15 +64,23 @@ class LCAMtgosdkIntegration (LCAIntegration):
 	def _disconnect (self) -> None:
 		pass
 
+	def __invoke_callback (self,
+		callback: typing.Callable,
+		args: tuple,
+	) -> None:
+		try:
+			callback(*args)
+		except Exception as e:
+			logger.exception(e)
+
 	def on_game_joined (self,
 		callback: typing.Callable[[MTGOSDK.API.Play.Match, MTGOSDK.API.Play.Games.Game], None],
 	) -> None:
-		# TODO wrap the callback in a lambda that does basic exception handling, right now all exceptions just poof into the ether
 		import MTGOSDK; import System
 		MTGOSDK.API.Play.EventManager.GameJoined += System.Action[
 			MTGOSDK.API.Play.Event,
 			MTGOSDK.API.Play.Games.Game,
-		](callback)
+		]( lambda *args : self.__invoke_callback(callback, args) )
 
 	def on_game_results_changed (self,
 		game: MTGOSDK.API.Play.Games.Game,
@@ -84,8 +92,16 @@ class LCAMtgosdkIntegration (LCAIntegration):
 		import MTGOSDK; import System
 		game.OnGameResultsChanged += System.Action[
 			System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
-		]( lambda results : callback(game, results) )
+		]( lambda *args : self.__invoke_callback(callback, (game,) + args) )
 		logger.warning('after registering the thing')
+
+	def get_username (self) -> str | None:
+		import MTGOSDK
+		try:
+			return MTGOSDK.API.Client().CurrentUser.Name
+		except Exception as e:
+			logger.exception(e)
+			return None
 
 	@LCAIntegration.in_context
 	def listen_until_mtgo_closed (self) -> None:

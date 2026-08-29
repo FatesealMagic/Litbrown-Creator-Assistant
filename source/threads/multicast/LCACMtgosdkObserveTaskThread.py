@@ -42,9 +42,10 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 		mtgo_match: MTGOSDK.API.Play.Match,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
 	) -> None:
+		logger.info(f'{mtgo_match.Id} {mtgo_match.Token}')
 		try:
-			if mtgo_game.Status == 'Finished': # TODO check if game ID is already in the state model
-				return
+			if str(mtgo_game.Status) == 'Finished': # TODO check if game ID is already in the state model
+				logger.info(f'{list(mtgo_game.Players)} {list(mtgo_game.WinningPlayers)}')
 			logger.info(f'{mtgo_game.Id} {mtgo_game.Status} {list(mtgo_game.WinningPlayers)}')
 			self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
 			logger.info('after register')
@@ -59,5 +60,5 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 		logger.info(type(mtgo_game))
 		logger.info(type(mtgo_results))
 		for result in list(mtgo_results):
-			logger.info(f'{result.Player.Name} {result.Player.Result}')
+			logger.info(f'{result.Player} {result.Result}')
 

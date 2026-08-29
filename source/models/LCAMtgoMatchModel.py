@@ -20,35 +20,20 @@
   " 
   """
 
+import datetime
 import typing
+import uuid
 
-from loguru import logger
 import pydantic
 
-from .LCAProjectFileModel import *
-from .LCAMtgoMatchModel import *
+class LCAMtgoMatchModel (pydantic.BaseModel, validate_assignment = True):
+	id: int
+	best_of: int = 3
 
-class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
-
-	project: LCAProjectFileModel
-
-	segment_id: str | None = None
-	segment_number: int = 0
-	active: bool = False
-	start_timestamps: dict[	typing.Annotated[str, 'segment_id-segment_number'], float ] = pydantic.Field( default_factory = dict )
-	mistake_count: int = 0
-	muted: bool = False
-
-	class _Mtgo (pydantic.BaseModel, validate_assignment = True):
-		matches: list[LCAMtgoMatchModel] = []
-		state: LCAMtgoStateModel = LCAMtgoStateModel() # TODO
-	mtgo: _Mtgo = _Mtgo()
-
-	class _Core (pydantic.BaseModel, validate_assignment = True):
-		pass
-	core: _Core = _Core()
-
-	class _Plugins (pydantic.BaseModel, validate_assignment = True, extra = 'allow'):
-		pass
-	plugins: _Plugins = _Plugins()
+	class _Game (pydantic.BaseModel, validate_assignment = True):
+		id: int
+		players: list[str]
+		winners: list[str] | None = None
+		losers: list[str] | None = None
+	games: list[_Game] = []
 

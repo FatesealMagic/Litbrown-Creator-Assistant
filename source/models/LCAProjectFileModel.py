@@ -192,12 +192,12 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	def path_state (obj,
 		slug: str | None = None,
 		/, *,
-		ms: int | str | None = None,
+		ts: float | str | None = None,
 	) -> pathlib.Path:
-		if ms is None:
-			ms = time.time() * 1000
-		ms = int(ms)
-		filename = f'~state-{ms}.json'
+		if ts is None:
+			ts = time.time() * 1000
+		ts = float(ts)
+		filename = f'zstate-{ts:.6f}.json'
 		if isinstance(obj, type) and (cls := obj):
 			return cls.path(slug, filename)
 		elif self := obj:
@@ -211,7 +211,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if not isinstance(obj, type) and (self := obj):
 			slug = self.slug()
 		project_directory = pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(slug)
-		return sorted(list(project_directory.glob(f'{slug}-~state-*.json')))
+		return sorted(list(project_directory.glob(f'{slug}-zstate-*.json')))
 
 	@LCAHybridMethod
 	def filename (obj,

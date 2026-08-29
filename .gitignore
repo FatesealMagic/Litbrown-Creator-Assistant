@@ -1,5 +1,6 @@
 /.git/**
 /.venv/**
+/install_*
 /logs/**
 /projects/**
 /www_*

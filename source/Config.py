@@ -96,6 +96,21 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 		remote: RemoteModel = RemoteModel()
 
 		class LocalModel (pydantic.BaseModel, frozen = True):
+			
+			class MtgosdkModel (pydantic.BaseModel, frozen = True):
+				install_folder: str = 'install_mtgosdk'
+				binaries_folder: str = 'install_mtgosdk/bin/Release/net10.0-windows/win-x64/publish'
+				csproj: str = '''
+					<Project Sdk="Microsoft.NET.Sdk">
+						<PropertyGroup>
+							<TargetFramework>net10.0-windows</TargetFramework>
+							<UseWPF>true</UseWPF>
+							<UseWindowsForms>true</UseWindowsForms>
+							<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+						</PropertyGroup>
+					</Project>
+				'''.strip()
+			mtgosdk: MtgosdkModel = MtgosdkModel()
 
 			class ObsModel (pydantic.BaseModel, frozen = True):
 				pass

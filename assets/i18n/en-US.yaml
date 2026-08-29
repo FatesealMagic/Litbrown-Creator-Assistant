@@ -10,7 +10,7 @@ LCAConnectionLabelWidget:
   patreon: Patreon
   discord: Discord
   moxfield: Moxfield
-  mymtgo: MyMTGO
+  mtgosdk: MTGOSDK
   obs: OBS
   shotcut: Shotcut
   vlc: VLC
@@ -225,19 +225,19 @@ LCACFormatHelperDialog:
 LCACMainWindow:
   title: LCA Configure Tool
   tabs:
-    bluesky:  Bluesky
-    discord:  Discord
+    bluesky: Bluesky
+    discord: Discord
     manapool: Mana Pool
     moxfield: Moxfield
-    mymtgo:   MyMTGO
-    obs:      OBS
-    patreon:  Patreon
-    reddit:   Reddit
-    shotcut:  Shotcut
-    twitch:   Twitch
-    twitter:  Twitter
-    vlc:      VLC
-    youtube:  YouTube
+    mtgosdk: MTGOSDK
+    obs: OBS
+    patreon: Patreon
+    reddit: Reddit
+    shotcut: Shotcut
+    twitch: Twitch
+    twitter: Twitter
+    vlc: VLC
+    youtube: YouTube
     settings:
       title: Settings
       tabs:
@@ -268,14 +268,25 @@ LCACMoxfieldWidget:
   copypaste: <html>Once you get your "User-Agent", copy-paste the <i>entire</i> thing into the box below:</html>
   placeholder: Your "User-Agent", which starts with "MoxKey;"
 
-LCACMymtgoWidget:
-  info: If properly connected to MyMTGO, LCA can manipulate overlays in streams and videos to display real-time MTGO game data, like life totals and hand sizes.
-  link: Download MyMTGO from here if you haven't already.
-  refresh: Create / Refresh Connection to MyMTGO
-  is_mymtgo_installed: Could not locate MyMTGO's database. Please double check that MyMTGO is installed correctly. Reach out to me if this issue persists.
-  active: "Connection to MyMTGO is active. LCA is using MyMTGO to monitor games played on this machine with these MTGO accounts:"
-  inactive: Connection to MyMTGO is disabled.
-  remove: Remove Connection to MyMTGO
+LCACMtgosdkWidget:
+  info: LCA can extract real-time match information from Magic Online and share it with your stream and video overlays. It uses MTGOSDK to inject itself into your running official Magic Online client and read its memory in real-time.
+  install: Click the button below to install MTGOSDK within LCA. This may take some time; do not close this window until the install is complete.
+  disclaimer:
+  - While LCA allows its users to integrate with MTGOSDK, the developers of LCA make no guarantees that all possible uses of LCA's integration with MTGOSDK are permissable under your local laws or the terms of Magic Online's EULA. The developers of LCA disavow all responsibility for how its users choose to use its integration with MTGOSDK. USE THIS INTEGRATION ONLY AT YOUR OWN PERIL.
+  - "MTGOSDK prominently displays the following disclosure in its README:"
+  - This project is protected under U.S., Section 103(f) of the Digital Millennium Copyright Act (DMCA) (<a href='http://www.law.cornell.edu/uscode/text/17/1201'>17 USC § 1201 (f)</a>) protections for reverse-engineering for the purpose of enabling 'interoperability'.
+  - Section 12.1(b) of MTGO's <a href='https://www.mtgo.com/en/mtgo/eula'>End User License Agreement (EULA)</a> prohibits any modification, reverse engineering, or decompilation of the client 'except to the extent that such restriction is expressly prohibited by applicable law'.
+  - However, for such purposes protected under Section 103(f) of the DMCA, this EULA clause is statutorily preempted and rendered null and void; see also <a href='https://casetext.com/case/ml-genius-holdings-llc-v-google-llc'>ML Genius Holdings LLC v. Google LLC, No. 20-3113 (2d Cir. Mar. 10, 2022)</a>. All other provisions of the EULA remain in full force and effect unless otherwise prohibited by law.
+  - This is not legal advice. Consult with a legal professional on your specific situation.
+  install_btn: Create / Refresh MTGOSDK Installation
+  remove_btn: Remove MTGOSDK Installation
+  confirm: Are you sure you wish to proceed with MTGOSDK installation?
+  install_success: MTGOSDK installed successfully.
+  install_failed: MTGOSDK install failed. Please check the application logs and try again.
+  remove_confirm: Are you sure you wish to remove your MTGOSDK installation?
+  remove_success: MTGOSDK installation removed successfully.
+  remove_failed: MTGOSDK installation could not be removed and may be in an indeterminate state. Make sure no LCA tools or other programs are using the MTGOSDK installation folder, then try again. Restart your computer if issues persist.
+  remove_notneeded: MTGOSDK was not installed, so nothing was removed. No changes made.
 
 LCACSettingsAffiliatesWidget:
   affiliate_placeholder: Affiliate Code
@@ -526,6 +537,10 @@ LCAMMainWindow:
   buttons:
     start: START
     stop: STOP
+    mistake: MISTAKE
+    mute: CUT
+    unmute: RESUME
+    clip: CLIP
   confirm:
     stop: Are you sure you wish to stop recording?
     start: Are you sure you wish to start recording?
@@ -536,9 +551,14 @@ LCAMMainWindow:
     select_placeholder: Select a segment...
     startnew_placeholder: Start a new segment...
   statuses:
-    obs_connecting: Connecting to OBS...
-    obs_connected: Successfully connected to OBS.
-    obs_recording: Recording footage and stream state changes...
+    mtgosdk:
+      connecting: "MTGO: Connecting..."
+      connected: "MTGO: Connected"
+      not_installed: "MTGOSDK not installed"
+    obs:
+      connecting: "OBS: Connecting..."
+      connected: "OBS: Connected"
+      recording: "OBS: RECORDING"
 
 ################################################################################
 # THUMBNAIL

@@ -43,9 +43,8 @@ from .settings.LCACSettingsAffiliatesWidget import *
 class LCACMainWindow (LCAMainWindow):
 	
 	__TAB_NAMES = (
-		'youtube', 'twitch', 'patreon', 'discord', 'bluesky', 'twitter', 'reddit',
-		'moxfield',
-		'obs', 'shotcut', 'vlc',
+		'youtube', 'twitch', 'patreon', 'discord', 'bluesky', 'twitter', 'reddit', 'moxfield',
+		'mtgosdk', 'obs', 'shotcut', 'vlc',
 	)
 	
 	def _initialize_window (self) -> None:

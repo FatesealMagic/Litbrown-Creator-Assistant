@@ -35,6 +35,8 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	segment_number: int = 0
 	active: bool = False
 	start_timestamps: dict[	typing.Annotated[str, 'segment_id-segment_number'], float ] = pydantic.Field( default_factory = dict )
+	mistake_count: int = 0
+	muted: bool = False
 
 	class _Core (pydantic.BaseModel, validate_assignment = True):
 		pass

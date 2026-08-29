@@ -42,8 +42,10 @@ from ..LCAMainWindow import *
 from ..LCAPopupMessage import *
 from ...common.LCAProjectState import *
 from ...common.LCAKeySequence import *
+from ...integrations.LCAIntegrationErrors import *
 from ...models.LCAProjectFileModel import *
 from ...threads.LCAWorkerThread import *
+from ...threads.multicast.LCACMtgosdkObserveTaskThread import *
 from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import *
 
 class LCAMMainWindow (LCAMainWindow):
@@ -58,16 +60,19 @@ class LCAMMainWindow (LCAMainWindow):
 	__status_lbl: QLabel
 	
 	__obs_thread: LCAWorkerThread
-	
-	__BUTTONS_STYLESHEET = 'font-size: 13pt; font-weight: bold;'
+	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
+
+	__BUTTONS_STYLESHEET = 'font-size: 13pt; font-weight: bold; padding: 0.3em;'
 	
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
 			LCAPopupMessage.error(I18n(self).errors.need_slug)
 			sys.exit()
+		self.__status_lbls = {}
 		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
 		self.__initialize_project_state()
 		self.__setup_obs_thread()
+		self.__setup_mtgosdk_thread()
 		self.__setup_keyboard_hotkey_signals()
 		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
@@ -89,6 +94,16 @@ class LCAMMainWindow (LCAMainWindow):
 		self.obs().on_connected.connect(self.__slot_obs_connected)
 		self.obs().on_scene_changed.connect(self.__slot_obs_on_scene_changed)
 		self.obs().on_active_toggled.connect(self.__slot_obs_on_active_toggled)
+
+	def __setup_mtgosdk_thread (self, e: Exception | None = None) -> None:
+		if isinstance(e, LCAIntegrationNotInitializedError):
+			self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.not_installed)
+			return
+		self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.connecting)
+		self.__mtgosdk_thread = LCACMtgosdkObserveTaskThread()
+		self.__mtgosdk_thread.error.connect(self.__setup_mtgosdk_thread)
+		self.__mtgosdk_thread.update.connect(lambda _ : self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.connected))
+		self.__mtgosdk_thread.start()
 
 	def __setup_keyboard_hotkey_signals (self) -> None:
 		self.__hotkey_combos = {}
@@ -112,7 +127,6 @@ class LCAMMainWindow (LCAMainWindow):
 			if not combo:
 				continue
 			self.__hotkey_combos[combo] = self.__hotkey_combos.get(combo, ()) + (hotkey,)
-		logger.warning(self.__hotkey_combos)
 		self.__keyboard_listener = pynput.keyboard.GlobalHotKeys({
 			combo: ( lambda l_combo = combo : self.hotkey_pressed.emit(','.join(self.__hotkey_combos[l_combo])) )
 				for combo in self.__hotkey_combos.keys()
@@ -141,14 +155,34 @@ class LCAMMainWindow (LCAMainWindow):
 				layout.addWidget(segment_cbo, 1)
 				if controls_widget := QWidget():
 					controls_widget.setStyleSheet(self.__BUTTONS_STYLESHEET)
-					controls_layout = QHBoxLayout(controls_widget)
+					controls_layout = QVBoxLayout(controls_widget)
 					controls_layout.setContentsMargins(0, 0, 0, 0)
 					if startstop_btn := QPushButton(I18n(self).buttons.start):
 						self.__startstop_btn = startstop_btn
+						startstop_btn.setStyleSheet('padding: 0.75em;')
 						startstop_btn.setEnabled(False)
 						startstop_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 						startstop_btn.clicked.connect(self.__evt_startstop_clicked)
-					controls_layout.addWidget(startstop_btn, 1)
+					controls_layout.addWidget(startstop_btn)
+					if addlbtns_widget := QWidget():
+						addlbtns_layout = QHBoxLayout(addlbtns_widget)
+						addlbtns_layout.setContentsMargins(0, 0, 0, 0)
+						if mistake_btn := QPushButton(I18n(self).buttons.mistake):
+							mistake_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
+						addlbtns_layout.addWidget(mistake_btn)
+						if muteunmute_btn := QPushButton(
+							I18n(self).buttons.unmute
+							if LCAProjectState().model.muted
+							else I18n(self).buttons.mute
+						):
+							self.__muteunmute_btn = muteunmute_btn
+							muteunmute_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+							muteunmute_btn.setCheckable(True)
+							muteunmute_btn.setChecked(LCAProjectState().model.muted)
+							muteunmute_btn.clicked.connect(self.__evt_muteunmute_clicked)
+						addlbtns_layout.addWidget(muteunmute_btn)
+					controls_layout.addWidget(addlbtns_widget)
 				layout.addWidget(controls_widget, 1)
 			wrapper_layout.addWidget(widget)
 		self.setCentralWidget(wrapper_widget)
@@ -184,10 +218,15 @@ class LCAMMainWindow (LCAMainWindow):
 
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
-		self.__status_lbl = QLabel()
-		self.__status_lbl.setStyleSheet('margin-right: 0.3em; margin-bottom: 0.3em;')
-		self.statusBar().addPermanentWidget(self.__status_lbl)
-		self.__set_status_message(I18n(self).statuses.obs_connecting)
+		self.__status_lbls = {}
+		for lbl, msg in [
+			('obs', I18n(self).statuses.obs.connecting),
+			('mtgosdk', I18n(self).statuses.mtgosdk.connecting),
+		]:
+			self.__status_lbls[lbl] = QLabel()
+			self.__status_lbls[lbl].setStyleSheet('margin-right: 0.5em; margin-bottom: 0.2em; margin-top: 0.2em;')
+			self.statusBar().addPermanentWidget(self.__status_lbls[lbl])
+			self.__set_status_message(lbl, msg)
 
 	def closeEvent (self, event: QCloseEvent) -> None:
 		LCAProjectState().shutdown()
@@ -226,13 +265,15 @@ class LCAMMainWindow (LCAMainWindow):
 				state.model.segment_id = None
 				state.model.segment_number = 0
 
-	def __set_status_message (self, msg: str) -> None:
-		self.__status_lbl.setText(f'{msg}')
+	def __set_status_message (self, integration: str, msg: str) -> None:
+		if not self.__status_lbls.get(integration, None):
+			return
+		self.__status_lbls[integration].setText(f'{msg}')
 
 	@Slot(bool)
 	def __slot_obs_connected (self, success: bool) -> None:
 		self.setEnabled(success)
-		self.__set_status_message(I18n(self).statuses.obs_connected if success else I18n(self).statuses.obs_connecting)
+		self.__set_status_message('obs', I18n(self).statuses.obs.connected if success else I18n(self).statuses.obs.connecting)
 
 	@Slot(str)
 	def __slot_obs_on_scene_changed (self, scene_name: str) -> None:
@@ -246,26 +287,42 @@ class LCAMMainWindow (LCAMainWindow):
 		self.setEnabled(True)
 		self.__rebuild_segment_cbo()
 		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
-		self.__set_status_message(I18n(self).statuses.obs_recording if active else I18n(self).statuses.obs_connected)
+		self.__set_status_message('obs', I18n(self).statuses.obs.recording if active else I18n(self).statuses.obs.connected)
 
 	def __evt_mistake_clicked (self) -> None:
-		logger.warning('mistake')
+		logger.info('Marking a mistake')
+		with LCAProjectState() as state:
+			state.model.mistake_count += 1
 
 	def __evt_mute_clicked (self) -> None:
-		logger.warning('mute')
+		logger.info('Muted')
+		with LCAProjectState() as state:
+			state.model.muted = True
+		self.__muteunmute_btn.setChecked(True)
+		self.__muteunmute_btn.setText(I18n(self).buttons.unmute)
 
 	def __evt_unmute_clicked (self) -> None:
-		logger.warning('unmute')
+		logger.info('Unmuted')
+		with LCAProjectState() as state:
+			state.model.muted = False
+		self.__muteunmute_btn.setChecked(False)
+		self.__muteunmute_btn.setText(I18n(self).buttons.mute)
+
+	def __evt_muteunmute_clicked (self) -> None:
+		self.__evt_unmute_clicked() if LCAProjectState().model.muted else self.__evt_mute_clicked()
 
 	def __evt_clip_clicked (self) -> None:
-		logger.warning('clip')
+		logger.info('Clip')
 
 	@Slot(str)
 	def __evt_hotkey_pressed (self, hotkeys: str) -> None:
 		logger.debug(f'Pressed hotkeys: {hotkeys}')
+		muted = LCAProjectState().model.muted
 		if not self.isEnabled():
 			return
 		for hotkey in hotkeys.split(','):
+			if ((hotkey == 'muted') and muted) or ((hotkey == 'unmuted') and not muted):
+				continue
 			getattr(self, f'__evt_{hotkey}_clicked')()
 
 	def obs (self) -> LCAMObsRecordPuppeteerWorkerObject:

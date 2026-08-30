@@ -547,6 +547,8 @@ LCAMMainWindow:
   errors:
     need_slug: Please select a project when opening the Multicast Tool.
     state_server_already_running: Only one instance of either the Multicast or Render Tools can be running at once. Please close out the running Multicast or Render Tool instance and try again.
+  plugins:
+    button: Plugins
   segment:
     select_placeholder: Select a segment...
     startnew_placeholder: Start a new segment...

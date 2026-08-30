@@ -4,20 +4,20 @@
   " Litbrown Creator Assistant
   " Automation Software for Magic: the Gathering Online (TM) Content Creators
   " Copyright (C) 2026 Reid Litbrown
-  " 
+  "
   " This program is free software: you can redistribute it and/or modify
   " it under the terms of the GNU Affero General Public License as published
   " by the Free Software Foundation, either version 3 of the License, or
   " (at your option) any later version.
-  " 
+  "
   " This program is distributed in the hope that it will be useful,
   " but WITHOUT ANY WARRANTY; without even the implied warranty of
   " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   " GNU Affero General Public License for more details.
-  " 
+  "
   " You should have received a copy of the GNU Affero General Public License
   " along with this program.  If not, see <https://www.gnu.org/licenses/>.
-  " 
+  "
   """
 
 import typing
@@ -38,30 +38,30 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	mistake_count: int = 0
 	muted: bool = False
 
-	class _Mtgo (pydantic.BaseModel, validate_assignment = True):
+	class Mtgo (pydantic.BaseModel, validate_assignment = True):
 		
-		class _Match (pydantic.BaseModel, validate_assignment = True):
+		class Match (pydantic.BaseModel, validate_assignment = True):
 			id: int
 			best_of: int = 3
+			players: list[str]
 			
-			class _Game (pydantic.BaseModel, validate_assignment = True):
+			class Game (pydantic.BaseModel, validate_assignment = True):
 				id: int
-				players: list[str]
 				winners: list[str] | None = None
 				losers: list[str] | None = None
-			games: list[_Game] = []
+			games: list[Game] = []
 
-		matches: list[LCAMtgoMatchModel] = []
+		matches: list[Match] = []
 
 		#state: LCAMtgoStateModel = LCAMtgoStateModel() # TODO
 
-	mtgo: _Mtgo = _Mtgo()
+	mtgo: Mtgo = Mtgo()
 
-	class _Core (pydantic.BaseModel, validate_assignment = True):
+	class Core (pydantic.BaseModel, validate_assignment = True):
 		pass
-	core: _Core = _Core()
+	core: Core = Core()
 
-	class _Plugins (pydantic.BaseModel, validate_assignment = True, extra = 'allow'):
+	class Plugins (pydantic.BaseModel, validate_assignment = True, extra = 'allow'):
 		pass
-	plugins: _Plugins = _Plugins()
+	plugins: Plugins = Plugins()
 

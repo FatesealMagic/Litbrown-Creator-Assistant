@@ -4,20 +4,20 @@
   " Litbrown Creator Assistant
   " Automation Software for Magic: the Gathering Online (TM) Content Creators
   " Copyright (C) 2026 Reid Litbrown
-  " 
+  "
   " This program is free software: you can redistribute it and/or modify
   " it under the terms of the GNU Affero General Public License as published
   " by the Free Software Foundation, either version 3 of the License, or
   " (at your option) any later version.
-  " 
+  "
   " This program is distributed in the hope that it will be useful,
   " but WITHOUT ANY WARRANTY; without even the implied warranty of
   " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   " GNU Affero General Public License for more details.
-  " 
+  "
   " You should have received a copy of the GNU Affero General Public License
   " along with this program.  If not, see <https://www.gnu.org/licenses/>.
-  " 
+  "
   """
 
 import base64
@@ -58,6 +58,7 @@ class LCAMMainWindow (LCAMainWindow):
 	__segment_cbo: LCAComboBox
 	__startstop_btn: QPushButton
 	__status_lbl: QLabel
+	__plugins_menu: QMenu
 	
 	__obs_thread: LCAWorkerThread
 	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
@@ -186,6 +187,7 @@ class LCAMMainWindow (LCAMainWindow):
 				layout.addWidget(controls_widget, 1)
 			wrapper_layout.addWidget(widget)
 		self.setCentralWidget(wrapper_widget)
+		self.__setup_plugins_menu()
 		self.__setup_status_bar()
 		self.__obs_thread.start()
 
@@ -216,6 +218,10 @@ class LCAMMainWindow (LCAMainWindow):
 					if f'{segment.id}-0' not in LCAProjectState().model.start_timestamps.keys():
 						self.__segment_cbo.addItem(segment.name, (segment.id, 0))
 
+	def __setup_plugins_menu (self) -> None:
+		self.__plugins_menu = QMenu(self)
+		self.__plugins_menu.addAction(QAction("wow"))
+
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
 		self.__status_lbls = {}
@@ -224,9 +230,16 @@ class LCAMMainWindow (LCAMainWindow):
 			('mtgosdk', I18n(self).statuses.mtgosdk.connecting),
 		]:
 			self.__status_lbls[lbl] = QLabel()
-			self.__status_lbls[lbl].setStyleSheet('margin-right: 0.5em; margin-bottom: 0.2em; margin-top: 0.2em;')
+			self.__status_lbls[lbl].setStyleSheet('margin-right: 0.1em;')
 			self.statusBar().addPermanentWidget(self.__status_lbls[lbl])
 			self.__set_status_message(lbl, msg)
+		if plugins_btn := QPushButton(I18n(self).plugins.button):
+			plugins_btn.setStyleSheet('margin-right: 0.7em; margin-bottom: 0.4em; margin-top: 0.4em; margin-left: 0.1em;')
+			plugins_btn.clicked.connect(lambda : QMenu.exec(self.__build_plugins_menu(), QCursor.pos()))
+		self.statusBar().addPermanentWidget(plugins_btn)
+
+	def __build_plugins_menu (self) -> list[QAction]:
+		return [QAction(x) for x in ('wow', 'fuck', 'tron')]
 
 	def closeEvent (self, event: QCloseEvent) -> None:
 		LCAProjectState().shutdown()

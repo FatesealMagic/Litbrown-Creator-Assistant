@@ -26,7 +26,6 @@ from loguru import logger
 import pydantic
 
 from .LCAProjectFileModel import *
-from .LCAMtgoMatchModel import *
 
 class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 
@@ -40,8 +39,22 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	muted: bool = False
 
 	class _Mtgo (pydantic.BaseModel, validate_assignment = True):
+		
+		class _Match (pydantic.BaseModel, validate_assignment = True):
+			id: int
+			best_of: int = 3
+			
+			class _Game (pydantic.BaseModel, validate_assignment = True):
+				id: int
+				players: list[str]
+				winners: list[str] | None = None
+				losers: list[str] | None = None
+			games: list[_Game] = []
+
 		matches: list[LCAMtgoMatchModel] = []
-		state: LCAMtgoStateModel = LCAMtgoStateModel() # TODO
+
+		#state: LCAMtgoStateModel = LCAMtgoStateModel() # TODO
+
 	mtgo: _Mtgo = _Mtgo()
 
 	class _Core (pydantic.BaseModel, validate_assignment = True):

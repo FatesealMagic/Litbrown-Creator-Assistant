@@ -37,9 +37,11 @@ from ...I18n import *
 from ...Settings import *
 from ...Util import *
 
+from ..LCAPluginWidget import *
 from ..LCAComboBox import *
 from ..LCAMainWindow import *
 from ..LCAPopupMessage import *
+from ...common.LCAPluginManager import *
 from ...common.LCAProjectState import *
 from ...common.LCAKeySequence import *
 from ...integrations.LCAIntegrationErrors import *
@@ -59,7 +61,7 @@ class LCAMMainWindow (LCAMainWindow):
 	__startstop_btn: QPushButton
 	__status_lbl: QLabel
 	__plugins_menu: QMenu
-	
+
 	__obs_thread: LCAWorkerThread
 	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
 
@@ -79,6 +81,8 @@ class LCAMMainWindow (LCAMainWindow):
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(I18n(self).title)
 		if profile := Settings().tools.multicast.profile.get(self.__project.series_id, None):
+			for plugin in profile.loaded_plugins:
+				self.__load_and_dock_plugin(plugin)
 			self.restoreGeometry(profile.geometry)
 			self.restoreState(profile.state)
 		self.setEnabled(False)
@@ -187,9 +191,9 @@ class LCAMMainWindow (LCAMainWindow):
 				layout.addWidget(controls_widget, 1)
 			wrapper_layout.addWidget(widget)
 		self.setCentralWidget(wrapper_widget)
-		self.__setup_plugins_menu()
 		self.__setup_status_bar()
 		self.__obs_thread.start()
+		self.setEnabled(True)
 
 	def __update_id_label (self, state: LCAProjectStateModel) -> None:
 		text  = f'<html><h3 style="text-align: center;">'
@@ -218,10 +222,6 @@ class LCAMMainWindow (LCAMainWindow):
 					if f'{segment.id}-0' not in LCAProjectState().model.start_timestamps.keys():
 						self.__segment_cbo.addItem(segment.name, (segment.id, 0))
 
-	def __setup_plugins_menu (self) -> None:
-		self.__plugins_menu = QMenu(self)
-		self.__plugins_menu.addAction(QAction("wow"))
-
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
 		self.__status_lbls = {}
@@ -239,7 +239,14 @@ class LCAMMainWindow (LCAMainWindow):
 		self.statusBar().addPermanentWidget(plugins_btn)
 
 	def __build_plugins_menu (self) -> list[QAction]:
-		return [QAction(x) for x in ('wow', 'fuck', 'tron')]
+		actions = []
+		for import_path, plugin_name in LCAPluginManager.list_plugins():
+			action = QAction(plugin_name)
+			action.triggered.connect(lambda _, l_import_path = import_path : self.__evt_toggle_plugin_activated(l_import_path))
+			action.setCheckable(True)
+			action.setChecked(LCAPluginManager.is_plugin_loaded(import_path))
+			actions.append(action)
+		return actions
 
 	def closeEvent (self, event: QCloseEvent) -> None:
 		LCAProjectState().shutdown()
@@ -249,6 +256,7 @@ class LCAMMainWindow (LCAMainWindow):
 				Settings().ToolsModel.ToolsMulticastModel.ToolsMulticastProfileModel(
 					geometry = base64.b64encode(bytes(self.saveGeometry())),
 					state = base64.b64encode(bytes(self.saveState())),
+					loaded_plugins = LCAPluginManager.list_loaded_plugins(),
 				)
 		self.__obs_thread.wait()
 		event.accept()
@@ -303,6 +311,8 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__set_status_message('obs', I18n(self).statuses.obs.recording if active else I18n(self).statuses.obs.connected)
 
 	def __evt_mistake_clicked (self) -> None:
+		logger.warning(self.__class__.__module__)
+		logger.warning(self.__class__.__qualname__)
 		logger.info('Marking a mistake')
 		with LCAProjectState() as state:
 			state.model.mistake_count += 1
@@ -338,10 +348,23 @@ class LCAMMainWindow (LCAMainWindow):
 				continue
 			getattr(self, f'__evt_{hotkey}_clicked')()
 
+	def __evt_toggle_plugin_activated (self, import_path: str) -> None:
+		if LCAPluginManager.is_plugin_loaded(import_path):
+			self.findChild(LCAPluginWidget, f'plugin.{import_path}').close()
+		else:
+			self.__load_and_dock_plugin(import_path)
+
+	def __load_and_dock_plugin (self, import_path: str) -> None:
+		dock = LCAPluginManager.load_plugin(self, import_path)
+		if not dock:
+			LCAPopupMessage.warning(I18n(self).errors.plugin_not_loaded)
+			return
+		self.addDockWidget(Qt.BottomDockWidgetArea, dock)
+		dock.setFloating(True)
+
 	def obs (self) -> LCAMObsRecordPuppeteerWorkerObject:
 		return self.__obs_thread.worker
 
 	def setEnabled (self, enabled: bool) -> None:
 		super().setEnabled(enabled)
-		# Also disable floating docks
 

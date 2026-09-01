@@ -58,9 +58,15 @@ class LCA:
 			{ 'sink': sys.stderr or (lambda msg : None), 'format': self.__LOGGER_FORMAT, },
 			{ 'sink': './logs/{time}.log', 'format': self.__LOGGER_FORMAT, 'rotation': '5 MB' },
 		] )
-		I18n.load(Assets.yaml(f'i18n/{Settings().tools.general.language}.yaml'))
+		self.__register_self_package()
+		#I18n.load(Assets.yaml(f'i18n/{Settings().tools.general.language}.yaml'))
 		# TODO can't get this working well with multiple instances running
 		# os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = str(Config().network.chromium_debug_port)
+
+	def __register_self_package (self) -> None:
+		current_module = importlib.import_module(__name__)
+		sys.modules['LCA'] = current_module
+		globals()['LCA'] = current_module
 
 	def run (self) -> None:
 		logger.info(sys.argv)
@@ -98,7 +104,7 @@ class LCA:
 
 	def __gui_set_font (self) -> None:
 		font_id = QFontDatabase.addApplicationFontFromData(QByteArray(Assets.binary(
-			'font/NotoSans-VariableFont_wdth,wght.ttf'
+			'font/ChironGoRoundTC-VariableFont_wght.ttf'
 		)))
 		font = QFont(QFontDatabase.applicationFontFamilies(font_id)[0], 11)
 		font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)

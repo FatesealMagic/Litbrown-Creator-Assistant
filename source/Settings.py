@@ -232,6 +232,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			class ToolsMulticastProfileModel (pydantic.BaseModel, validate_assignment = True):
 				geometry: pydantic.Base64Bytes = b''
 				state: pydantic.Base64Bytes = b''
+				loaded_plugins: list[str] = []
 			profile: dict[typing.Annotated[str, 'series_id'], ToolsMulticastProfileModel] = {}
 
 		multicast: ToolsMulticastModel = ToolsMulticastModel()

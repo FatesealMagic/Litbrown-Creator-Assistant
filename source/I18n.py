@@ -20,23 +20,34 @@
   "
   """
 
+import os
+import pathlib
 import typing
 
 from loguru import logger
 import munch
 import yaml
 
-class I18n (munch.Munch):
-	
-	__i18n: munch.Munch
-	
-	def __init__ (self, key: typing.Type | object):
-		if type(key).__name__ in ('type', 'ObjectType', 'ModelMetaclass'):
-			super().__init__(self.__i18n[key.__name__])
-		else:
-			super().__init__(self.__i18n[type(key).__name__])
+from .Settings import *
 
-	@classmethod
-	def load (cls, i18n_object: dict) -> None:
-		cls.__i18n = munch.munchify(i18n_object)
+def I18n (
+	key: typing.Type | object,
+	/, *,
+	_i18n_munches = {},
+) -> munch.Munch:
+	if type(key) not in ('type', 'ObjectType', 'ModelMetaclass'):
+		key = type(key)
+	split = key.__module__.split('.')
+	i18n_key = None if split[0] == 'source' else f'{split[0]}.{split[1]}'
+	if i18n_key not in _i18n_munches.keys():
+		logger.info(f'Loading I18n for {i18n_key}')
+		with open(
+			pathlib.Path.cwd() /
+				pathlib.Path(f'plugins/{split[0]}/{split[1]}' if split[0] != 'source' else '.') /
+				pathlib.Path(f'assets/i18n/{Settings().tools.general.language}.yaml'),
+			'r',
+			encoding = 'utf-8',
+		) as f:
+			_i18n_munches[i18n_key] = munch.munchify(yaml.safe_load(f.read()))
+	return _i18n_munches[i18n_key][key.__name__]
 

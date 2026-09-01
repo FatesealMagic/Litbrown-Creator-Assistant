@@ -159,6 +159,10 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 		websocket_port: int = 42969
 		websocket_name: str = 'LCA Project State Server'
 	network: NetworkModel = NetworkModel()
+
+	class PluginsModel (pydantic.BaseModel, frozen = True):
+		path: str = 'plugins'
+	plugins: PluginsModel = PluginsModel()
 	
 	class StyleModel (pydantic.BaseModel, frozen = True):
 		text_lgt: str = '#ffffff'

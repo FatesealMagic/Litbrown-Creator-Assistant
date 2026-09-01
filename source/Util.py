@@ -26,11 +26,6 @@ import sys
 
 from loguru import logger
 
-from PySide6.QtGui import *
-from PySide6.QtWidgets import *
-
-from .gui.LCAPopupMessage import *
-
 class Util:
 	
 	CLI_TOOLS = ('daemon',)
@@ -51,12 +46,16 @@ class Util:
 		return '.' in sys.argv[0] and sys.argv[0].split('.')[-1] == 'py'
 
 	@classmethod
-	def launch_new_instance (cls, tool: str, args: list[str] = []) -> subprocess.Popen | None:
+	def launch_new_instance (cls,
+		tool: str,
+		args: list[str] = [],
+		/,
+	) -> subprocess.Popen | None:
 		try:
 			return subprocess.Popen( [sys.executable, '-m', 'source', tool.lower()] + args )
 		except Exception as e:
 			logger.exception(e)
-			LCAPopupMessage.error(f'{e}: {' '.join(base_cmd)}')
+			return None
 
 	@classmethod
 	def oklch_to_hex (cls, l: float, c: float, h: float) -> QColor:

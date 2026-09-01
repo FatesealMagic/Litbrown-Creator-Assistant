@@ -28,7 +28,6 @@ from PySide6.QtWidgets import *
 
 from ....Config import *
 from ....I18n import *
-from ....Util import *
 
 from ...LCAWidget import *
 

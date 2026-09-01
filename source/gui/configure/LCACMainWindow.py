@@ -28,9 +28,10 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
+from ...Assets import *
 from ...Config import *
 from ...I18n import *
-from ...Assets import *
+from ...Util import *
 
 from ..LCAMainWindow import *
 from ..LCASideTabWidget import *

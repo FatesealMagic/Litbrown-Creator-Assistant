@@ -31,35 +31,53 @@ from ..Assets import *
 
 class LCAPopupMessage (QMessageBox):
 
-	def __init__ (self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
+	def __init__ (self,
+		/, *,
+		icon: QMessageBox.Icon,
+		title_key: str,
+		text: str,
+		buttons: QMessageBox.StandardButton,
+	):
+		super().__init__(icon, I18n(self)[title_key], text.strip(), buttons)
 		self.setFont(QApplication.font())
 		self.setWindowIcon(Assets.QIcon('icons/assistant.ico'))
 
 	@classmethod
-	def info (cls, text: str, buttons = QMessageBox.StandardButton.NoButton) -> QMessageBox.StandardButton:
+	def info (cls,
+		text: str,
+		/, *,
+		buttons = QMessageBox.StandardButton.NoButton,
+	) -> QMessageBox.StandardButton:
 		return cls(
-			QMessageBox.Icon.Information,
-			I18n(cls).info_title,
-			text.strip(),
+			icon = QMessageBox.Icon.Information,
+			title_key = 'info_title',
+			text = text,
 			buttons = buttons,
 		).exec()
 
 	@classmethod
-	def warning (cls, text: str, buttons = QMessageBox.StandardButton.NoButton) -> QMessageBox.StandardButton:
+	def warning (cls,
+		text: str,
+		/, *,
+		buttons = QMessageBox.StandardButton.NoButton,
+	) -> QMessageBox.StandardButton:
 		return cls(
-			QMessageBox.Icon.Warning,
-			I18n(cls).warning_title,
-			text.strip(),
+			icon = QMessageBox.Icon.Warning,
+			title_key = 'warning_title',
+			text = text,
 			buttons = buttons,
 		).exec()
 
 	@classmethod
-	def error (cls, text: str, buttons = QMessageBox.StandardButton.NoButton) -> QMessageBox.StandardButton:
+	def error (cls,
+		text: str,
+		/, *,
+		buttons = QMessageBox.StandardButton.NoButton,
+	) -> QMessageBox.StandardButton:
 		return cls(
-			QMessageBox.Icon.Critical,
-			I18n(cls).error_title,
-			text.strip(),
+			icon = QMessageBox.Icon.Critical,
+			title_key = 'error_title',
+			text = text,
 			buttons = buttons,
 		).exec()
 

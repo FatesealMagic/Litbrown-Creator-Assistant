@@ -27,6 +27,8 @@ import pydantic
 
 from .LCAProjectFileModel import *
 
+# Model ########################################################################
+
 class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 
 	project: LCAProjectFileModel
@@ -44,11 +46,11 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 			id: int
 			best_of: int = 3
 			players: list[str]
+			victory: bool | None = None
 			
 			class Game (pydantic.BaseModel, validate_assignment = True):
 				id: int
-				winners: list[str] | None = None
-				losers: list[str] | None = None
+				victory: bool | None = None
 			games: list[Game] = []
 
 		matches: list[Match] = []
@@ -64,4 +66,21 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	class Plugins (pydantic.BaseModel, validate_assignment = True, extra = 'allow'):
 		pass
 	plugins: Plugins = Plugins()
+
+# Implementation ###############################################################
+
+	def mtgo_match_from_id (self, match_id: int) -> Mtgo.Match | None:
+		for match_model in self.mtgo.matches:
+			if match_model.id == match_id:
+				return match_model
+		logger.info(f'Could not locate match {match_id}')
+		return None
+
+	def mtgo_game_from_id (self, game_id: int) -> Mtgo.Match.Game | None:
+		for match_model in self.mtgo.matches:
+			for game_model in match_model.games:
+				if game_model.id == game_id:
+					return game_model
+		logger.info(f'Could not locate game {game_id}')
+		return None
 

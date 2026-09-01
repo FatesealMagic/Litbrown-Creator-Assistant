@@ -74,13 +74,30 @@ class LCAMtgosdkIntegration (LCAIntegration):
 			logger.exception(e)
 
 	def on_game_joined (self,
-		callback: typing.Callable[[MTGOSDK.API.Play.Match, MTGOSDK.API.Play.Games.Game], None],
+		callback: typing.Callable[ [
+			MTGOSDK.API.Play.Match,
+			MTGOSDK.API.Play.Games.Game,
+		], None ],
 	) -> None:
 		import MTGOSDK; import System
 		MTGOSDK.API.Play.EventManager.GameJoined += System.Action[
 			MTGOSDK.API.Play.Event,
 			MTGOSDK.API.Play.Games.Game,
 		]( lambda *args : self.__invoke_callback(callback, args) )
+		logger.debug(f'Registered {callback}')
+
+	def on_match_state_changed (self,
+		match_: MTGOSDK.API.Play.Match,
+		callback: typing.Callable[ [
+			MTGOSDK.API.Play.Match,
+			MTGOSDK.API.Play.MatchState,
+		], None ],
+	) -> None:
+		import MTGOSDK; import System
+		match_.OnMatchStateChanged += System.Action[
+			MTGOSDK.API.Play.MatchState,
+		]( lambda *args : self.__invoke_callback(callback, (match_,) + args) )
+		logger.debug(f'Registered {callback}')
 
 	def on_game_results_changed (self,
 		game: MTGOSDK.API.Play.Games.Game,
@@ -93,7 +110,7 @@ class LCAMtgosdkIntegration (LCAIntegration):
 		game.OnGameResultsChanged += System.Action[
 			System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
 		]( lambda *args : self.__invoke_callback(callback, (game,) + args) )
-		logger.warning('after registering the thing')
+		logger.debug(f'Registered {callback}')
 
 	def get_username (self) -> str | None:
 		import MTGOSDK

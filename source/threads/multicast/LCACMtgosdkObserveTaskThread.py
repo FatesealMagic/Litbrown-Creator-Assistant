@@ -44,33 +44,24 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 		mtgo_match: MTGOSDK.API.Play.Match,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
 	) -> None:
-		logger.info(f'{mtgo_match.Id} {mtgo_match.Token}')
-		if str(mtgo_game.Status) == 'Finished': # TODO check if game ID is already in the state model
-			logger.info(f'{list(mtgo_game.Players)} {list(mtgo_game.WinningPlayers)}')
-		logger.info(f'{mtgo_game.Id} {mtgo_game.Status} {list(mtgo_game.WinningPlayers)}')
-		self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
-		logger.info('after register')
-
-		for match_model in LCAProjectState().model.mtgo.matches:
-			if match_model.id == mtgo_match.Id:
-				for game_model in match_model.games:
-					if game_model.id == mtgo_game.Id:
-						if str(mtgo_game.Status) == 'Finished':
-							winners = [winner.Name for winner in list(mtgo_game.WinningPlayers)]
-							losers = [player for player in match_model.players if player not in winners]
-							with LCAProjectState() as state:
-								game_model.winners = winners
-								game_model.losers = losers
-						return
-				logger.info(f'Started MTGO game ({mtgo_game.Id}) within existing match ({mtgo_match.Id})')
-				game_model = LCAProjectStateModel.Mtgo.Match.Game(
-					id = mtgo_game.Id,
-				)
-				self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
-				with LCAProjectState() as state:
-					match_model.games.append(game_model)
+		match_model = LCAProjectState().model.mtgo_match_from_id(mtgo_match.Id)
+		if match_model:
+			game_model = LCAProjectState().model.mtgo_game_from_id(mtgo_game.Id)
+			if game_model:
+				if str(mtgo_game.Status) == 'Finished':
+					victory = self.__sdk.get_username() in [winner.Name for winner in list(mtgo_game.WinningPlayers)]
+					with LCAProjectState() as state:
+						game_model.victory = victory
 				return
-		logger.info(f'Started MTGO game({mtgo_game.Id}) within new match ({mtgo_match.Id})')
+			logger.info(f'Started MTGO game ({mtgo_game.Id}) within existing match ({mtgo_match.Id})')
+			game_model = LCAProjectStateModel.Mtgo.Match.Game(
+				id = mtgo_game.Id,
+			)
+			self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
+			with LCAProjectState() as state:
+				match_model.games.append(game_model)
+			return
+		logger.info(f'Started MTGO game ({mtgo_game.Id}) within new match ({mtgo_match.Id})')
 		match_model = LCAProjectStateModel.Mtgo.Match(
 			id = mtgo_match.Id,
 			best_of = mtgo_match.MaxGames,
@@ -79,21 +70,34 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 				id = mtgo_game.Id,
 			) ],
 		)
+		self.__sdk.on_match_state_changed(mtgo_match, self.__evt_match_state_changed)
 		self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
 		with LCAProjectState() as state:
 			state.model.mtgo.matches.append(match_model)
+
+	def __evt_match_state_changed (self,
+		mtgo_match: MTGOSDK.API.Play.Match,
+		mtgo_match_state: MTGOSDK.API.Play.MatchState,
+	) -> None:
+		logger.warning(f'in match state changed: {mtgo_match_state}')
+		if not len(list(mtgo_match.WinningPlayers)) and not len(list(mtgo_match.LosingPlayers)):
+			return
+		match_model = LCAProjectState().model.mtgo_match_from_id(mtgo_match.Id)
+		if not match_model:
+			return
+		victory = self.__sdk.get_username() in [winner.Name for winner in list(mtgo_match.WinningPlayers)]
+		if victory != match_model.victory:
+			with LCAProjectState() as state:
+				match_model.victory = victory
 
 	def __evt_game_results_changed (self,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
 		mtgo_results: System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
 	) -> None:
-		winners = [result.Player for result in list(mtgo_results) if str(result.Result) == 'Win']
-		losers = [result.Player for result in list(mtgo_results) if str(result.Result) == 'Loss']
-		for match_model in LCAProjectState().model.mtgo.matches:
-			if match_model.id == mtgo_game.Match.Id:
-				for game_model in match_model.games:
-					if game_model.id == mtgo_game.Id:
-						with LCAProjectState() as state:
-							game_model.winners = winners
-							game_model.losers = losers
+		victory = self.__sdk.get_username() in [result.Player for result in list(mtgo_results) if str(result.Result) == 'Win']
+		game_model = LCAProjectState().model.mtgo_game_from_id(mtgo_game.Id)
+		if not game_model:
+			return
+		with LCAProjectState() as state:
+			game_model.victory = victory
 

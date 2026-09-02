@@ -38,7 +38,7 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 			self.__sdk = sdk
 			sdk.on_game_joined(self.__evt_game_joined)
 			self.update.emit(True)
-			sdk.listen_until_mtgo_closed()
+			sdk.listen_until_mtgo_closed(self.isInterruptionRequested)
 
 	def __evt_game_joined (self,
 		mtgo_match: MTGOSDK.API.Play.Match,

@@ -251,6 +251,7 @@ class LCAMMainWindow (LCAMainWindow):
 	def closeEvent (self, event: QCloseEvent) -> None:
 		LCAProjectState().shutdown()
 		self.__obs_thread.quit()
+		self.__mtgosdk_thread.requestInterruption()
 		with Settings():
 			Settings().tools.multicast.profile[self.__project.series_id] = \
 				Settings().ToolsModel.ToolsMulticastModel.ToolsMulticastProfileModel(
@@ -259,6 +260,7 @@ class LCAMMainWindow (LCAMainWindow):
 					loaded_plugins = LCAPluginManager.list_loaded_plugins(),
 				)
 		self.__obs_thread.wait()
+		self.__mtgosdk_thread.wait()
 		event.accept()
 
 	def __evt_segment_changed (self, segment_info: tuple[str, int | None]) -> None:

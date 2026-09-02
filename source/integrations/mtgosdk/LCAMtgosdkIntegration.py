@@ -121,10 +121,11 @@ class LCAMtgosdkIntegration (LCAIntegration):
 			return None
 
 	@LCAIntegration.in_context
-	def listen_until_mtgo_closed (self) -> None:
+	def listen_until_mtgo_closed (self, should_continue: typing.Callable[[], bool]) -> None:
 		import MTGOSDK
-		while MTGOSDK.Core.Remoting.RemoteClient.MTGOProcess():
+		while (abrupt_termination := should_continue()) and MTGOSDK.Core.Remoting.RemoteClient.MTGOProcess():
 			time.sleep(0.05)
 		logger.debug('MTGO closed')
-		raise LCAIntegrationUnexpectedError
+		if abrupt_termination:
+			raise LCAIntegrationUnexpectedError
 

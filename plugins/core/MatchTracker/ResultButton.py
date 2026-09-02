@@ -31,6 +31,12 @@ class ResultButton (QPushButton):
 	
 	POSSIBLE_VALUES = (None, True, False)
 	
+	__STYLESHEETS = {
+		None:  '',
+		True:  'background-color: #090;',
+		False: 'background-color: #900;',
+	}
+	
 	changed = Signal(object) # bool | None
 
 	__value: bool | None = None
@@ -48,6 +54,7 @@ class ResultButton (QPushButton):
 			return
 		self.__value = val
 		self.setText(I18n(self).labels[str(val)])
+		self.setStyleSheet('font-weight: bold;' + self.__STYLESHEETS[val])
 		self.changed.emit(val)
 
 	def __evt_on_clicked (self) -> None:

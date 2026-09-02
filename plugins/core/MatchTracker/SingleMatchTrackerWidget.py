@@ -44,10 +44,11 @@ class SingleMatchTrackerWidget (LCAWidget):
 		super().__init__()
 	
 	def _setup_layout (self) -> None:
+		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 		layout = QVBoxLayout(self)
 		layout.setContentsMargins(0, 0, 0, 0)
 		layout.addWidget(
-			QLabel(f'{I18n(self).match} #{self.__match_number}'),
+			QLabel(f'<html><h3>{I18n(self).match} #{self.__match_number}</h3></html>'),
 			alignment = Qt.AlignmentFlag.AlignHCenter,
 		)
 		if match_result_btn := ResultButton():
@@ -55,9 +56,13 @@ class SingleMatchTrackerWidget (LCAWidget):
 			match_result_btn.changed.connect(self.__evt_match_result_changed)
 		layout.addWidget(match_result_btn)
 		layout.addWidget(
-			QLabel(f'{I18n(self).vs} {', '.join(self.__get_match_ref().opponents)}'),
+			QLabel(', '.join(self.__get_match_ref().opponents)),
 			alignment = Qt.AlignmentFlag.AlignHCenter,
 		)
+		if deckname_input := QLineEdit():
+			deckname_input.setPlaceholderText(I18n(self).archetype)
+			deckname_input.editingFinished.connect( lambda : self.__evt_archetype_edited(deckname_input.text()) )
+		layout.addWidget(deckname_input)
 		self.__game_result_btns = []
 		for i in range(self.__get_match_ref().best_of):
 			layout.addWidget(LCASeparator.horizontal())
@@ -66,6 +71,13 @@ class SingleMatchTrackerWidget (LCAWidget):
 				game_result_btn.setEnabled(False)
 				game_result_btn.changed.connect(lambda val, l_i = i : self.__evt_game_result_changed(i, val))
 			layout.addWidget(game_result_btn)
+			if notes_input := QLineEdit():
+				notes_input.setPlaceholderText(I18n(self).notes)
+				notes_input.editingFinished.connect(
+					lambda l_input = notes_input, l_i = i : self.__evt_game_notes_edited(l_i, l_input.text())
+				)
+			layout.addWidget(notes_input)
+		layout.addStretch()
 		self.__evt_model_updated(LCAProjectState().model)
 		LCAProjectState().updated_model.connect(self.__evt_model_updated)
 
@@ -88,6 +100,14 @@ class SingleMatchTrackerWidget (LCAWidget):
 			return
 		with LCAProjectState():
 			self.__get_match_ref().games[game_index].victory = val
+
+	def __evt_archetype_edited (self, archetype: str) -> None:
+		with LCAProjectState():
+			self.__get_match_ref().archetype = archetype
+
+	def __evt_game_notes_edited (self, game_index: int, notes: str) -> None:
+		with LCAProjectState():
+			self.__get_match_ref().games[game_index].notes = notes
 
 	def __get_match_ref (self) -> LCAProjectStateModel.Mtgo.Match:
 		return LCAProjectState().model.mtgo.matches[self.__match_number]

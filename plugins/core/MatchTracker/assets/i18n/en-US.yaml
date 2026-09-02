@@ -22,6 +22,8 @@
 SingleMatchTrackerWidget:
   match: Match
   vs: vs
+  archetype: Opponent's Deck
+  notes: Game Notes
 
 ResultButton:
   labels:

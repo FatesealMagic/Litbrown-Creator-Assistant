@@ -44,6 +44,6 @@ class MatchTrackerWidget (LCAPluginWidget):
 	def __evt_state_updated (self, state: LCAProjectStateModel) -> None:
 		for i in range(self.__carousel_widget.count(), len(state.mtgo.matches)):
 			self.setWidget(self.__carousel_widget)
-			self.__carousel_widget.addItem( SingleMatchTrackerWidget(i), i )
+			self.__carousel_widget.addItem( SingleMatchTrackerWidget(i), i, alignment = Qt.Alignment() )
 			self.__carousel_widget.set_value(i)
 

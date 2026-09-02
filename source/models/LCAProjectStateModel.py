@@ -47,10 +47,12 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 			best_of: int = 3
 			opponents: list[str]
 			victory: bool | None = None
+			archetype: str = ''
 			
 			class Game (pydantic.BaseModel, validate_assignment = True):
 				id: int
 				victory: bool | None = None
+				notes: str = ''
 			games: list[Game] = []
 
 		matches: list[Match] = []

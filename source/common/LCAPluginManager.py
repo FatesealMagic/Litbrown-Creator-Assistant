@@ -101,6 +101,7 @@ class LCAPluginManager:
 	def unload_plugin (cls, import_path: str) -> None:
 		if import_path in cls.__loaded_plugins:
 			del cls.__loaded_plugins[import_path]
+		logger.debug(cls.__loaded_plugins)
 		if import_path in sys.modules:
 			del sys.modules[import_path]
 

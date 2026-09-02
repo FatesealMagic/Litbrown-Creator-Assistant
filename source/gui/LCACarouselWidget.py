@@ -34,14 +34,23 @@ class LCACarouselWidget (LCAWidget):
 	
 	changed = Signal(object)
 	
+	__margin: bool
+
 	__datas: list[object]
 	__widgets = list[QWidget]
+
+	def __init__ (self,
+		margin: bool = False,
+	):
+		self.__margin = margin
+		super().__init__()
 	
 	def _setup_layout (self) -> None:
 		self.__datas = []
 		self.__widgets = []
 		layout = QHBoxLayout(self)
-		layout.setContentsMargins(0, 0, 0, 0)
+		if not self.__margin:
+			layout.setContentsMargins(0, 0, 0, 0)
 		if group_widget := QGroupBox():
 			group_layout = QHBoxLayout(group_widget)
 			group_layout.setContentsMargins(0, 0, 0, 0)
@@ -88,6 +97,9 @@ class LCACarouselWidget (LCAWidget):
 				self.__stacked_widget.removeWidget(to_delete)
 				to_delete.deleteLater()
 		self.changed.emit(None)
+
+	def count (self) -> int:
+		return len(self.__widgets)
 
 	def widget (self, index: int) -> QWidget | None:
 		return None if index == -1 else self.__widgets[index]

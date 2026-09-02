@@ -22,28 +22,45 @@
 
 from loguru import logger
 
+from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 
-from source.common.LCAProjectState import *
-from source.models.LCAProjectStateModel import *
-from source.gui.LCACarouselWidget import *
-from source.gui.LCAPluginWidget import *
+from source.I18n import *
 
-from .SingleMatchTrackerWidget import *
+class ResultButton (QPushButton):
+	
+	POSSIBLE_VALUES = (None, True, False)
+	
+	changed = Signal(object) # bool | None
 
-class MatchTrackerWidget (LCAPluginWidget):
+	__value: bool | None = None
 
-	__carousel_widget: LCACarouselWidget
+	def __init__ (self) -> None:
+		super().__init__()
+		self.clicked.connect(self.__evt_on_clicked)
+		self.setText(I18n(self).labels['None'])
 
-	def _setup_layout (self) -> None:
-		if carousel_widget := LCACarouselWidget(margin = True):
-			self.__carousel_widget = carousel_widget
-		LCAProjectState().updated_model.connect(self.__evt_state_updated)
-		self.__evt_state_updated(LCAProjectState().model)
+	def get_value (self) -> bool | None:
+		return self.__value
 
-	def __evt_state_updated (self, state: LCAProjectStateModel) -> None:
-		for i in range(self.__carousel_widget.count(), len(state.mtgo.matches)):
-			self.setWidget(self.__carousel_widget)
-			self.__carousel_widget.addItem( SingleMatchTrackerWidget(i), i )
-			self.__carousel_widget.set_value(i)
+	def set_value (self, val: bool | None) -> None:
+		if self.__value == val:
+			return
+		self.__value = val
+		self.setText(I18n(self).labels[str(val)])
+		self.changed.emit(val)
 
+	def __evt_on_clicked (self) -> None:
+		index = self.POSSIBLE_VALUES.index(self.__value)
+		index += 1
+		index %= 3
+		self.set_value(self.POSSIBLE_VALUES[index])
+
+	val = Property(
+		object,
+		fget = get_value,
+		fset = set_value,
+		notify = changed,
+		user = True,
+	)
+	

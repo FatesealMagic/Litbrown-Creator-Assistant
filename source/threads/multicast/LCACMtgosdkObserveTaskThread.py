@@ -65,7 +65,7 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 		match_model = LCAProjectStateModel.Mtgo.Match(
 			id = mtgo_match.Id,
 			best_of = mtgo_match.MaxGames,
-			players = [ player.Name for player in list(mtgo_game.Players) ],
+			opponents = [ player.Name for player in list(mtgo_game.Players) if player.Name != self.__sdk.get_username() ],
 			games = [ LCAProjectStateModel.Mtgo.Match.Game(
 				id = mtgo_game.Id,
 			) ],

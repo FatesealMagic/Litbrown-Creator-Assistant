@@ -45,7 +45,7 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 		class Match (pydantic.BaseModel, validate_assignment = True):
 			id: int
 			best_of: int = 3
-			players: list[str]
+			opponents: list[str]
 			victory: bool | None = None
 			
 			class Game (pydantic.BaseModel, validate_assignment = True):

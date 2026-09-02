@@ -59,7 +59,6 @@ class LCA:
 			{ 'sink': './logs/{time}.log', 'format': self.__LOGGER_FORMAT, 'rotation': '5 MB' },
 		] )
 		self.__register_self_package()
-		#I18n.load(Assets.yaml(f'i18n/{Settings().tools.general.language}.yaml'))
 		# TODO can't get this working well with multiple instances running
 		# os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = str(Config().network.chromium_debug_port)
 

@@ -40,7 +40,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		if tabs := QTabWidget():
-			for tab in ('general', 'schedule', 'multicast', 'edit', 'thumbnail', 'render'):
+			for tab in ('general', 'schedule', 'multicast', 'thumbnail', 'render'):
 				tabs.addTab( getattr(self, f'__build_{tab}_tab')(), I18n(self).tabs[tab].title )
 		layout.addWidget(tabs)
 
@@ -135,9 +135,6 @@ class LCACSettingsLCAWidget (LCAWidget):
 		if new_seq != key_edit.keySequence().toString():
 			with QSignalBlocker(key_edit):
 				key_edit.setKeySequence(QKeySequence(new_seq))
-
-	def __build_edit_tab (self) -> QWidget:
-		return QLabel('edit')
 
 	def __build_thumbnail_tab (self) -> QWidget:
 		widget = QWidget()

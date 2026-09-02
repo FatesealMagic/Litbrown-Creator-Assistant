@@ -45,12 +45,12 @@ class LCALMainWindow (LCAMainWindow):
 	def _initialize_window (self) -> None:
 		self.setWindowIcon(Assets.QIcon('icons/assistant.ico'))
 		self.setWindowTitle(I18n(self).title)
-		self.resize(500, 400)
+		self.resize(500, 300)
 		self.__project_watcher = LCAProjectWatcher()
 
 	def _setup_layout (self) -> None:
 		central_widget = LCASideTabWidget()
-		for tab in ('home', 'configure', 'schedule', 'multicast', 'edit', 'thumbnail', 'render'):
+		for tab in ('home', 'configure', 'schedule', 'multicast', 'thumbnail', 'render'):
 			central_widget.addWidget(
 				getattr(self, f'__build_{tab}_tab')(),
 				I18n(self).tabs[tab].title,
@@ -148,19 +148,6 @@ class LCALMainWindow (LCAMainWindow):
 		layout.addWidget(launch_btn)
 		self.__rebuild_multicast_selector()
 		multicast_selector.currentDataChanged.connect(lambda : launch_btn.setEnabled(True))
-		return widget
-
-	def __build_edit_tab (self) -> QWidget:
-		widget = QWidget()
-		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.edit.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
-		layout.addStretch(1)
-		if launch_btn := QPushButton(I18n(self).tabs.edit.launch):
-			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
-			launch_btn.clicked.connect(self.__evt_edit_launched)
-		layout.addWidget(launch_btn)
 		return widget
 
 	def __build_thumbnail_tab (self) -> QWidget:

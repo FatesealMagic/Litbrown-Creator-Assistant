@@ -29,7 +29,7 @@ from loguru import logger
 class Util:
 	
 	CLI_TOOLS = ('daemon',)
-	GUI_TOOLS = ('launcher', 'configure', 'schedule', 'multicast', 'edit', 'thumbnail', 'render')
+	GUI_TOOLS = ('launcher', 'configure', 'schedule', 'multicast', 'thumbnail', 'render')
 	
 	@classmethod
 	def app_name (cls) -> str:

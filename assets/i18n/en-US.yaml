@@ -194,10 +194,6 @@ LCALMainWindow:
       intro: A multicast is a recording session paired with zero, one, or multiple simultaneous livestreams. The Multicast tool assists you in managing multicasts in real time and sets up the Render tool for success.
       selector_placeholder: Select a Multicast
       launch: Launch Multicast Tool
-    edit:
-      title: Edit
-      intro: The Edit tool provides a structured workflow for editing your content.
-      launch: Launch Edit Tool
     thumbnail:
       title: Thumbnail
       intro: Use the Thumbnail Tool to assist in generating a video thumbnail.
@@ -335,8 +331,6 @@ LCACSettingsLCAWidget:
         mute: Begin Cut from Video
         unmute: End Cut from Video
         clip: Mark Clip
-    edit:
-      title: Edit
     thumbnail:
       title: Thumbnail
       render_file: "<html>Path to thumbnail rendering webpage within your serving directory:<br><i>Don't change unless you know what you're doing!</i></html>"

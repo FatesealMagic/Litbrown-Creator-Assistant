@@ -34,6 +34,7 @@ from ...I18n import *
 from ...Util import *
 
 from ..LCACarouselWidget import *
+from ..LCALabel import *
 from ..LCATableModel import *
 from ..LCAWidget import *
 from ...common.LCAProjectWatcher import *
@@ -41,8 +42,8 @@ from ...models.LCAProjectFileModel import *
 
 class LCASDetailsEditingWidget (LCAWidget):
 
-	__thumbnail_source_lbls: list[QLabel] = []
-	__thumbnail_display_lbls: list[QLabel] = []
+	__thumbnail_source_lbls: list[LCALabel] = []
+	__thumbnail_display_lbls: list[LCALabel] = []
 	__model: LCATableModel[LCAProjectFileModel]
 	__carousel_widget: LCACarouselWidget
 
@@ -72,7 +73,7 @@ class LCASDetailsEditingWidget (LCAWidget):
 				if source_widget := QWidget():
 					source_layout = QHBoxLayout(source_widget)
 					source_layout.setContentsMargins(0, 0, 0, 0)
-					source_layout.addWidget(QLabel(
+					source_layout.addWidget(LCALabel(
 						f'<html><h3>{Settings().series_from_id(project.series_id).name} {project.entry_number}</h3></html>'
 					), alignment=Qt.AlignmentFlag.AlignVCenter)
 					if thumbnail_launch_btn := QPushButton(' ' + I18n(self).thumbnail.launch):
@@ -80,12 +81,12 @@ class LCASDetailsEditingWidget (LCAWidget):
 						thumbnail_launch_btn.setIcon(Assets.QIcon('icons/thumbnail.ico'))
 						thumbnail_launch_btn.clicked.connect(lambda : Util.launch_new_instance('thumbnail'))
 					source_layout.addWidget(thumbnail_launch_btn)
-					if thumbnail_source_lbl := QLabel(I18n(self).thumbnail.source.none):
+					if thumbnail_source_lbl := LCALabel(I18n(self).thumbnail.source.none):
 						self.__thumbnail_source_lbls.append(thumbnail_source_lbl)
 						thumbnail_source_lbl.setAlignment(Qt.AlignRight)
 					source_layout.addWidget(thumbnail_source_lbl, alignment=Qt.AlignmentFlag.AlignVCenter)
 				layout.addWidget(source_widget)
-				if thumbnail_display_lbl := QLabel():
+				if thumbnail_display_lbl := LCALabel():
 					self.__thumbnail_display_lbls.append(thumbnail_display_lbl)
 					thumbnail_display_lbl.setFixedSize(QSize(640, 360))
 					thumbnail_display_lbl.setScaledContents(True)

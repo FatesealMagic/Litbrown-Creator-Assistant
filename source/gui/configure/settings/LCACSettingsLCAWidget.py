@@ -31,6 +31,7 @@ from ....I18n import *
 from ....Settings import *
 from ....Util import *
 
+from ...LCALabel import *
 from ...LCASeparator import *
 from ...LCAWidget import *
 from ...LCAFilePickerWidget import *
@@ -47,7 +48,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 	def __build_general_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.addWidget(QLabel(I18n(self).tabs.general.project_location))
+		layout.addWidget(LCALabel(I18n(self).tabs.general.project_location))
 		if projectdir_location := LCAFilePickerWidget(
 			Settings().tools.general.projects_location,
 			LCAFilePickerWidget.Mode.Directory,
@@ -55,7 +56,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 			Settings().bind(projectdir_location, 'tools.general.projects_location')
 		layout.addWidget(projectdir_location)
 		layout.addWidget(LCASeparator.horizontal())
-		layout.addWidget(QLabel(I18n(self).tabs.general.www_location))
+		layout.addWidget(LCALabel(I18n(self).tabs.general.www_location))
 		if wwwdir_location := LCAFilePickerWidget(
 			Settings().tools.general.www_directory,
 			LCAFilePickerWidget.Mode.Directory,
@@ -63,7 +64,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 			Settings().bind(wwwdir_location, 'tools.general.www_directory')
 		layout.addWidget(wwwdir_location)
 		layout.addWidget(LCASeparator.horizontal())
-		layout.addWidget(QLabel(I18n(self).tabs.general.color_slider))
+		layout.addWidget(LCALabel(I18n(self).tabs.general.color_slider))
 		if color_slider := QSlider(Qt.Orientation.Horizontal):
 			color_slider.setMaximum(359)
 			color_slider.setProperty('css_class', 'rainbow')
@@ -84,18 +85,18 @@ class LCACSettingsLCAWidget (LCAWidget):
 	def __build_schedule_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.addWidget(QLabel(I18n(self).tabs.schedule.lbl_htmlrenderfile))
+		layout.addWidget(LCALabel(I18n(self).tabs.schedule.lbl_htmlrenderfile))
 		if renderfile_location := QLineEdit():
 			Settings().bind(renderfile_location, 'tools.schedule.render_file')
 		layout.addWidget(renderfile_location)
 		layout.addSpacing(layout.spacing())
-		layout.addWidget(QLabel(I18n(self).tabs.schedule.lbl_functocall))
+		layout.addWidget(LCALabel(I18n(self).tabs.schedule.lbl_functocall))
 		if functocall_line := QLineEdit(Settings().tools.schedule.render_function):
 			functocall_line.setValidator(QRegularExpressionValidator(QRegularExpression('^[_$a-zA-Z][_$a-zA-Z0-9]*$')))
 			Settings().bind(functocall_line, 'tools.schedule.render_function')
 		layout.addWidget(functocall_line)
 		layout.addSpacing(layout.spacing())
-		layout.addWidget(QLabel(I18n(self).tabs.schedule.lbl_outputfile))
+		layout.addWidget(LCALabel(I18n(self).tabs.schedule.lbl_outputfile))
 		if outputfile_location := LCAFilePickerWidget(
 			Settings().tools.schedule.output_file,
 			LCAFilePickerWidget.Mode.SaveFile,
@@ -109,7 +110,7 @@ class LCACSettingsLCAWidget (LCAWidget):
 	def __build_multicast_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QFormLayout(widget)
-		layout.addWidget(QLabel(f'<html><h3 style="text-align: center;">{I18n(self).tabs.multicast.hotkeys.title}</h3></html>'))
+		layout.addWidget(LCALabel(f'<html><h3 style="text-align: center;">{I18n(self).tabs.multicast.hotkeys.title}</h3></html>'))
 		for hotkey in ('startstop', 'mistake', 'mute', 'unmute', 'clip'):
 			if key_edit := QKeySequenceEdit(QKeySequence(getattr(Settings().tools.multicast.hotkeys, hotkey))):
 				key_edit.setClearButtonEnabled(True)
@@ -139,12 +140,12 @@ class LCACSettingsLCAWidget (LCAWidget):
 	def __build_thumbnail_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.addWidget(QLabel(I18n(self).tabs.thumbnail.render_file))
+		layout.addWidget(LCALabel(I18n(self).tabs.thumbnail.render_file))
 		if render_file_input := QLineEdit():
 			Settings().bind(render_file_input, 'tools.thumbnail.render_file')
 		layout.addWidget(render_file_input)
 		layout.addSpacing(layout.spacing())
-		layout.addWidget(QLabel(I18n(self).tabs.thumbnail.render_func))
+		layout.addWidget(LCALabel(I18n(self).tabs.thumbnail.render_func))
 		if render_func_input := QLineEdit():
 			Settings().bind(render_func_input, 'tools.thumbnail.render_func')
 		layout.addWidget(render_func_input)
@@ -152,5 +153,5 @@ class LCACSettingsLCAWidget (LCAWidget):
 		return widget
 
 	def __build_render_tab (self) -> QWidget:
-		return QLabel('render')
+		return LCALabel('render')
 

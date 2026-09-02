@@ -37,9 +37,10 @@ from ...I18n import *
 from ...Settings import *
 from ...Util import *
 
-from ..LCAPluginWidget import *
 from ..LCAComboBox import *
+from ..LCALabel import *
 from ..LCAMainWindow import *
+from ..LCAPluginWidget import *
 from ..LCAPopupMessage import *
 from ...common.LCAPluginManager import *
 from ...common.LCAProjectState import *
@@ -56,10 +57,10 @@ class LCAMMainWindow (LCAMainWindow):
 
 	__project: LCAProjectFileModel
 	
-	__id_label: QLabel
+	__id_label: LCALabel
 	__segment_cbo: LCAComboBox
 	__startstop_btn: QPushButton
-	__status_lbl: QLabel
+	__status_lbl: LCALabel
 	__plugins_menu: QMenu
 
 	__obs_thread: LCAWorkerThread
@@ -145,7 +146,7 @@ class LCAMMainWindow (LCAMainWindow):
 			if widget := QFrame():
 				widget.setProperty('css_class', 'accent_bordered')
 				layout = QVBoxLayout(widget)
-				if id_label := QLabel(
+				if id_label := LCALabel(
 					'<html><h3 style="text-align: center;">'
 					+ f'{Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}'
 					+ '</h3></html>'
@@ -229,7 +230,7 @@ class LCAMMainWindow (LCAMainWindow):
 			('obs', I18n(self).statuses.obs.connecting),
 			('mtgosdk', I18n(self).statuses.mtgosdk.connecting),
 		]:
-			self.__status_lbls[lbl] = QLabel()
+			self.__status_lbls[lbl] = LCALabel()
 			self.__status_lbls[lbl].setStyleSheet('margin-right: 0.1em;')
 			self.statusBar().addPermanentWidget(self.__status_lbls[lbl])
 			self.__set_status_message(lbl, msg)

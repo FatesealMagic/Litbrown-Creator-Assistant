@@ -35,6 +35,7 @@ from ....Util import *
 from .LCACSettingsOrganizationSeriesSegmentWidget import *
 from .LCACSettingsOrganizationSeriesVariantWidget import *
 from ..LCACFormatHelperWidget import *
+from ...LCALabel import *
 from ...LCATabbedDataViewWidget import *
 from ...LCATabbedDataViewPanelWidget import *
 from ...LCAToggleButtonGroupWidget import *
@@ -103,7 +104,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		if enabledoutputs_widget := QWidget():
 			enabledoutputs_layout = QHBoxLayout(enabledoutputs_widget)
 			enabledoutputs_layout.setContentsMargins(0, 0, 0, 0)
-			enabledoutputs_layout.addWidget(QLabel(I18n(self).tabs.videoinfo.supported_outputs + ' '))
+			enabledoutputs_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.supported_outputs + ' '))
 			self.__enabledoutputs_checkboxes = {}
 			for i, output in enumerate(('stream', 'video', 'clip')):
 				output_checkbox = QCheckBox(I18n(self).tabs.videoinfo[f'{output}info_tab_title'])
@@ -141,7 +142,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 					if stream_desclbl_widget := QWidget():
 						stream_desclbl_layout = QVBoxLayout(stream_desclbl_widget)
 						stream_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						stream_desclbl_layout.addWidget(QLabel(I18n(self).tabs.videoinfo.stream_desc))
+						stream_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.stream_desc))
 						stream_desclbl_layout.addSpacing(stream_desclbl_layout.spacing() / 2)
 						stream_desclbl_layout.addWidget( LCACFormatHelperWidget(
 							LCATextTemplate.VariableGroup.STREAM,
@@ -177,7 +178,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 					if video_desclbl_widget := QWidget():
 						video_desclbl_layout = QVBoxLayout(video_desclbl_widget)
 						video_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						video_desclbl_layout.addWidget(QLabel(I18n(self).tabs.videoinfo.video_desc))
+						video_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.video_desc))
 						video_desclbl_layout.addSpacing(video_desclbl_layout.spacing() / 2)
 						video_desclbl_layout.addWidget( LCACFormatHelperWidget(
 							LCATextTemplate.VariableGroup.VIDEO,
@@ -213,7 +214,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 					if clip_desclbl_widget := QWidget():
 						clip_desclbl_layout = QVBoxLayout(clip_desclbl_widget)
 						clip_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						clip_desclbl_layout.addWidget(QLabel(I18n(self).tabs.videoinfo.clip_desc))
+						clip_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.clip_desc))
 						clip_desclbl_layout.addSpacing(clip_desclbl_layout.spacing() / 2)
 						clip_desclbl_layout.addWidget( LCACFormatHelperWidget(
 							LCATextTemplate.VariableGroup.CLIP,
@@ -236,9 +237,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		if tab_widget := QTabWidget():
 			if decklists_widget := QWidget():
 				decklists_layout = QVBoxLayout(decklists_widget)
-				if decklist_help_lbl := QLabel(I18n(self).tabs.formatting.decklists.info):
-					decklist_help_lbl.setWordWrap(True)
-				decklists_layout.addWidget(decklist_help_lbl)
+				decklists_layout.addWidget(LCALabel(I18n(self).tabs.formatting.decklists.info))
 				if decklists_tabwidget := QTabWidget():
 					for decklists_type in ('stream', 'video', 'clip'):
 						if decklist_widget := QWidget():

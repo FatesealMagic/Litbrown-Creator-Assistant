@@ -33,6 +33,7 @@ from ....Settings import *
 from ....Util import *
 
 from ...LCAFilePickerWidget import *
+from ...LCALabel import *
 from ...LCATabbedDataViewPanelWidget import *
 
 class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget):
@@ -42,11 +43,11 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 		layout.setSpacing(layout.spacing() * 2)
 		if name_input := QLineEdit():
 			self._mapper.addMapping(name_input, self.model.get_column_index('name'))
-		layout.addRow(QLabel(I18n(self).name), name_input)
+		layout.addRow(LCALabel(I18n(self).name), name_input)
 		if id_input := QLineEdit():
 			id_input.setReadOnly(True)
 			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
-		layout.addRow(QLabel(I18n(self).id), id_input)
+		layout.addRow(LCALabel(I18n(self).id), id_input)
 		if mtgformat := QComboBox():
 			mtgformat.setEditable(True)
 			mtgformat.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -57,13 +58,13 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 					mtgformat.insertSeparator(mtgformat.count())
 			self._mapper.addMapping(mtgformat, self.model.get_column_index('mtgformat'), b'currentText')
 			mtgformat.currentTextChanged.connect(self._mapper.submit)
-		layout.addRow(QLabel(I18n(self).mtgformat), mtgformat)
+		layout.addRow(LCALabel(I18n(self).mtgformat), mtgformat)
 		if desc_edit := QPlainTextEdit():
 			# TODO this is a hack, figure out why the description is overwritten to '' when the next statement is removed
 			desc_edit.setPlainText(self.model.data(self.model.createIndex(
 				self._mapper.currentIndex(), self.model.get_column_index('description')
 			)))
 			self._mapper.addMapping(desc_edit, self.model.get_column_index('description'))
-		layout.addRow(QLabel(I18n(self).desc), desc_edit)
+		layout.addRow(LCALabel(I18n(self).desc), desc_edit)
 		self._finalize_mapper()
 

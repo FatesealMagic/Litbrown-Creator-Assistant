@@ -32,6 +32,7 @@ from ..Assets import *
 from ..Settings import *
 from ..Util import *
 
+from .LCALabel import *
 from .LCAWidget import *
 
 class LCAFilePickerWidget (LCAWidget):
@@ -64,7 +65,7 @@ class LCAFilePickerWidget (LCAWidget):
 			group_layout.setContentsMargins(0, 0, 0, 0)
 			group_layout.setSpacing(0)
 			#group_layout.addSpacing(group_layout.spacing())
-			if file_display := QLabel(self.__value):
+			if file_display := LCALabel(self.__value):
 				self.__file_display = file_display
 				file_display.setSizePolicy(QSizePolicy.Policy.Ignored, file_display.sizePolicy().verticalPolicy())
 			group_layout.addWidget(file_display, 1)

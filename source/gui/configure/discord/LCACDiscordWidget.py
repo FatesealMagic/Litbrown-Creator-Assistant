@@ -29,6 +29,7 @@ from PySide6.QtWidgets import *
 from ....Config import *
 from ....I18n import *
 
+from ...LCALabel import *
 from ...LCAWidget import *
 
 class LCACDiscordWidget (LCAWidget):
@@ -36,6 +37,6 @@ class LCACDiscordWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel('discord'))
+		layout.addWidget(LCALabel('discord'))
 		layout.addStretch(1)
 

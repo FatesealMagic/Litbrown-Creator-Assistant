@@ -32,18 +32,17 @@ from ....Config import *
 from ....I18n import *
 from ....Settings import *
 
-from ...LCAWidget import *
 from ..LCACConnectButton import *
 from ..LCACConnectionInfoDisplayWidget import *
+from ...LCALabel import *
+from ...LCAWidget import *
 
 class LCACTwitchWidget (LCAWidget):
 
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		if info_lbl := QLabel(I18n(self).info):
-			info_lbl.setWordWrap(True)
-		layout.addWidget(info_lbl)
+		layout.addWidget(LCALabel(I18n(self).info))
 		layout.addWidget(LCACConnectionInfoDisplayWidget('twitch'))
 		if connection_btn := LCACConnectButton('twitch'):
 			connection_btn.clicked.connect(self.__start_oauth_flow)

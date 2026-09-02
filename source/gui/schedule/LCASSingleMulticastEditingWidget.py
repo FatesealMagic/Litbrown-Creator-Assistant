@@ -29,12 +29,14 @@ from PySide6.QtWidgets import *
 from ...Config import *
 from ...I18n import *
 from ...Settings import *
-from ..LCAWidget import *
-from ..LCAFilePickerWidget import *
+
 from .LCASDeckURLEdit import *
 from ..LCAComboBox import *
-from ..LCATableModel import *
 from ..LCADateAndTimePickerWidget import *
+from ..LCAFilePickerWidget import *
+from ..LCALabel import *
+from ..LCATableModel import *
+from ..LCAWidget import *
 from ...models.LCAProjectFileModel import *
 
 class LCASSingleMulticastEditingWidget (LCAWidget):
@@ -66,10 +68,10 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 		if basicinfo_widget := QWidget():
 			basicinfo_layout = QHBoxLayout(basicinfo_widget)
 			basicinfo_layout.setContentsMargins(0, 0, 0, 0)
-			basicinfo_layout.addWidget(QLabel( f'<html><h3>{self.__series.name} {self.__entry_number}</h3></html>' ))
+			basicinfo_layout.addWidget(LCALabel( f'<html><h3>{self.__series.name} {self.__entry_number}</h3></html>' ))
 			basicinfo_layout.addStretch()
 			if self.__series.variants:
-				basicinfo_layout.addWidget(QLabel(I18n(self).variant_lbl))
+				basicinfo_layout.addWidget(LCALabel(I18n(self).variant_lbl))
 				if variant_combo := LCAComboBox():
 					self.__variant_combo = variant_combo
 					for variant in self.__series.variants:
@@ -78,7 +80,7 @@ class LCASSingleMulticastEditingWidget (LCAWidget):
 					mapper.addMapping(variant_combo, self.__model.get_column_index('variant_id'))
 				basicinfo_layout.addWidget(variant_combo)
 			basicinfo_layout.addSpacing(basicinfo_layout.spacing())
-			basicinfo_layout.addWidget(QLabel(I18n(self).mtgformat_lbl))
+			basicinfo_layout.addWidget(LCALabel(I18n(self).mtgformat_lbl))
 			if mtgformat_combo := QComboBox():
 				self.__mtgformat_combo = mtgformat_combo
 				mtgformat_combo.setEditable(True)

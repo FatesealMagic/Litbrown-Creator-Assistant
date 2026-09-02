@@ -31,6 +31,7 @@ from ....Config import *
 from ....I18n import *
 from ....Settings import *
 
+from ...LCALabel import *
 from ...LCAWidget import *
 from ...LCAPopupMessage import *
 from ....threads.configure.LCACMtgosdkInstallTaskThread import *
@@ -42,12 +43,8 @@ class LCACMtgosdkWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		if info_lbl := QLabel(I18n(self).info):
-			info_lbl.setWordWrap(True)
-		layout.addWidget(info_lbl)
-		if install_lbl := QLabel(I18n(self).install):
-			install_lbl.setWordWrap(True)
-		layout.addWidget(install_lbl)
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).install))
 		for disclaimer in I18n(self).disclaimer:
 			if disclaimer_lbl := QLabel(f'<html><b>{disclaimer}</b></html>'):
 				disclaimer_lbl.setWordWrap(True)

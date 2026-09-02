@@ -29,6 +29,7 @@ from PySide6.QtWidgets import *
 
 from ...Settings import *
 
+from ...LCALabel import *
 from ..LCAWidget import *
 
 class LCACConnectionInfoDisplayWidget (LCAWidget):
@@ -36,9 +37,9 @@ class LCACConnectionInfoDisplayWidget (LCAWidget):
 	__integration_name: str
 	__profile_pic_url: str = ''
 	
-	__profilepic_lbl: QLabel
-	__display_lbl: QLabel
-	__handle_lbl: QLabel
+	__profilepic_lbl: LCALabel
+	__display_lbl: LCALabel
+	__handle_lbl: LCALabel
 
 	def __init__ (self, integration_name: str):
 		self.__integration_name = integration_name
@@ -47,21 +48,21 @@ class LCACConnectionInfoDisplayWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QHBoxLayout(self)
 		layout.addStretch(1)
-		if profilepic_lbl := QLabel():
+		if profilepic_lbl := LCALabel():
 			self.__profilepic_lbl = profilepic_lbl
-			profilepic_lbl.setStyleSheet('QLabel { border-radius: 44px; margin-right: 1em; }')
+			profilepic_lbl.setStyleSheet('LCALabel { border-radius: 44px; margin-right: 1em; }')
 		layout.addWidget(profilepic_lbl)
 		if display_handle_widget := QWidget():
 			display_handle_layout = QVBoxLayout(display_handle_widget)
 			display_handle_layout.setContentsMargins(0, 0, 0, 0)
 			display_handle_layout.setSpacing(0)
-			if display_lbl := QLabel():
+			if display_lbl := LCALabel():
 				self.__display_lbl = display_lbl
-				display_lbl.setStyleSheet('QLabel { font-size: 22pt; font-weight: bold; }')
+				display_lbl.setStyleSheet('LCALabel { font-size: 22pt; font-weight: bold; }')
 			display_handle_layout.addWidget(display_lbl)
-			if handle_lbl := QLabel():
+			if handle_lbl := LCALabel():
 				self.__handle_lbl = handle_lbl
-				handle_lbl.setStyleSheet('QLabel { font-size: 16pt; font-weight: bold; }')
+				handle_lbl.setStyleSheet('LCALabel { font-size: 16pt; font-weight: bold; }')
 			display_handle_layout.addWidget(handle_lbl)
 		layout.addWidget(display_handle_widget)
 		layout.addStretch(1)

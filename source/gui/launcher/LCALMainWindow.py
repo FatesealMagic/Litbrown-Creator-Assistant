@@ -63,15 +63,9 @@ class LCALMainWindow (LCAMainWindow):
 		if tab_widget := QTabWidget():
 			if general_tab_widget := QWidget():
 				general_tab_layout = QVBoxLayout(general_tab_widget)
-				if intro_label := QLabel(I18n(self).tabs.home.intro):
-					intro_label.setWordWrap(True)
-				general_tab_layout.addWidget(intro_label)
+				general_tab_layout.addWidget(LCALabel(I18n(self).tabs.home.intro))
 				general_tab_layout.addStretch(1)
-				if contact_label := QLabel(I18n(self).tabs.home.contact):
-					contact_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-					contact_label.setOpenExternalLinks(True)
-					contact_label.setWordWrap(True)
-				general_tab_layout.addWidget(contact_label)
+				general_tab_layout.addWidget(LCALabel(I18n(self).tabs.home.contact))
 			tab_widget.addTab(general_tab_widget, I18n(self).tabs.home.tabs.general)
 			if license_tab_widget := QTextBrowser():
 				license_tab_widget.setReadOnly(True)
@@ -84,30 +78,11 @@ class LCALMainWindow (LCAMainWindow):
 				credits_tab_widget.setHtml(Assets.text('credits.html'))
 			tab_widget.addTab(credits_tab_widget, I18n(self).tabs.home.tabs.credits)
 		return tab_widget
-		widget = QWidget()
-		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.home.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
-		layout.addStretch(1)
-		if license_label := QLabel(I18n(self).tabs.home.license):
-			license_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-			license_label.setOpenExternalLinks(True)
-			license_label.setWordWrap(True)
-		layout.addWidget(license_label)
-		if contact_label := QLabel(I18n(self).tabs.home.contact):
-			contact_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-			contact_label.setOpenExternalLinks(True)
-			contact_label.setWordWrap(True)
-		layout.addWidget(contact_label)
-		return widget
 
 	def __build_configure_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.configure.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
+		layout.addWidget(LCALabel(I18n(self).tabs.configure.intro))
 		layout.addStretch(1)
 		if launch_btn := QPushButton(I18n(self).tabs.configure.launch):
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
@@ -118,9 +93,7 @@ class LCALMainWindow (LCAMainWindow):
 	def __build_schedule_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.schedule.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
+		layout.addWidget(LCALabel(I18n(self).tabs.schedule.intro))
 		layout.addStretch(1)
 		if launch_btn := QPushButton(I18n(self).tabs.schedule.launch):
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
@@ -131,9 +104,7 @@ class LCALMainWindow (LCAMainWindow):
 	def __build_multicast_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.multicast.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
+		layout.addWidget(LCALabel(I18n(self).tabs.multicast.intro))
 		layout.addStretch(1)
 		if multicast_selector := LCAComboBox():
 			self.__multicast_selector = multicast_selector
@@ -153,9 +124,7 @@ class LCALMainWindow (LCAMainWindow):
 	def __build_thumbnail_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.thumbnail.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
+		layout.addWidget(LCALabel(I18n(self).tabs.thumbnail.intro))
 		layout.addStretch(1)
 		if launch_btn := QPushButton(I18n(self).tabs.thumbnail.launch):
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
@@ -166,9 +135,7 @@ class LCALMainWindow (LCAMainWindow):
 	def __build_render_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if content_label := QLabel(I18n(self).tabs.render.intro):
-			content_label.setWordWrap(True)
-		layout.addWidget(content_label)
+		layout.addWidget(LCALabel(I18n(self).tabs.render.intro))
 		layout.addStretch(1)
 		if launch_btn := QPushButton(I18n(self).tabs.render.launch):
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)

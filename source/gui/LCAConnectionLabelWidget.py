@@ -30,6 +30,7 @@ from ..Config import *
 from ..I18n import *
 from ..Assets import *
 
+from .LCALabel import *
 from .LCAWidget import *
 
 class LCAConnectionLabelWidget (LCAWidget):
@@ -45,11 +46,11 @@ class LCAConnectionLabelWidget (LCAWidget):
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(0, 0, 0, 0)
 		layout.addStretch()
-		if icon_lbl := QLabel():
+		if icon_lbl := LCALabel():
 			icon_lbl.setPixmap(Assets.QIcon(f'external/icons/{self.__connection_name}.png').pixmap(QSize(32, 32)))
 		layout.addWidget(icon_lbl, alignment = Qt.AlignmentFlag.AlignVCenter)
 		layout.addSpacing(layout.spacing())
-		if text_lbl := QLabel(I18n(self)[self.__connection_name]):
+		if text_lbl := LCALabel(I18n(self)[self.__connection_name]):
 			font = text_lbl.font()
 			font.setPointSize(font.pointSize() * 2)
 			font.setWeight(QFont.Weight.Bold)

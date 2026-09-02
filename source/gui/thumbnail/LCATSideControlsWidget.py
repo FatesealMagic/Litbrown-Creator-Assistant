@@ -37,6 +37,7 @@ from ...Settings import *
 from ...Util import *
 
 from .LCATSideControlEditorWidget import *
+from ..LCALabel import *
 from ..LCAMagicCardSelectorWidget import *
 from ..LCASeparator import *
 from ..LCATableModel import *
@@ -140,13 +141,11 @@ class LCATSideControlsWidget (LCAWidget):
 						case 'separator':
 							control_layout.addSpacing(control_layout.spacing())
 							control_layout.addWidget(LCASeparator.horizontal())
-							if control_name := QLabel(control.name):
-								control_name.setWordWrap(True)
+							if control_name := LCALabel(control.name):
 								control_name.setStyleSheet('font-size: 13pt; font-weight: bold;')
 							control_layout.addWidget(control_name, alignment = Qt.AlignCenter)
 						case _:
-							if control_name := QLabel(control.name):
-								control_name.setWordWrap(True)
+							if control_name := LCALabel(control.name):
 								control_name.setStyleSheet('font-weight: bold;')
 							control_layout.addWidget(control_name)
 					match control.input_type:

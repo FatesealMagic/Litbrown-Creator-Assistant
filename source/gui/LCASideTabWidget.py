@@ -29,6 +29,7 @@ from ..I18n import *
 from ..Assets import *
 from ..Util import *
 
+from .LCALabel import *
 from .LCAWidget import *
 
 class LCASideTabWidget (LCAWidget):
@@ -108,13 +109,11 @@ class LCASideTabWidget (LCAWidget):
 
 	def __add_list_widget (self, title: str, icon: str | None = None) -> None:
 		item = QListWidgetItem(' ' + title)
-		#widget = QLabel(' ' + title)
 		if icon:
 			qicon = Assets.QIcon(icon)
 			qicon.addPixmap(qicon.pixmap(QSize(24,24)), QIcon.Selected)
 			item.setIcon(qicon)
 		self.__list_widget.addItem(item)
-		#self.__list_widget.setItemWidget(item, widget)
 		if self.__orientation == Qt.Orientation.Vertical:
 			self.__list_widget.setFixedWidth(self.__list_widget.sizeHintForColumn(0) + 2 * self.__list_widget.frameWidth() + 20)
 		else:
@@ -130,11 +129,11 @@ class LCASideTabWidget (LCAWidget):
 			title_layout.setContentsMargins(0, 0, 0, 0)
 			title_layout.addStretch(1)
 			if icon:
-				title_ico = QLabel()
+				title_ico = LCALabel()
 				title_ico.setPixmap(Assets.QIcon(icon).pixmap(QSize(48,48)))
 				title_layout.addWidget(title_ico)
 				title_layout.addSpacing(title_layout.spacing())
-			title_label = QLabel(title)
+			title_label = LCALabel(title)
 			title_label.setStyleSheet(self.__TITLE_STYLESHEET)
 			title_layout.addWidget(title_label)
 			title_layout.addStretch(1)

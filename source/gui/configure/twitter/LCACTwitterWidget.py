@@ -30,6 +30,7 @@ from ....Config import *
 from ....I18n import *
 from ....Util import *
 
+from ...LCALabel import *
 from ...LCAWidget import *
 
 class LCACTwitterWidget (LCAWidget):
@@ -37,6 +38,6 @@ class LCACTwitterWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel('twitter'))
+		layout.addWidget(LCALabel('twitter'))
 		layout.addStretch(1)
 

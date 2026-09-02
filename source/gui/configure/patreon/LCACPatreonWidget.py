@@ -33,9 +33,10 @@ from ....Config import *
 from ....I18n import *
 from ....Settings import *
 
-from ...LCAWidget import *
 from ..LCACConnectButton import *
 from ..LCACConnectionInfoDisplayWidget import *
+from ...LCALabel import *
+from ...LCAWidget import *
 from ....threads.configure.LCACPatreonRefreshTiersTaskThread import *
 
 class LCACPatreonWidget (LCAWidget):
@@ -45,9 +46,7 @@ class LCACPatreonWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		if info_lbl := QLabel(I18n(self).info):
-			info_lbl.setWordWrap(True)
-		layout.addWidget(info_lbl)
+		layout.addWidget(LCALabel(I18n(self).info))
 		layout.addWidget(LCACConnectionInfoDisplayWidget('patreon'))
 		if connect_btn := LCACConnectButton('patreon'):
 			connect_btn.clicked.connect(self.__start_oauth_flow)

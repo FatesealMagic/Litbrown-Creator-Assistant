@@ -30,6 +30,7 @@ from ....Config import *
 from ....I18n import *
 from ....Util import *
 
+from ...LCALabel import *
 from ...LCAWidget import *
 
 class LCACShotcutWidget (LCAWidget):
@@ -37,6 +38,6 @@ class LCACShotcutWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel('shotcut'))
+		layout.addWidget(LCALabel('shotcut'))
 		layout.addStretch(1)
 

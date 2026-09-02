@@ -32,11 +32,11 @@ from ....Util import *
 
 from ...LCAWidget import *
 
-class LCACVlcWidget (LCAWidget):
+class LCACFoobarWidget (LCAWidget):
 
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel('vlc'))
+		
 		layout.addStretch(1)
 

@@ -29,12 +29,15 @@ from PySide6.QtWidgets import *
 
 from ..Assets import *
 
+from .LCALabel import *
 from .LCAWidget import *
 from ..models.LCAScryfallCardModel import *
 
 class LCACardDisplayWidget (LCAWidget):
 	
 	card: LCAScryfallCardModel
+
+	__label: LCALabel
 
 	def __init__ (self, card: LCAScryfallCardModel, face: int = 0, *args, **kwargs):
 		self.card = card
@@ -43,7 +46,7 @@ class LCACardDisplayWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QHBoxLayout(self)
 		layout.setContentsMargins(0, 0, 0, 0)
-		self.__label = QLabel()
+		self.__label = LCALabel()
 		self.__label.setScaledContents(True)
 		self.__label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(self.__label)

@@ -20,24 +20,18 @@
   "
   """
 
-from loguru import logger
-
 from PySide6.QtCore import *
-from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Util import *
+class LCALabel (QLabel):
 
-from ...LCALabel import *
-from ...LCAWidget import *
-
-class LCACRedditWidget (LCAWidget):
-
-	def _setup_layout (self) -> None:
-		layout = QVBoxLayout(self)
-		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(LCALabel('reddit'))
-		layout.addStretch(1)
+	def __init__ (self,
+		text: str = '',
+		/, *,
+		word_wrap: bool = True,
+	) -> None:
+		super().__init__(text)
+		self.setWordWrap(True)
+		self.setTextInteractionFlags(Qt.TextBrowserInteraction)
+		self.setOpenExternalLinks(True)
 

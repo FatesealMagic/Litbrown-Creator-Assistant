@@ -29,6 +29,7 @@ from PySide6.QtWidgets import *
 from ....I18n import *
 from ....Settings import *
 
+from ...LCALabel import *
 from ...LCAWidget import *
 
 class LCACMoxfieldWidget (LCAWidget):
@@ -36,17 +37,9 @@ class LCACMoxfieldWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		if info_lbl := QLabel(I18n(self).info):
-			info_lbl.setWordWrap(True)
-		layout.addWidget(info_lbl)
-		if agent_lbl := QLabel(I18n(self).agent):
-			agent_lbl.setWordWrap(True)
-			agent_lbl.setTextInteractionFlags(Qt.TextBrowserInteraction)
-			agent_lbl.setOpenExternalLinks(True)
-		layout.addWidget(agent_lbl)
-		if copy_lbl := QLabel(I18n(self).copypaste):
-			copy_lbl.setWordWrap(True)
-		layout.addWidget(copy_lbl)
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).agent))
+		layout.addWidget(LCALabel(I18n(self).copypaste))
 		if input_txt := QLineEdit():
 			input_txt.setPlaceholderText(I18n(self).placeholder)
 			Settings().bind(input_txt, 'integrations.moxfield.user_agent')

@@ -33,6 +33,7 @@ from ....Settings import *
 from ....Util import *
 
 from ...LCAComboBox import *
+from ...LCALabel import *
 from ...LCATabbedDataViewPanelWidget import *
 
 class LCACSettingsMembershipTierWidget (LCATabbedDataViewPanelWidget):
@@ -44,7 +45,7 @@ class LCACSettingsMembershipTierWidget (LCATabbedDataViewPanelWidget):
 	def _setup_layout (self) -> None:
 		layout = QFormLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addRow(QLabel(I18n(self).remote_tiers.header))
+		layout.addRow(LCALabel(I18n(self).remote_tiers.header))
 		self.__remote_platform_cbos = {}
 		for platform in self.__SUPPORTED_REMOTE_PLATFORMS:
 			if cbo := LCAComboBox():

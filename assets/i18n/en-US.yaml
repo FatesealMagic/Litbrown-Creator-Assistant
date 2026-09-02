@@ -179,7 +179,6 @@ LCALMainWindow:
         license: License
         credits: Credits
       intro: '<html>Welcome to the Litbrown Creator Assistant. This tool can help you schedule, manage, edit, render, and upload your Magic: the Gathering Online&trade; related content.</html>'
-      license: '<html>The Litbrown Creator Assistant is free, open-source software under the terms of the <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License, version 3</a>.</html>'
       contact: '<html><a href="https://discord.com/invite/vkwBPfR4YS">Join Discord server for support</a></html>'
     configure:
       title: Configure
@@ -244,6 +243,7 @@ LCACMainWindow:
   tabs:
     bluesky: Bluesky
     discord: Discord
+    foobar: foobar2000
     manapool: Mana Pool
     moxfield: Moxfield
     mtgosdk: MTGOSDK
@@ -253,7 +253,6 @@ LCACMainWindow:
     shotcut: Shotcut
     twitch: Twitch
     twitter: Twitter
-    vlc: VLC
     youtube: YouTube
     settings:
       title: Settings
@@ -274,6 +273,11 @@ LCACMainWindow:
         affiliates:
           title: Affiliate Codes
   replacements_help: Show Help Dialog for Creating Dynamic Titles && Descriptions
+
+LCACFoobarWidget:
+  info: LCA uses its connection to foobar2000 to automatically play music while streaming and synchronize your music to your videos. You will need a foobar2000 installation with the Beefweb Remote Control component.
+  install_foobar: <html><a href="https://www.foobar2000.org/">Click here to visit foobar2000's home page and install.</a></html>
+  install_beefweb: <html><a href="https://www.foobar2000.org/components/view/foo_beefweb">Click here to install Beefweb.</a></html>
 
 LCACManapoolWidget:
   include_in_decklists: Include a link to purchase deck on Mana Pool above each decklist in description

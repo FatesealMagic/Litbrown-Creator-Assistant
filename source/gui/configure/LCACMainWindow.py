@@ -33,6 +33,7 @@ from ...Config import *
 from ...I18n import *
 from ...Util import *
 
+from ..LCALabel import *
 from ..LCAMainWindow import *
 from ..LCASideTabWidget import *
 from ..LCATabbedDataViewWidget import *
@@ -45,7 +46,7 @@ class LCACMainWindow (LCAMainWindow):
 	
 	__TAB_NAMES = (
 		'youtube', 'twitch', 'patreon', 'discord', 'bluesky', 'twitter', 'reddit', 'moxfield',
-		'mtgosdk', 'obs', 'shotcut', 'vlc',
+		'mtgosdk', 'obs', 'shotcut', 'foobar',
 	)
 	
 	def _initialize_window (self) -> None:
@@ -84,9 +85,7 @@ class LCACMainWindow (LCAMainWindow):
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
 		layout.setSpacing(layout.spacing() * 2)
-		if info_lbl := QLabel(I18n(self).tabs.settings.tabs.membership.info):
-			info_lbl.setWordWrap(True)
-		layout.addWidget(info_lbl)
+		layout.addWidget(QLabel(I18n(self).tabs.settings.tabs.membership.info))
 		layout.addWidget(LCATabbedDataViewWidget(
 			LCATableModel( Settings().MembershipTierModel, lambda : Settings().membership_tiers, Settings ),
 			LCACSettingsMembershipTierWidget,

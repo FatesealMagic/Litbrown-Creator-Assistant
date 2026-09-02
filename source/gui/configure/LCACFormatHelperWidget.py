@@ -52,20 +52,17 @@ class LCACFormatHelperWidget (LCAWidget):
 		def _setup_layout (self) -> None:
 			layout = QVBoxLayout(self)
 			for i, lbltext in enumerate(I18n(self).directions):
-				lbl = QLabel(lbltext)
-				lbl.setWordWrap(True)
-				layout.addWidget(lbl)
+				layout.addWidget(LCALabel(lbltext))
 			if var_cbo := QComboBox():
 				for key in LCATextTemplate.vars_for_group(self.__variable_group):
 					var_cbo.addItem(f'${{{key}}}')
 				var_cbo.currentTextChanged.connect(self.__evt_var_selected)
 			layout.addWidget(var_cbo)
-			if var_lbl := QLabel(
+			if var_lbl := LCALabel(
 				LCATextTemplate.vars_and_descriptions_for_group(self.__variable_group)
 					[ LCATextTemplate.vars_for_group(self.__variable_group)[0] ]
 			):
 				self.__var_lbl = var_lbl
-				var_lbl.setWordWrap(True)
 			layout.addWidget(var_lbl)
 			layout.addStretch()
 			if close_btn := QPushButton(' ' + I18n(self).close_btn):

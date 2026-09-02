@@ -34,6 +34,7 @@ from ..Util import *
 
 from .LCACardDisplayWidget import *
 from .LCACarouselWidget import *
+from .LCALabel import *
 from .LCAWidget import *
 from ..models.LCAScryfallCardModel import *
 from ..threads.common.LCAScryfallSearchTaskThread import *
@@ -88,7 +89,7 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 						backtocardsearch_btn.setIcon(Assets.QIcon('icons/undo.png'))
 						backtocardsearch_btn.clicked.connect(self.__evt_backtocardsearch_clicked)
 					printname_layout.addWidget(backtocardsearch_btn)
-					if cardname_lbl := QLabel():
+					if cardname_lbl := LCALabel():
 						self.__cardname_lbl = cardname_lbl
 						cardname_lbl.setStyleSheet('font-weight: bold; font-style: italic;')
 						cardname_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -103,7 +104,7 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 					self.__printcarousel_widget = printcarousel_widget
 					printcarousel_widget.changed.connect( self.__evt_carousel_updated )
 				printsearch_layout.addWidget(printcarousel_widget)
-				if setname_lbl := QLabel():
+				if setname_lbl := LCALabel():
 					self.__setname_lbl = setname_lbl
 					setname_lbl.setStyleSheet('font-style: italic;')
 					setname_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)

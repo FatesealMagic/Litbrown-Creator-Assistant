@@ -36,6 +36,7 @@ from ..Assets import *
 from ..Settings import *
 from ..Util import *
 
+from .LCALabel import *
 from .LCAWidget import *
 from ..threads.LCATaskThread import *
 from ..integrations.LCAIntegration import *
@@ -93,7 +94,7 @@ class LCATaskTrackerWidget (LCAWidget):
 		if status_widget := QWidget():
 			status_layout = QVBoxLayout(status_widget)
 			status_layout.setContentsMargins(0, 0, 0, 0)
-			if label := QLabel(self.__label):
+			if label := LCALabel(self.__label):
 				label.setAlignment(Qt.AlignCenter)
 				font = label.font()
 				font.setPointSize(font.pointSize() * 1.4)

@@ -35,6 +35,9 @@ class MatchTrackerWidget (LCAPluginWidget):
 
 	__carousel_widget: LCACarouselWidget
 
+	def _initial_project_state_data (self) -> None:
+		return None
+
 	def _setup_layout (self) -> None:
 		if carousel_widget := LCACarouselWidget(margin = True):
 			self.__carousel_widget = carousel_widget

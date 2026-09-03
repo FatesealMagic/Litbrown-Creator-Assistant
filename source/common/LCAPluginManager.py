@@ -53,7 +53,7 @@ class LCAPluginManager:
 					logger.warning(f'Error loading plugin {import_path}:')
 					logger.exception(e)
 		logger.debug(ret)
-		return ret
+		return sorted(ret)
 
 	@classmethod
 	def list_loaded_plugins (cls) -> list[str]:

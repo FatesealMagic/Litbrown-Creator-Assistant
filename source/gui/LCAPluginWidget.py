@@ -21,20 +21,28 @@
   """
 
 from loguru import logger
+import pydantic
 
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from .LCAWidget import *
-from ..common.LCAPluginManager import *
+from ..common.LCAPluginManager import LCAPluginManager
+from ..common.LCAProjectState import LCAProjectState
 
 class LCAPluginWidget (QDockWidget):
+
+	def _initial_project_state_data (self) -> pydantic.BaseModel | None:
+		raise NotImplementedError
+
+	def _setup_layout (self) -> None:
+		raise NotImplementedError
 
 	_import_path: str
 	
 	@property
 	def import_path (self) -> str:
-		return _import_path
+		return self._import_path
 
 	def __init__ (self, *,
 		parent: QWidget | None = None,
@@ -43,15 +51,29 @@ class LCAPluginWidget (QDockWidget):
 	):
 		self._import_path = import_path
 		super().__init__(parent)
+		if self._get_project_state_data() is None:
+			self._set_project_state_data(self._initial_project_state_data())
 		self._setup_layout()
 		self.setObjectName(f'plugin.{import_path}')
 		self.setWindowTitle(title)
 
-	def _setup_layout (self) -> None:
-		raise NotImplementedError
-
 	def closeEvent (self, event: QCloseEvent) -> None:
 		logger.debug(f'Unloading plugin {self._import_path}')
+		self.__remove_project_state_data()
 		LCAPluginManager.unload_plugin(self._import_path)
 		self.deleteLater()
+
+	def _get_project_state_data (self) -> pydantic.BaseModel | None:
+		return LCAProjectState().model.plugins.get(self.import_path, None)
+
+	def _set_project_state_data (self, new_state: pydantic.BaseModel | None) -> None:
+		if LCAProjectState().model.plugins.get(self.import_path, 'notfound') != new_state:
+			with LCAProjectState() as state:
+				state.model.plugins[self.import_path] = new_state
+
+	def __remove_project_state_data (self) -> None:
+		if LCAProjectState().model.plugins.get(self.import_path, 'notfound') == 'notfound':
+			return
+		with LCAProjectState() as state:
+			del state.model.plugins[self.import_path]
 

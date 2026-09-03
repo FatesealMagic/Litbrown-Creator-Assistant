@@ -21,6 +21,7 @@
   """
 
 import json
+import traceback
 import typing
 
 from loguru import logger
@@ -34,6 +35,8 @@ from ..threads.LCAWorkerThread import *
 from ..threads.common.LCAProjectStateWebsocketWorkerObject import *
 
 class LCAProjectState (metaclass = LCASingleton):
+
+	frozen: bool = False
 	
 	class _LCAProjectStateSignals (QObject):
 		updated_model = Signal(LCAProjectStateModel)
@@ -86,6 +89,7 @@ class LCAProjectState (metaclass = LCASingleton):
 		return self.__model
 
 	def shutdown (self) -> None:
+		self.frozen = True
 		self.__thread.quit()
 		self.__thread.wait()
 
@@ -94,6 +98,10 @@ class LCAProjectState (metaclass = LCASingleton):
 		return self
 
 	def __exit__ (self, exc_type, exc_val, exc_tb):
+		if self.frozen:
+			self.__mutex.release()
+			return
+		logger.debug('\n' + ''.join(traceback.format_stack()))
 		model_dict = self.__model.model_dump(mode = 'json')
 		self.__project.overwrite_file(
 			self.__project.path_state(),

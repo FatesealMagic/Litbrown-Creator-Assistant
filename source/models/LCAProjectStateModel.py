@@ -67,7 +67,9 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 
 	mtgo: Mtgo = Mtgo()
 
-	plugins: dict[str, pydantic.BaseModel | None] = {}
+	class Plugins (pydantic.BaseModel, validate_assignment = True, extra = 'allow'):
+		pass
+	plugins: Plugins = Plugins()
 
 # Implementation ###############################################################
 

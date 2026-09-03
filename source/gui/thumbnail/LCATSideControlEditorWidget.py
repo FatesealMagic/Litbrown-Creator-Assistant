@@ -140,7 +140,6 @@ class LCATSideControlEditorWidget (LCAWidget):
 						option_layout.addWidget(option_input)
 						if option_delete_btn := QPushButton(''):
 							option_delete_btn.setIcon(Assets.QIcon('icons/minus.png'))
-							logger.warning(i)
 							option_delete_btn.clicked.connect( functools.partial( self.__evt_combo_option_removed, i = i ) )
 						option_layout.addWidget(option_delete_btn)
 					combo_options_layout.addWidget(option_widget)
@@ -163,8 +162,6 @@ class LCATSideControlEditorWidget (LCAWidget):
 			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].default = value
 
 	def __evt_number_option_changed (self, property: str, value: int) -> None:
-		logger.warning(property)
-		logger.warning(value)
 		with Settings():
 			setattr(Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci], property, value)
 
@@ -174,7 +171,6 @@ class LCATSideControlEditorWidget (LCAWidget):
 		self.__model_modified_callback()
 
 	def __evt_combo_option_removed (self, i: int) -> None:
-		logger.warning(i)
 		with Settings():
 			Settings().tools.thumbnail.profiles[self.__pi].controls[self.__ci].options.pop(i)
 		self.__model_modified_callback()

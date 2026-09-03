@@ -103,7 +103,11 @@ class LCAScryfallIntegration (LCAIntegration):
 				return
 
 	@LCAIntegration.in_context
-	def search (self, query: str) -> collections.abc.Iterator[list[LCAScryfallCardModel]]:
+	def search (self,
+		query: str,
+		*,
+		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
+	) -> collections.abc.Iterator[list[LCAScryfallCardModel]]:
 		for page in self.__execute_paginated_request(
 			'cards/search',
 			delay_between_requests = 0.5,

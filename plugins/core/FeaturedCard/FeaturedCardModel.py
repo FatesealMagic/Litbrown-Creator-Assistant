@@ -20,23 +20,10 @@
   "
   """
 
-from loguru import logger
+import pydantic
 
-from ..LCATaskThread import *
-from ...integrations.scryfall.LCAScryfallIntegration import *
-from ...models.LCAScryfallCardModel import *
+from source.models.LCAScryfallCardModel import LCAScryfallCardModel
 
-class LCAScryfallSearchTaskThread (LCATaskThread):
-	
-	def _run (self,
-		query: str,
-		*,
-		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
-	) -> list[LCAScryfallCardModel]:
-		results = []
-		with LCAScryfallIntegration() as scryfall:
-			for page in scryfall.search(query):
-				results += page
-				self._emit_update(page)
-		return results
+class FeaturedCardModel (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
+	featured: LCAScryfallCardModel | None = None
 

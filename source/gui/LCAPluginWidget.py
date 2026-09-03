@@ -32,6 +32,9 @@ from ..common.LCAProjectState import LCAProjectState
 
 class LCAPluginWidget (QDockWidget):
 
+	def _project_state_type (self) -> type[pydantic.BaseModel] | None:
+		raise NotImplementedError
+
 	def _initial_project_state_data (self) -> pydantic.BaseModel | None:
 		raise NotImplementedError
 
@@ -64,16 +67,22 @@ class LCAPluginWidget (QDockWidget):
 		self.deleteLater()
 
 	def _get_project_state_data (self) -> pydantic.BaseModel | None:
-		return LCAProjectState().model.plugins.get(self.import_path, None)
+		result = getattr(LCAProjectState().model.plugins, self.__attr_name(), None)
+		if result is None:
+			return None
+		return self._project_state_type()(**result)
 
 	def _set_project_state_data (self, new_state: pydantic.BaseModel | None) -> None:
-		if LCAProjectState().model.plugins.get(self.import_path, 'notfound') != new_state:
+		if getattr(LCAProjectState().model.plugins, self.__attr_name(), 'notfound') != new_state:
 			with LCAProjectState() as state:
-				state.model.plugins[self.import_path] = new_state
+				setattr(state.model.plugins, self.__attr_name(), new_state)
+		return
 
 	def __remove_project_state_data (self) -> None:
-		if LCAProjectState().model.plugins.get(self.import_path, 'notfound') == 'notfound':
-			return
-		with LCAProjectState() as state:
-			del state.model.plugins[self.import_path]
+		if hasattr(LCAProjectState().model.plugins, self.__attr_name()):
+			with LCAProjectState() as state:
+				delattr(state.model.plugins, self.__attr_name())
+
+	def __attr_name (self) -> str:
+		return self.import_path.replace('.', '__')
 

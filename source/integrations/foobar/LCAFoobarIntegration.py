@@ -37,7 +37,6 @@ class LCAFoobarIntegration (LCAIntegration):
 
 	@classmethod
 	def is_initialized (cls) -> bool:
-		logger.warning(Settings().integrations.foobar.install_location)
 		return pathlib.Path(Settings().integrations.foobar.install_location).is_file()
 
 	def _connect (self) -> None:

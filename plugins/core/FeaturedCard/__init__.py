@@ -20,23 +20,7 @@
   "
   """
 
-from loguru import logger
+__all__ = ['FeaturedCardWidget']
 
-from ..LCATaskThread import *
-from ...integrations.scryfall.LCAScryfallIntegration import *
-from ...models.LCAScryfallCardModel import *
-
-class LCAScryfallSearchTaskThread (LCATaskThread):
-	
-	def _run (self,
-		query: str,
-		*,
-		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
-	) -> list[LCAScryfallCardModel]:
-		results = []
-		with LCAScryfallIntegration() as scryfall:
-			for page in scryfall.search(query):
-				results += page
-				self._emit_update(page)
-		return results
+from .FeaturedCardWidget import *
 

@@ -35,6 +35,9 @@ class MatchTrackerWidget (LCAPluginWidget):
 
 	__carousel_widget: LCACarouselWidget
 
+	def _project_state_type (self) -> None:
+		return None
+
 	def _initial_project_state_data (self) -> None:
 		return None
 

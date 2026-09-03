@@ -41,9 +41,17 @@ from ..threads.common.LCAScryfallSearchTaskThread import *
 
 class LCAMagicCardSelectorWidget (LCAWidget):
 	
-	changed = Signal(LCAScryfallCardModel)
-	
+	changed = Signal(object) # LCAScryfallCardModel | None
+
+	__single_result: bool
 	__search_results: list[LCAScryfallCardModel] = []
+
+	def __init__ (self,
+		/, *,
+		single_result: bool = False,
+	):
+		self.__single_result = single_result
+		super().__init__()
 
 	def _setup_layout (self) -> None:
 		self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
@@ -66,11 +74,18 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 						scryfallsearch_input.setPlaceholderText(I18n(self).search_placeholder)
 					cardsearchbar_layout.addWidget(scryfallsearch_input)
 					if scryfallsearch_btn := QPushButton(''):
+						self.__scryfallsearch_btn = scryfallsearch_btn
 						scryfallsearch_btn.setIcon(Assets.QIcon('icons/advance.png'))
 						scryfallsearch_btn.clicked.connect(
 							lambda input = scryfallsearch_input : self.__do_scryfall_search(scryfallsearch_input.text())
 						)
 					cardsearchbar_layout.addWidget(scryfallsearch_btn)
+					if clearvalue_btn := QPushButton(''):
+						self.__clearvalue_btn = clearvalue_btn
+						clearvalue_btn.setIcon(Assets.QIcon('icons/close.png'))
+						clearvalue_btn.clicked.connect(self.__evt_clearvalue_clicked)
+						clearvalue_btn.hide()
+					cardsearchbar_layout.addWidget(clearvalue_btn)
 				cardsearch_layout.addWidget(cardsearchbar_widget)
 				if cardsearch_results := QListWidget():
 					self.__cardsearch_results = cardsearch_results
@@ -118,7 +133,10 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 		self.setEnabled(False)
 		self.__cardsearch_results.clear()
 		self.__search_results = []
-		self.__search_thread = LCAScryfallSearchTaskThread(query = query)
+		self.__search_thread = LCAScryfallSearchTaskThread(
+			query = query,
+			unique = 'cards' if self.__single_result else 'prints',
+		)
 		self.__search_thread.error.connect( self.__evt_search_thread_error )
 		self.__search_thread.update.connect( self.__evt_search_thread_update )
 		self.__search_thread.complete.connect( self.__evt_search_thread_complete )
@@ -141,20 +159,28 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 			self.__evt_card_selected(self.__cardsearch_results.currentItem().text())
 
 	def __evt_card_selected (self, cardname: str) -> None:
-		self.__printcarousel_widget.clear()
-		for card_printing in self.__search_results:
-			if card_printing.name == self.__cardsearch_results.currentItem().text():
-				stacked = QStackedWidget()
-				stacked.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-				stacked.setProperty('css_class', 'card_display')
-				stacked.addWidget( LCACardDisplayWidget(card_printing) )
-				if card_printing.card_faces:
-					for i in range(1, len(card_printing.card_faces)):
-						copy = card_printing.model_copy(deep = True)
-						copy.lca_selected_face = i
-						stacked.addWidget( LCACardDisplayWidget(copy) )
-				self.__printcarousel_widget.addItem( stacked, card_printing )
-		self.__stacked_widget.setCurrentIndex(1)
+		if self.__single_result:
+			for card in self.__search_results:
+				if card.name == self.__cardsearch_results.currentItem().text():
+					self.__scryfallsearch_btn.hide()
+					self.__clearvalue_btn.show()
+					self.changed.emit(card)
+					return
+		else:
+			self.__printcarousel_widget.clear()
+			for card_printing in self.__search_results:
+				if card_printing.name == self.__cardsearch_results.currentItem().text():
+					stacked = QStackedWidget()
+					stacked.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+					stacked.setProperty('css_class', 'card_display')
+					stacked.addWidget( LCACardDisplayWidget(card_printing) )
+					if card_printing.card_faces:
+						for i in range(1, len(card_printing.card_faces)):
+							copy = card_printing.model_copy(deep = True)
+							copy.lca_selected_face = i
+							stacked.addWidget( LCACardDisplayWidget(copy) )
+					self.__printcarousel_widget.addItem( stacked, card_printing )
+			self.__stacked_widget.setCurrentIndex(1)
 
 	def __evt_carousel_updated (self, card: LCAScryfallCardModel | None) -> None:
 		logger.debug(card.set_name if card else 'NONE')
@@ -178,4 +204,11 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 		card = self.__printcarousel_widget.currentWidget().currentWidget().card
 		self.__cardname_lbl.setText(card.name.split(' // ')[card.lca_selected_face])
 		self.changed.emit(card)
+
+	def __evt_clearvalue_clicked (self) -> None:
+		self.__scryfallsearch_input.setText('')
+		self.__cardsearch_results.clear()
+		self.__scryfallsearch_btn.show()
+		self.__clearvalue_btn.hide()
+		self.changed.emit(None)
 

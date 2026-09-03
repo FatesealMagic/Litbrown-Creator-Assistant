@@ -103,7 +103,6 @@ class LCADHttpRequestHandler (http.server.SimpleHTTPRequestHandler):
 				getattr(Settings().integrations, integration_name).auth = rsp.json()
 			with IntegrationClass(suppress_checks = True) as integration:
 				user = integration.get_user_info()
-				logger.warning(user)
 			with Settings():
 				setattr(Settings().integrations, integration_name, user)
 			with IntegrationClass():

@@ -79,7 +79,6 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 		mtgo_match: MTGOSDK.API.Play.Match,
 		mtgo_match_state: MTGOSDK.API.Play.MatchState,
 	) -> None:
-		logger.warning(f'in match state changed: {mtgo_match_state}')
 		if not len(list(mtgo_match.WinningPlayers)) and not len(list(mtgo_match.LosingPlayers)):
 			return
 		match_model = LCAProjectState().model.mtgo_match_from_id(mtgo_match.Id)

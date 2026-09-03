@@ -85,6 +85,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(I18n(self).title)
+		self.setDockNestingEnabled(True)
 		if profile := Settings().tools.multicast.profile.get(self.__project.series_id, None):
 			for plugin in profile.loaded_plugins:
 				self.__load_and_dock_plugin(plugin)
@@ -334,8 +335,6 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
 
 	def __evt_mistake_clicked (self) -> None:
-		logger.warning(self.__class__.__module__)
-		logger.warning(self.__class__.__qualname__)
 		logger.info('Marking a mistake')
 		with LCAProjectState() as state:
 			state.model.mistake_count += 1

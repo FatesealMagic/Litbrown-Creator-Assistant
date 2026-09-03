@@ -48,7 +48,7 @@ class SingleMatchTrackerWidget (LCAWidget):
 		layout = QVBoxLayout(self)
 		layout.setContentsMargins(0, 0, 0, 0)
 		layout.addWidget(
-			QLabel(f'<html><h3>{I18n(self).match} #{self.__match_number}</h3></html>'),
+			QLabel(f'<html><h3>{I18n(self).match} #{self.__match_number + 1}</h3></html>'),
 			alignment = Qt.AlignmentFlag.AlignHCenter,
 		)
 		if match_result_btn := ResultButton():

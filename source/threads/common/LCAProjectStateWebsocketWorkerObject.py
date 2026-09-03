@@ -54,8 +54,10 @@ class LCAProjectStateWebsocketWorkerObject (LCAWorkerObject):
 
 	@Slot()
 	def slot_new_connection (self) -> None:
+		from ...common.LCAProjectState import LCAProjectState # TODO remove circular dependency
 		client = self.__wss.nextPendingConnection()
 		logger.info(f'Received new websocket connection: {client}')
+		client.sendTextMessage(json.dumps(LCAProjectState().model.model_dump(mode = 'json')))
 		client.textMessageReceived.connect(self.slot_text_message_received)
 		with self.__clients_mutex:
 			self.__clients.append(client)
@@ -68,7 +70,7 @@ class LCAProjectStateWebsocketWorkerObject (LCAWorkerObject):
 
 	@Slot(str)
 	def slot_text_message_received (self, message: str) -> None:
-		logger.debug(f'[ws] {self.sender()}: {message}')
+		pass
 
 	@Slot()
 	def slot_destruct (self) -> None:

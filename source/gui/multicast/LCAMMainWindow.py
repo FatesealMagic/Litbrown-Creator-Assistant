@@ -85,7 +85,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(I18n(self).title)
-		self.setDockNestingEnabled(True)
+		self.__set_docking_behaviors()
 		if profile := Settings().tools.multicast.profile.get(self.__project.series_id, None):
 			for plugin in profile.loaded_plugins:
 				self.__load_and_dock_plugin(plugin)
@@ -153,6 +153,13 @@ class LCAMMainWindow (LCAMainWindow):
 				for combo in self.__hotkey_combos.keys()
 		})
 		self.__keyboard_listener.start()
+
+	def __set_docking_behaviors (self) -> None:
+		self.setDockNestingEnabled(True)
+		self.setCorner(Qt.Corner.TopLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
+		self.setCorner(Qt.Corner.BottomLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
+		self.setCorner(Qt.Corner.TopRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
+		self.setCorner(Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
 
 	def _setup_layout (self) -> None:
 		if wrapper_widget := QWidget():

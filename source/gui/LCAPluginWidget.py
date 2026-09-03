@@ -70,7 +70,9 @@ class LCAPluginWidget (QDockWidget):
 		result = getattr(LCAProjectState().model.plugins, self.__attr_name(), None)
 		if result is None:
 			return None
-		return self._project_state_type()(**result)
+		if type(result) is dict:
+			return self._project_state_type()(**result)
+		return result
 
 	def _set_project_state_data (self, new_state: pydantic.BaseModel | None) -> None:
 		if getattr(LCAProjectState().model.plugins, self.__attr_name(), 'notfound') != new_state:

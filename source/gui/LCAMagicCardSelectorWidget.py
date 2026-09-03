@@ -157,6 +157,9 @@ class LCAMagicCardSelectorWidget (LCAWidget):
 		if success and self.__cardsearch_results.count() == 1:
 			self.__cardsearch_results.setCurrentRow(0)
 			self.__evt_card_selected(self.__cardsearch_results.currentItem().text())
+			if self.__single_result:
+				self.__scryfallsearch_input.clear()
+				self.__scryfallsearch_input.setFocus()
 
 	def __evt_card_selected (self, cardname: str) -> None:
 		if self.__single_result:

@@ -45,7 +45,6 @@ class LCAPopupMessage (QMessageBox):
 	@classmethod
 	def info (cls,
 		text: str,
-		/, *,
 		buttons = QMessageBox.StandardButton.NoButton,
 	) -> QMessageBox.StandardButton:
 		return cls(
@@ -58,7 +57,6 @@ class LCAPopupMessage (QMessageBox):
 	@classmethod
 	def warning (cls,
 		text: str,
-		/, *,
 		buttons = QMessageBox.StandardButton.NoButton,
 	) -> QMessageBox.StandardButton:
 		return cls(
@@ -71,7 +69,6 @@ class LCAPopupMessage (QMessageBox):
 	@classmethod
 	def error (cls,
 		text: str,
-		/, *,
 		buttons = QMessageBox.StandardButton.NoButton,
 	) -> QMessageBox.StandardButton:
 		return cls(

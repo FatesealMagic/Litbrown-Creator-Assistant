@@ -143,14 +143,16 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 	series: list[SeriesModel] = []
 
 	class IntegrationsModel (pydantic.BaseModel, validate_assignment = True):
-		
+
+		class FoobarIntegrationModel (pydantic.BaseModel, validate_assignment = True):
+			install_location: str = ''
+			beefweb_port: int = 8880
+			additional_arguments: str = ''
+		foobar: FoobarIntegrationModel = FoobarIntegrationModel()
+
 		class MoxfieldIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			user_agent: str = ''
 		moxfield: MoxfieldIntegrationModel = MoxfieldIntegrationModel()
-		
-		class MymtgoIntegrationModel (pydantic.BaseModel, validate_assignment = True):
-			accounts: list[str] = []
-		mymtgo: MymtgoIntegrationModel = MymtgoIntegrationModel()
 
 		class ObsIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			class ObsInstanceIntegrationModel (pydantic.BaseModel, validate_assignment = True):

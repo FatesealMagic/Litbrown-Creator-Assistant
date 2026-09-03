@@ -278,6 +278,9 @@ LCACFoobarWidget:
   info: LCA uses its connection to foobar2000 to automatically play music while streaming and synchronize your music to your videos. You will need a foobar2000 installation with the Beefweb Remote Control component.
   install_foobar: <html><a href="https://www.foobar2000.org/">Click here to visit foobar2000's home page and install.</a></html>
   install_beefweb: <html><a href="https://www.foobar2000.org/components/view/foo_beefweb">Click here to install Beefweb.</a></html>
+  install_location: "Install location for foobar2000:"
+  beefweb_port: "Beefweb's networking port:"
+  additional_arguments: "Additional arguments to pass to foobar2000 on startup:"
 
 LCACManapoolWidget:
   include_in_decklists: Include a link to purchase deck on Mana Pool above each decklist in description
@@ -317,13 +320,13 @@ LCACSettingsLCAWidget:
     general:
       title: General
       project_location: "Location of LCA project files:"
-      www_location: "<html>Directory to serve locally (OBS browser source, thumbnail creator, etc.):<br><i>Requires a <b>FULL RESTART</b> to take effect!</i></html>"
-      color_slider: "<html>Accent Hue: <br><i>Will force a slow repaint of all LCA windows when used</i></html>"
+      www_location: "<html>Directory to serve locally (OBS browser source, thumbnail creator, etc.):<br>Requires a FULL RESTART to take effect!</html>"
+      color_slider: "<html>Accent Hue: <br>Will force a slow repaint of all LCA windows when used</html>"
     schedule:
       title: Schedule
       group_rendering: Render
-      lbl_htmlrenderfile: "<html>Location of schedule rendering HTML file:<br><i>Don't change unless you know what you're doing!</i></html>"
-      lbl_functocall: "<html>Name of render function to call upon document ready:<br><i>Don't change unless you know what you're doing!</i></html>"
+      lbl_htmlrenderfile: "<html>Location of schedule rendering HTML file:<br>Don't change unless you know what you're doing!</html>"
+      lbl_functocall: "<html>Name of render function to call upon document ready:<br>Don't change unless you know what you're doing!</html>"
       lbl_outputfile: "Location of rendered schedule image:"
       group_connection: Publish
     multicast:
@@ -337,8 +340,8 @@ LCACSettingsLCAWidget:
         clip: Mark Clip
     thumbnail:
       title: Thumbnail
-      render_file: "<html>Path to thumbnail rendering webpage within your serving directory:<br><i>Don't change unless you know what you're doing!</i></html>"
-      render_func: "<html>Name of function to call with thumbnail data updates:<br><i>Don't change unless you know what you're doing!</i></html>"
+      render_file: "<html>Path to thumbnail rendering webpage within your serving directory:<br>Don't change unless you know what you're doing!</html>"
+      render_func: "<html>Name of function to call with thumbnail data updates:<br>Don't change unless you know what you're doing!</html>"
     render:
       title: Render
 

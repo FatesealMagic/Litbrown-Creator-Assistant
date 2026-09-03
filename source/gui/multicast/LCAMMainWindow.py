@@ -42,12 +42,14 @@ from ..LCALabel import *
 from ..LCAMainWindow import *
 from ..LCAPluginWidget import *
 from ..LCAPopupMessage import *
+from ..LCASeparator import *
 from ...common.LCAPluginManager import *
 from ...common.LCAProjectState import *
 from ...common.LCAKeySequence import *
 from ...integrations.LCAIntegrationErrors import *
 from ...models.LCAProjectFileModel import *
 from ...threads.LCAWorkerThread import *
+from ...threads.multicast.LCACFoobarControllerTaskThread import *
 from ...threads.multicast.LCACMtgosdkObserveTaskThread import *
 from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import *
 
@@ -65,6 +67,7 @@ class LCAMMainWindow (LCAMainWindow):
 
 	__obs_thread: LCAWorkerThread
 	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
+	__foobar_thread: LCACFoobarControllerTaskThread
 
 	__BUTTONS_STYLESHEET = 'font-size: 13pt; font-weight: bold; padding: 0.3em;'
 	
@@ -77,6 +80,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__initialize_project_state()
 		self.__setup_obs_thread()
 		self.__setup_mtgosdk_thread()
+		self.__setup_foobar_thread()
 		self.__setup_keyboard_hotkey_signals()
 		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
@@ -103,13 +107,23 @@ class LCAMMainWindow (LCAMainWindow):
 
 	def __setup_mtgosdk_thread (self, e: Exception | None = None) -> None:
 		if isinstance(e, LCAIntegrationNotInitializedError):
-			self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.not_installed)
+			self.__update_integration_status('mtgosdk', False)
 			return
-		self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.connecting)
+		self.__update_integration_status('mtgosdk', None)
 		self.__mtgosdk_thread = LCACMtgosdkObserveTaskThread()
 		self.__mtgosdk_thread.error.connect(self.__setup_mtgosdk_thread)
-		self.__mtgosdk_thread.update.connect(lambda _ : self.__set_status_message('mtgosdk', I18n(self).statuses.mtgosdk.connected))
+		self.__mtgosdk_thread.update.connect(lambda _ : self.__update_integration_status('mtgosdk', True))
 		self.__mtgosdk_thread.start()
+
+	def __setup_foobar_thread (self, e: Exception | None = None) -> None:
+		if isinstance(e, LCAIntegrationNotInitializedError):
+			self.__update_integration_status('foobar', False)
+			return
+		self.__update_integration_status('foobar', None)
+		self.__foobar_thread = LCACFoobarControllerTaskThread()
+		self.__foobar_thread.error.connect(self.__setup_foobar_thread)
+		self.__foobar_thread.update.connect(lambda _ : self.__update_integration_status('foobar', True))
+		self.__foobar_thread.start()
 
 	def __setup_keyboard_hotkey_signals (self) -> None:
 		self.__hotkey_combos = {}
@@ -226,14 +240,15 @@ class LCAMMainWindow (LCAMainWindow):
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
 		self.__status_lbls = {}
-		for lbl, msg in [
-			('obs', I18n(self).statuses.obs.connecting),
-			('mtgosdk', I18n(self).statuses.mtgosdk.connecting),
-		]:
-			self.__status_lbls[lbl] = LCALabel()
-			self.__status_lbls[lbl].setStyleSheet('margin-right: 0.1em;')
-			self.statusBar().addPermanentWidget(self.__status_lbls[lbl])
-			self.__set_status_message(lbl, msg)
+		for integration in ('foobar', 'obs', 'mtgosdk'):
+			if logo_lbl := QLabel():
+				logo_lbl.setPixmap(Assets.QIcon(f'external/icons/{integration}.png').pixmap(QSize(24, 24)))
+			self.statusBar().addPermanentWidget(logo_lbl)
+			if status_lbl := QLabel():
+				self.__status_lbls[integration] = status_lbl
+				status_lbl.setPixmap(Assets.QIcon('icons/help.png').pixmap(QSize(24, 24)))
+			self.statusBar().addPermanentWidget(status_lbl)
+			self.statusBar().addPermanentWidget(LCASeparator.vertical())
 		if plugins_btn := QPushButton(I18n(self).plugins.button):
 			plugins_btn.setStyleSheet('margin-right: 0.7em; margin-bottom: 0.4em; margin-top: 0.4em; margin-left: 0.1em;')
 			plugins_btn.clicked.connect(lambda : QMenu.exec(self.__build_plugins_menu(), QCursor.pos()))
@@ -289,15 +304,19 @@ class LCAMMainWindow (LCAMainWindow):
 				state.model.segment_id = None
 				state.model.segment_number = 0
 
-	def __set_status_message (self, integration: str, msg: str) -> None:
+	def __update_integration_status (self, integration: str, status: bool | None) -> None:
 		if not self.__status_lbls.get(integration, None):
 			return
-		self.__status_lbls[integration].setText(f'{msg}')
+		self.__status_lbls[integration].setPixmap(Assets.QIcon(f'icons/{ {
+			None:  'help',
+			True:  'ok',
+			False: 'close',
+		}[status] }.png').pixmap(24, 24))
 
 	@Slot(bool)
 	def __slot_obs_connected (self, success: bool) -> None:
 		self.setEnabled(success)
-		self.__set_status_message('obs', I18n(self).statuses.obs.connected if success else I18n(self).statuses.obs.connecting)
+		self.__update_integration_status('obs', True if success else None)
 
 	@Slot(str)
 	def __slot_obs_on_scene_changed (self, scene_name: str) -> None:
@@ -311,7 +330,6 @@ class LCAMMainWindow (LCAMainWindow):
 		self.setEnabled(True)
 		self.__rebuild_segment_cbo()
 		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
-		self.__set_status_message('obs', I18n(self).statuses.obs.recording if active else I18n(self).statuses.obs.connected)
 
 	def __evt_mistake_clicked (self) -> None:
 		logger.warning(self.__class__.__module__)

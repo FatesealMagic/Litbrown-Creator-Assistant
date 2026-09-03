@@ -85,7 +85,7 @@ class LCACMainWindow (LCAMainWindow):
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(QLabel(I18n(self).tabs.settings.tabs.membership.info))
+		layout.addWidget(LCALabel(I18n(self).tabs.settings.tabs.membership.info))
 		layout.addWidget(LCATabbedDataViewWidget(
 			LCATableModel( Settings().MembershipTierModel, lambda : Settings().membership_tiers, Settings ),
 			LCACSettingsMembershipTierWidget,

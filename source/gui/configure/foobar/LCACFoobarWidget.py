@@ -30,6 +30,9 @@ from ....Config import *
 from ....I18n import *
 from ....Util import *
 
+from ...LCAFilePickerWidget import *
+from ...LCALabel import *
+from ...LCASeparator import *
 from ...LCAWidget import *
 
 class LCACFoobarWidget (LCAWidget):
@@ -37,6 +40,25 @@ class LCACFoobarWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).install_foobar))
+		layout.addWidget(LCALabel(I18n(self).install_beefweb))
+		layout.addWidget(LCASeparator.horizontal())
+		layout.addWidget(LCALabel(I18n(self).install_location))
+		if install_location := LCAFilePickerWidget(
+			Settings().integrations.foobar.install_location,
+			LCAFilePickerWidget.Mode.OpenFile,
+		):
+			Settings().bind(install_location, 'integrations.foobar.install_location')
+		layout.addWidget(install_location)
+		layout.addWidget(LCALabel(I18n(self).beefweb_port))
+		if beefweb_port := QSpinBox():
+			beefweb_port.setRange(0, 65535)
+			Settings().bind(beefweb_port, 'integrations.foobar.beefweb_port')
+		layout.addWidget(beefweb_port)
+		layout.addWidget(LCALabel(I18n(self).additional_arguments))
+		if additional_arguments := QLineEdit():
+			Settings().bind(additional_arguments, 'integrations.foobar.additional_arguments')
+		layout.addWidget(additional_arguments)
 		layout.addStretch(1)
 

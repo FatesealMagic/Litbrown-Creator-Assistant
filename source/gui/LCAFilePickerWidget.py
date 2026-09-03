@@ -64,8 +64,7 @@ class LCAFilePickerWidget (LCAWidget):
 			group_layout = QHBoxLayout(group_widget)
 			group_layout.setContentsMargins(0, 0, 0, 0)
 			group_layout.setSpacing(0)
-			#group_layout.addSpacing(group_layout.spacing())
-			if file_display := LCALabel(self.__value):
+			if file_display := QLabel(self.__value):
 				self.__file_display = file_display
 				file_display.setSizePolicy(QSizePolicy.Policy.Ignored, file_display.sizePolicy().verticalPolicy())
 			group_layout.addWidget(file_display, 1)
@@ -73,7 +72,6 @@ class LCAFilePickerWidget (LCAWidget):
 				picker_btn.setIcon(Assets.QIcon('icons/filepicker.png'))
 				picker_btn.clicked.connect(self.__open_picker_dialog)
 			group_layout.addWidget(picker_btn, 0)
-			#group_layout.addSpacing(group_layout.spacing() / 2)
 		layout.addWidget(group_widget)
 
 	def __open_picker_dialog (self) -> None:

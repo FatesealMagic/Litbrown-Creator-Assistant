@@ -40,6 +40,12 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	mistake_count: int = 0
 	muted: bool = False
 
+	class Music (pydantic.BaseModel, validate_assignment = True):
+		artist: str = ''
+		title: str = ''
+		path: str = ''
+	music: Music = Music()
+
 	class Mtgo (pydantic.BaseModel, validate_assignment = True):
 		
 		class Match (pydantic.BaseModel, validate_assignment = True):

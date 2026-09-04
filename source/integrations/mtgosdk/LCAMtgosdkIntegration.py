@@ -24,6 +24,7 @@ import functools
 import os
 import pathlib
 import sys
+import typing
 
 from loguru import logger
 import clr_loader
@@ -31,15 +32,27 @@ import pythonnet
 
 from ..LCAIntegration import *
 from ..LCAIntegrationErrors import *
+from ...common.LCASingleton import LCASingleton
 
 from ...Config import *
 from ...Settings import *
 
-class LCAMtgosdkIntegration (LCAIntegration):
+class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 
-	__client: MTGOSDK.API.Client
+	# See __evt_ callbacks below for proper type hint signatures
+	class _Signals (QObject):
+		on_game_joined = Signal(object, object)
+		on_match_state_changed = Signal(object, object)
+		on_game_results_changed = Signal(object, object)
+		on_message_received = Signal(object, object)
 
 	__BINARIES_FOLDER = str(pathlib.Path(Config().integrations.local.mtgosdk.binaries_folder).resolve())
+
+	__signals = _Signals()
+
+	@property
+	def signals (self) -> _Signals:
+		return self.__signals
 
 	@classmethod
 	def is_initialized (cls) -> bool:
@@ -64,53 +77,73 @@ class LCAMtgosdkIntegration (LCAIntegration):
 	def _disconnect (self) -> None:
 		pass
 
-	def __invoke_callback (self,
-		callback: typing.Callable,
-		args: tuple,
-	) -> None:
-		try:
-			callback(*args)
-		except Exception as e:
-			logger.exception(e)
+	@LCAIntegration.in_context
+	def listen_until_mtgo_closed (self, should_continue: typing.Callable[[], bool]) -> None:
+		import MTGOSDK
+		self.__establish_mtgo_global_callbacks()
+		while (abrupt_termination := should_continue()) and MTGOSDK.Core.Remoting.RemoteClient.MTGOProcess():
+			time.sleep(0.05)
+		logger.info('MTGO closed')
+		if abrupt_termination:
+			raise LCAIntegrationUnexpectedError
 
-	def on_game_joined (self,
-		callback: typing.Callable[ [
-			MTGOSDK.API.Play.Match,
-			MTGOSDK.API.Play.Games.Game,
-		], None ],
-	) -> None:
-		import MTGOSDK; import System
+	@staticmethod
+	def __callback (func: typing.Callable) -> typing.Callable:
+		@functools.wraps(func)
+		def wrapper (self, *args, **kwargs) -> typing.Any:
+			try:
+				return func(self, *args, **kwargs)
+			except Exception as e:
+				logger.exception(e)
+		return wrapper
+
+	def __establish_mtgo_global_callbacks (self) -> None:
+		import MTGOSDK
+		import System
 		MTGOSDK.API.Play.EventManager.GameJoined += System.Action[
 			MTGOSDK.API.Play.Event,
 			MTGOSDK.API.Play.Games.Game,
-		]( lambda *args : self.__invoke_callback(callback, args) )
-		logger.debug(f'Registered {callback}')
-
-	def on_match_state_changed (self,
-		match_: MTGOSDK.API.Play.Match,
-		callback: typing.Callable[ [
+		]( self.__evt_game_joined )
+		MTGOSDK.API.Play.Match.MatchStateChanged += System.Action[
 			MTGOSDK.API.Play.Match,
 			MTGOSDK.API.Play.MatchState,
-		], None ],
-	) -> None:
-		import MTGOSDK; import System
-		match_.OnMatchStateChanged += System.Action[
-			MTGOSDK.API.Play.MatchState,
-		]( lambda *args : self.__invoke_callback(callback, (match_,) + args) )
-		logger.debug(f'Registered {callback}')
-
-	def on_game_results_changed (self,
-		game: MTGOSDK.API.Play.Games.Game,
-		callback: typing.Callable[ [
+		]( self.__evt_match_state_changed )
+		MTGOSDK.API.Play.Games.Game.GameResultsChanged += System.Action[
 			MTGOSDK.API.Play.Games.Game,
 			System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
-		], None ],
+		]( self.__evt_game_results_changed )
+		MTGOSDK.API.Chat.Channel.MessageReceived += System.Action[
+			MTGOSDK.API.Chat.Channel,
+			MTGOSDK.API.Chat.Message,
+		]( self.__evt_message_received )
+
+	@__callback
+	def __evt_game_joined (self,
+		event: MTGOSDK.API.Play.Event,
+		game: MTGOSDK.API.Play.Games.Game,
 	) -> None:
-		import MTGOSDK; import System
-		game.OnGameResultsChanged += System.Action[
-			System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
-		]( lambda *args : self.__invoke_callback(callback, (game,) + args) )
-		logger.debug(f'Registered {callback}')
+		self.signals.on_game_joined.emit(event, game)
+
+	@__callback
+	def __evt_match_state_changed (self,
+		match_: MTGOSDK.API.Play.Match,
+		match_state: MTGOSDK.API.Play.MatchState,
+	) -> None:
+		self.signals.on_match_state_changed.emit(match_, match_state)
+
+	@__callback
+	def __evt_game_results_changed (self,
+		game: MTGOSDK.API.Play.Games.Game,
+		results: System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
+	) -> None:
+		self.signals.on_game_results_changed.emit(game, results)
+
+	@__callback
+	def __evt_message_received (self,
+		channel: MTGOSDK.API.Chat.Channel,
+		message: MTGOSDK.API.Chat.Message,
+	) -> None:
+		self.signals.on_message_received.emit(channel, message)
 
 	def get_username (self) -> str | None:
 		import MTGOSDK
@@ -119,13 +152,4 @@ class LCAMtgosdkIntegration (LCAIntegration):
 		except Exception as e:
 			logger.exception(e)
 			return None
-
-	@LCAIntegration.in_context
-	def listen_until_mtgo_closed (self, should_continue: typing.Callable[[], bool]) -> None:
-		import MTGOSDK
-		while (abrupt_termination := should_continue()) and MTGOSDK.Core.Remoting.RemoteClient.MTGOProcess():
-			time.sleep(0.05)
-		logger.debug('MTGO closed')
-		if abrupt_termination:
-			raise LCAIntegrationUnexpectedError
 

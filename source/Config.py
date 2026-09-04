@@ -110,6 +110,12 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 						</PropertyGroup>
 					</Project>
 				'''.strip()
+
+				class RegexesModel (pydantic.BaseModel, frozen = True):
+					card: str = r'@\[(.*?)@:\d+,\d+:@]'
+					player: str = r'(?:@P)?@P(\S+)'
+				regexes: RegexesModel = RegexesModel()
+
 			mtgosdk: MtgosdkModel = MtgosdkModel()
 
 			class ObsModel (pydantic.BaseModel, frozen = True):

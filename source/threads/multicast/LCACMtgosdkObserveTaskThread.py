@@ -36,10 +36,13 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 	def _run (self) -> None:
 		with LCAMtgosdkIntegration() as sdk:
 			self.__sdk = sdk
-			sdk.on_game_joined(self.__evt_game_joined)
+			sdk.signals.on_game_joined.connect(self.__evt_game_joined)
+			sdk.signals.on_match_state_changed.connect(self.__evt_match_state_changed)
+			sdk.signals.on_game_results_changed.connect(self.__evt_game_results_changed)
 			self.update.emit(True)
 			sdk.listen_until_mtgo_closed(self.isInterruptionRequested)
 
+	@Slot(object, object)
 	def __evt_game_joined (self,
 		mtgo_match: MTGOSDK.API.Play.Match,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
@@ -70,11 +73,10 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 				id = mtgo_game.Id,
 			) ],
 		)
-		self.__sdk.on_match_state_changed(mtgo_match, self.__evt_match_state_changed)
-		self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
 		with LCAProjectState() as state:
 			state.model.mtgo.matches.append(match_model)
 
+	@Slot(object, object)
 	def __evt_match_state_changed (self,
 		mtgo_match: MTGOSDK.API.Play.Match,
 		mtgo_match_state: MTGOSDK.API.Play.MatchState,
@@ -89,6 +91,7 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 			with LCAProjectState() as state:
 				match_model.victory = victory
 
+	@Slot(object, object)
 	def __evt_game_results_changed (self,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
 		mtgo_results: System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],

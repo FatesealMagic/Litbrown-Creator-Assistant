@@ -263,7 +263,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		thumbnail_path, thumbnail_type = (None, None)
 		if (path := self.get_thumbnail_path(
 			format = format,
-			slug = self.get_slug(),
+			slug = self.slug(),
 		)).is_file():
 			thumbnail_path, thumbnail_type = (path, 'multicast')
 		elif self.variant_id and (path := self.get_thumbnail_path(

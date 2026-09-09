@@ -125,7 +125,6 @@ class ChatMonitorTaskThread (LCATaskThread):
 				platform_message_id = self._determine_platform_message_id(el),
 				platform_user_id = self._determine_platform_user_id(el),
 			)
-			#el.evaluate('el => el.remove()')
 		except Exception as e:
 			logger.exception()
 			return

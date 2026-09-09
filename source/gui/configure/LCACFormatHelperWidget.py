@@ -32,6 +32,7 @@ from ...I18n import *
 from ...Assets import *
 
 from ..LCADialog import *
+from ..LCALabel import *
 from ..LCAPopupMessage import *
 from ..LCAWidget import *
 from ...common.LCATextTemplate import *

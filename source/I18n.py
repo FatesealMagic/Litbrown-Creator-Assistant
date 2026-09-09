@@ -35,7 +35,7 @@ def I18n (
 	/, *,
 	_i18n_munches = {},
 ) -> munch.Munch:
-	if type(key) not in ('type', 'ObjectType', 'ModelMetaclass'):
+	if type(key).__name__ not in ('type', 'ObjectType', 'ModelMetaclass'):
 		key = type(key)
 	split = key.__module__.split('.')
 	i18n_key = None if split[0] == 'source' else f'{split[0]}.{split[1]}'

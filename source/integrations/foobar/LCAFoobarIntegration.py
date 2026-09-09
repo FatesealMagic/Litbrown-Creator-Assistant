@@ -47,12 +47,13 @@ class LCAFoobarIntegration (LCAIntegration):
 		subprocess.Popen(f'{Settings().integrations.foobar.install_location} {Settings().integrations.foobar.additional_arguments}') 
 
 	def __wait_for_connection (self) -> None:
-		while True:
+		for _ in range(3):
 			try:
 				self.__request('GET', 'player')
-				break
+				return
 			except Exception as e:
 				time.sleep(0.5)
+		raise LCAIntegrationNotInitializedError('Unable to make contact with foobar2000')
 
 	def _disconnect (self) -> None:
 		pass

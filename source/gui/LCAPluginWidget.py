@@ -20,6 +20,9 @@
   "
   """
 
+import contextlib
+import typing
+
 from loguru import logger
 import pydantic
 
@@ -38,8 +41,14 @@ class LCAPluginWidget (QDockWidget):
 	def _initial_project_state_data (self) -> pydantic.BaseModel | None:
 		raise NotImplementedError
 
+	def _pre_layout (self) -> None:
+		pass
+
 	def _setup_layout (self) -> None:
 		raise NotImplementedError
+
+	def _post_layout (self) -> None:
+		pass
 
 	_import_path: str
 	
@@ -56,7 +65,9 @@ class LCAPluginWidget (QDockWidget):
 		super().__init__(parent)
 		if self._get_project_state_data() is None:
 			self._set_project_state_data(self._initial_project_state_data())
+		self._pre_layout()
 		self._setup_layout()
+		self._post_layout()
 		self.setObjectName(f'plugin.{import_path}')
 		self.setWindowTitle(title)
 
@@ -71,14 +82,21 @@ class LCAPluginWidget (QDockWidget):
 		if result is None:
 			return None
 		if type(result) is dict:
-			return self._project_state_type()(**result)
+			result = self._project_state_type()(**result)
+			setattr(LCAProjectState().model.plugins, self.__attr_name(), result)
 		return result
 
 	def _set_project_state_data (self, new_state: pydantic.BaseModel | None) -> None:
 		if getattr(LCAProjectState().model.plugins, self.__attr_name(), 'notfound') != new_state:
 			with LCAProjectState() as state:
 				setattr(state.model.plugins, self.__attr_name(), new_state)
-		return
+
+	@contextlib.contextmanager
+	def _project_state_data (self) -> typing.Iterator[pydantic.BaseModel]:
+		with LCAProjectState() as state:
+			yield self._get_project_state_data()
+			logger.debug(id(self._get_project_state_data()))
+		logger.debug(id(self._get_project_state_data()))
 
 	def __remove_project_state_data (self) -> None:
 		if hasattr(LCAProjectState().model.plugins, self.__attr_name()):

@@ -67,20 +67,20 @@ class TwitchChatMonitorTaskThread (ChatMonitorTaskThread):
 	def _container_selector (self) -> str:
 		return 'div.chat-scrollable-area__message-container'
 
-	def _determine_message (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		logger.debug('in determine message')
-		return chat_element.locator('span[data-a-target="chat-line-message-body"]').inner_text()
+	def _js_determine_message (self) -> str:
+		return '''
+			(el) => {
+				return el.querySelector('span[data-a-target="chat-line-message-body"]').innerText;
+			}
+		'''
 
-	def _determine_platform_message_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		return chat_element.locator('div.chat-line__message').first.evaluate('''
+	def _js_determine_platform_message_id (self) -> str:
+		return '''
 			(el) => {
 				try {
-					const ret = el[
-						Object.keys(el).find( k => k.startsWith('__reactProps$') )
+					const msg_el = el.querySelector('div.chat-line__message');
+					const ret = msg_el[
+						Object.keys(msg_el).find( k => k.startsWith('__reactProps$') )
 					]?.children?.props?.children?.[0]?._owner?.stateNode?.props?.message?.id;
 					if (!ret) return '';
 					return ret;
@@ -88,10 +88,12 @@ class TwitchChatMonitorTaskThread (ChatMonitorTaskThread):
 					return '';
 				}
 			}
-		''')
+		'''
 
-	def _determine_platform_user_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		return chat_element.locator('span[data-a-target="chat-message-username"]').inner_text()
+	def _js_determine_platform_user_id (self) -> str:
+		return '''
+			(el) => {
+				return el.querySelector('span[data-a-target="chat-message-username"]').innerText;
+			}
+		'''
 

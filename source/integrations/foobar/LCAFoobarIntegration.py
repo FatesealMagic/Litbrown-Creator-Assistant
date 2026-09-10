@@ -82,11 +82,14 @@ class LCAFoobarIntegration (LCAIntegration):
 		self.__request('POST', 'player/stop')
 
 	def get_current_music (self) -> LCAProjectStateModel.Music:
-		rsp = self.__request('GET', 'player', params = {'columns': '%artist%,%title%,%path%'})
-		data = rsp.json()['player']['activeItem']['columns']
-		return LCAProjectStateModel.Music(
-			artist = data[0],
-			title =  data[1],
-			path =   data[2],
-		)
+		try:
+			rsp = self.__request('GET', 'player', params = {'columns': '%artist%,%title%,%path%'})
+			data = rsp.json()['player']['activeItem']['columns']
+			return LCAProjectStateModel.Music(
+				artist = data[0],
+				title =  data[1],
+				path =   data[2],
+			)
+		except Exception:
+			return LCAProjectStateModel.Music()
 

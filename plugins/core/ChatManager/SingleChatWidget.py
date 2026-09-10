@@ -39,7 +39,7 @@ class SingleChatWidget (QLabel):
 		self.__message = message
 		super().__init__()
 		self.setStyleSheet('QLabel:hover { background-color: palette(dark); }')
-		self.setObjectName(message.lcaid)
+		self.setObjectName(str(message.timestamp))
 		pixmap = QPixmap()
 		pixmap.loadFromData(base64.b64decode(message.screenshot))
 		self.setPixmap(pixmap)

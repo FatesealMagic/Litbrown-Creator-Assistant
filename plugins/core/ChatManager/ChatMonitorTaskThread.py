@@ -52,26 +52,20 @@ class ChatMonitorTaskThread (LCATaskThread):
 	def _container_selector (self) -> str:
 		raise NotImplementedError
 
-	def _determine_message (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
+	def _js_determine_message (self) -> str:
 		raise NotImplementedError
 
-	def _determine_platform_message_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
+	def _js_determine_platform_message_id (self) -> str:
 		raise NotImplementedError
 
-	def _determine_platform_user_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
+	def _js_determine_platform_user_id (self) -> str:
 		raise NotImplementedError
 
 	def _run (self,
 	) -> None:
 		self.__queue = queue.SimpleQueue()
 		with playwright.sync_api.sync_playwright() as p:
-			browser = p.webkit.launch(headless = True)
+			browser = p.chromium.launch(headless = True)
 			self.__page = self.__initialize_page(browser)
 			while not self.isInterruptionRequested():
 				while True:
@@ -94,54 +88,88 @@ class ChatMonitorTaskThread (LCATaskThread):
 		page.goto(self._url, timeout = 20000)
 		page.wait_for_load_state(timeout = 20000)
 		page.add_style_tag(content = self._style)
+		page.add_style_tag(content = self.__css_clear_nonactive_siblings())
 		page.expose_function('lca_callback_new_chat', lambda lcaid : self.__queue.put(lcaid))
 		container = page.locator(self._container_selector)
-		container.evaluate(self.__js_hookup_callback())
+		container.evaluate(self.__js_prepare_container(), timeout = 15000)
 		return page
 
-	def __process_new_chat (self, lcaid: str) -> None:
-		logger.debug(f'Processing new chat: {lcaid}')
+	def __process_new_chat (self, message: dict) -> str:
+		logger.info(f'Received chat w/ ts {message['timestamp']}: {message['message']}')
 		try:
-			el = self.__page.locator(f'[data-lcaid="{lcaid}"]').first
+			message['screenshot'] = str( base64.b64encode(
+				self.__page.locator(f'[data-lcats="{message['timestamp']}"]').first.screenshot(
+					animations = 'disabled',
+					omit_background = True,
+					timeout = 10000,
+				)
+			), 'utf-8' )
 		except Exception as e:
 			logger.exception(e)
-			return
-		try:
-			screenshot = el.screenshot(
-				animations = 'disabled',
-				omit_background = True,
-				timeout = 10000,
-			)
-		except Exception as e:
-			logger.exception(e)
-			return
-		try:
-			message = ChatManagerModel.Message(
-				lcaid = lcaid,
-				timestamp = time.time(),
-				message = self._determine_message(el),
-				screenshot = str(base64.b64encode(screenshot), 'utf-8'),
-				platform_name = self._platform_name,
-				platform_message_id = self._determine_platform_message_id(el),
-				platform_user_id = self._determine_platform_user_id(el),
-			)
-		except Exception as e:
-			logger.exception()
-			return
-		self.update.emit(message)
+			return 'error'
+		self.update.emit(ChatManagerModel.Message(**message))
+		return str(message['timestamp'])
 
-	def __js_hookup_callback (self) -> str:
+	def __css_clear_nonactive_siblings (self) -> str:
 		return '''
-			async (el) => {
-				new MutationObserver( async (records, observer) => {
-					for (let record of records) {
-						for (let node of record.addedNodes) {
-							node.dataset.lcaid = `lcaid${Date.now()}''' + self._platform_name + '''${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
-							console.log(`Processing item with lcaid ${node.dataset.lcaid}`);
-							await window.lca_callback_new_chat(node.dataset.lcaid);
-						}
-					}
-				} ).observe( el, { childList: true } );
+			''' + self._container_selector + ''' >:not([data-lcats]) {
+				display: none;
 			}
+		'''
+
+	def __js_clear_container (self) -> str:
+		return '''
+			(el) => {
+				el.replaceChildren();
+			}
+		'''
+
+	def __js_prepare_container (self) -> str:
+		return '''
+			(el) => {
+
+				const setup_mutation_observer = () => {
+					new MutationObserver( async (records, observer) => {
+						for (let record of records) {
+							for (let node of record.addedNodes) {
+								if (node.nodeType !== 1)
+									continue;
+								process_node(node);
+							}
+						}
+					} ).observe( el, { childList: true } );
+				};
+
+				const process_node = async (node) => {
+
+					node.dataset.lcats = Temporal.Now.instant().epochMilliseconds.toString() +
+						Math.floor(Math.random() * 1e12).toString().padStart(12, '0');
+					console.log(`Processing node w/ ID ${node.dataset.lcats}`);
+
+					const determined_message = determine_message(node);
+					const determined_platform_message_id = determine_platform_message_id(node);
+					const determined_platform_user_id = determine_platform_user_id(node);
+
+					window.lca_callback_new_chat({
+						timestamp: node.dataset.lcats,
+						message: determined_message,
+						platform_name: "''' + self._platform_name + '''",
+						platform_message_id: determined_platform_message_id,
+						platform_user_id: determined_platform_user_id,
+					});
+					
+					console.log(`Finished processing node w/ ID ${ret}`);
+
+				};
+
+				const determine_message             = ''' + self._js_determine_message() + ''';
+				const determine_platform_message_id = ''' + self._js_determine_platform_message_id() + ''';
+				const determine_platform_user_id    = ''' + self._js_determine_platform_user_id() + ''';
+
+				el.replaceChildren();
+				setup_mutation_observer();
+				console.info('Setup complete');
+
+			};
 		'''
 

@@ -89,13 +89,11 @@ class ChatManagerWidget (LCAPluginWidget):
 		self.__update_chat_display()
 
 	def __start_chat_threads (self) -> None:
-		'''if youtube_broadcast_id := LCAProjectState().model.project.stream.remote_ids.youtube:
-			youtube_broadcast_id = 'rFZHOHl-L8A' # TODO Lofi girl stream, edit out later
+		if youtube_broadcast_id := LCAProjectState().model.project.stream.remote_ids.youtube:
 			self.__youtube_thread = YoutubeChatMonitorTaskThread(youtube_broadcast_id)
 			self.__youtube_thread.update.connect(self.__slot_new_message)
-			self.__youtube_thread.start()'''
+			self.__youtube_thread.start()
 		if twitch_broadcast_id := Settings().integrations.twitch.handle:
-			twitch_broadcast_id = 'ohnePixel' # TODO edit out later
 			self.__twitch_thread = TwitchChatMonitorTaskThread(twitch_broadcast_id)
 			self.__twitch_thread.update.connect(self.__slot_new_message)
 			self.__twitch_thread.start()

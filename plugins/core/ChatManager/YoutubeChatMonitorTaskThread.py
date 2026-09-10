@@ -86,18 +86,24 @@ class YoutubeChatMonitorTaskThread (ChatMonitorTaskThread):
 	def _container_selector (self) -> str:
 		return 'div#items'
 
-	def _determine_message (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		return chat_element.locator('span#message').inner_text()
+	def _js_determine_message (self) -> str:
+		return '''
+			(el) => {
+				return el.querySelector('span#message').innerText;
+			}
+		'''
 
-	def _determine_platform_message_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		return chat_element.get_attribute('id')
+	def _js_determine_platform_message_id (self) -> str:
+		return '''
+			(el) => {
+				return el.id;
+			}
+		'''
 
-	def _determine_platform_user_id (self,
-		chat_element: playwright.sync_api.Locator,
-	) -> str:
-		return chat_element.locator('span#author-name').inner_text()
+	def _js_determine_platform_user_id (self) -> str:
+		return '''
+			(el) => {
+				return el.querySelector('span#author-name').innerText;
+			}
+		'''
 

@@ -67,7 +67,7 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 	def __evt_card_selected (self, card: LCAScryfallCardModel | None) -> None:
 		if not card:
 			return
-		self.__hand_tracker.addItem(card.name.split(' // '))
+		self.__hand_tracker.addItem(card.name.split(' // ')[0])
 		state = self._get_project_state_data()
 		self._set_project_state_data( OpponentHandTrackerModel(
 			hand = state.hand + [card],
@@ -130,7 +130,7 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		for card_name in hand:
 			self.__hand_tracker.addItem(card_name)
 			for card in results:
-				if card.name.split(' // ') == card_name:
+				if card.name.split(' // ')[0] == card_name:
 					new_hand.append(card)
 					break
 		self._set_project_state_data( OpponentHandTrackerModel(

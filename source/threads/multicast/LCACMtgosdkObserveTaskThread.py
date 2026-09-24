@@ -44,10 +44,10 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 
 	@Slot(object, object)
 	def __evt_game_joined (self,
-		mtgo_match: MTGOSDK.API.Play.Match,
+		mtgo_event: MTGOSDK.API.Play.Event,
 		mtgo_game: MTGOSDK.API.Play.Games.Game,
 	) -> None:
-		match_model = LCAProjectState().model.mtgo_match_from_id(mtgo_match.Id)
+		match_model = LCAProjectState().model.mtgo_match_from_id(mtgo_game.Match.Id)
 		if match_model:
 			game_model = LCAProjectState().model.mtgo_game_from_id(mtgo_game.Id)
 			if game_model:
@@ -56,18 +56,17 @@ class LCACMtgosdkObserveTaskThread (LCATaskThread):
 					with LCAProjectState() as state:
 						game_model.victory = victory
 				return
-			logger.info(f'Started MTGO game ({mtgo_game.Id}) within existing match ({mtgo_match.Id})')
+			logger.info(f'Started MTGO game ({mtgo_game.Id}) within existing match ({mtgo_game.Match.Id})')
 			game_model = LCAProjectStateModel.Mtgo.Match.Game(
 				id = mtgo_game.Id,
 			)
-			self.__sdk.on_game_results_changed(mtgo_game, self.__evt_game_results_changed)
 			with LCAProjectState() as state:
 				match_model.games.append(game_model)
 			return
-		logger.info(f'Started MTGO game ({mtgo_game.Id}) within new match ({mtgo_match.Id})')
+		logger.info(f'Started MTGO game ({mtgo_game.Id}) within new match ({mtgo_game.Match.Id})')
 		match_model = LCAProjectStateModel.Mtgo.Match(
-			id = mtgo_match.Id,
-			best_of = mtgo_match.MaxGames,
+			id = mtgo_game.Match.Id,
+			best_of = mtgo_game.Match.MaxGames,
 			opponents = [ player.Name for player in list(mtgo_game.Players) if player.Name != self.__sdk.get_username() ],
 			games = [ LCAProjectStateModel.Mtgo.Match.Game(
 				id = mtgo_game.Id,

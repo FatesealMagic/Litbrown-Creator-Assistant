@@ -28,6 +28,7 @@ import typing
 
 from loguru import logger
 import clr_loader
+import psutil
 import pythonnet
 
 from ..LCAIntegration import *
@@ -78,14 +79,16 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 		pass
 
 	@LCAIntegration.in_context
-	def listen_until_mtgo_closed (self, should_continue: typing.Callable[[], bool]) -> None:
+	def listen_until_mtgo_closed (self, should_terminate: typing.Callable[[], bool]) -> None:
 		import MTGOSDK
 		self.__establish_mtgo_global_callbacks()
-		while (abrupt_termination := should_continue()) and MTGOSDK.Core.Remoting.RemoteClient.MTGOProcess():
+		while not (abrupt_termination := should_terminate()) and psutil.pid_exists(MTGOSDK.API.Client.ProcessId):
 			time.sleep(0.05)
 		logger.info('MTGO closed')
 		if abrupt_termination:
 			raise LCAIntegrationUnexpectedError
+		else:
+			raise LCAIntegrationConnectionClosedError
 
 	@staticmethod
 	def __callback (func: typing.Callable) -> typing.Callable:

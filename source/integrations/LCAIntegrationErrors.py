@@ -26,6 +26,9 @@ class LCAIntegrationError (RuntimeError):
 class LCAIntegrationNetworkFailureError (LCAIntegrationError):
 	pass
 
+class LCAIntegrationConnectionClosedError (LCAIntegrationError):
+	pass
+
 class LCAIntegrationNotInitializedError (LCAIntegrationError):
 	pass
 

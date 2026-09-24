@@ -168,8 +168,10 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		filename = filename or '.lca'
 		if slug in str(filename):
 			return pathlib.Path(filename)
-		filename = ('' if filename[0] == '.' else '-') + filename
-		return pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(f'{slug}/{slug}{filename}')
+		path, name = ([''] + filename.rsplit('/', 1))[-2:]
+		return pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(
+			f'{slug}/{path}/{slug}{ '-' if name[0] != '.' else '' }{name}'
+		)
 
 	@LCAHybridMethod
 	def path_footage (obj,
@@ -178,7 +180,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		segment_id: str,
 		segment_number: int | None = None,
 	) -> pathlib.Path:
-		filename = f'footage-{segment_id}'
+		filename = f'footage/{segment_id}'
 		if segment_number:
 			filename += f'-{segment_number:04}'
 		filename += '.mkv'
@@ -196,7 +198,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if ts is None:
 			ts = time.time() * 1000
 		ts = float(ts)
-		filename = f'zstate-{ts:.6f}.json'
+		filename = f'state/{ts:.6f}.json'
 		if isinstance(obj, type) and (cls := obj):
 			return cls.path(slug, filename)
 		elif self := obj:
@@ -210,23 +212,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if not isinstance(obj, type) and (self := obj):
 			slug = self.slug()
 		project_directory = pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(slug)
-		return sorted(list(project_directory.glob(f'{slug}-zstate-*.json')))
-
-	@LCAHybridMethod
-	def filename (obj,
-		slug_or_path: str | pathlib.Path,
-		path: str | pathlib.Path | None = None,
-	) -> str:
-		if isinstance(obj, type) and (cls := obj):
-			slug = str(slug_or_path)
-			path = pathlib.Path(path).as_posix()
-		elif self := obj:
-			slug = self.slug()
-			path = pathlib.Path(slug_or_path).as_posix()
-		filename = pathlib.Path(pathlib.Path(path).as_posix().split(f'{slug}/{slug}')[-1])
-		if filename[0] == '-':
-			filename = filename[1:]
-		return filename
+		return sorted(list(project_directory.glob(f'state/*.json')))
 
 	@LCAHybridMethod
 	def filelock (obj,

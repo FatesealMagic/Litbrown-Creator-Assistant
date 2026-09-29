@@ -121,6 +121,24 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 			class ObsModel (pydantic.BaseModel, frozen = True):
 				pass
 			obs: ObsModel = ObsModel()
+
+			class ScryfallModel (pydantic.BaseModel, frozen = True):
+				models_path: str = 'data/cards/models.sqlite'
+				bulk_info_uri: str = 'https://api.scryfall.com/bulk-data'
+				user_agent: str = 'Litbrown Creator Assistant v3.0.0'
+				db_schema: str = '''
+					BEGIN;
+					CREATE TABLE "cards" (
+						"name" TEXT NOT NULL,
+						"set_code" TEXT NOT NULL,
+						"collector_number" TEXT NOT NULL,
+						"scryfall_id" TEXT NOT NULL,
+						"json" TEXT NOT NULL,
+						PRIMARY KEY("set_code", "collector_number")
+					);
+					COMMIT;
+				'''
+			scryfall: ScryfallModel = ScryfallModel()
 			
 			class ShotcutModel (pydantic.BaseModel, frozen = True):
 				pass

@@ -21,11 +21,18 @@
   """
 
 import collections.abc
+import gzip
+import io
 import itertools
+import json
+import pathlib
+import sqlite3
 import time
 
 from loguru import logger
 import requests
+
+from ...Config import Config
 
 from ..LCAIntegration import *
 from ..LCAIntegrationErrors import *
@@ -101,6 +108,39 @@ class LCAScryfallIntegration (LCAIntegration):
 				next_uri = rsp_json['next_page']
 			else:
 				return
+
+	@LCAIntegration.in_context
+	def refresh_local_data (self) -> None:
+		gzipped_cards = self.bulk_data()
+		with gzip.GzipFile( fileobj = io.BytesIO(gzipped_cards), mode = 'rb' ) as gzip_file:
+			with io.TextIOWrapper( gzip_file, encoding = 'utf-8' ) as raw_cards:
+				with self.__prepare_local_card_database() as db:
+					cur = db.cursor()
+					for raw_card in raw_cards:
+						card = json.loads(raw_card)
+						cur.execute(
+							'INSERT INTO cards (name, set_code, collector_number, scryfall_id, json) VALUES (?, ?, ?, ?, ?)',
+							(card['name'], card['set'], card['collector_number'], card['id'], raw_card),
+						)
+					cur.close()
+				db.close()
+
+	def __prepare_local_card_database (self) -> sqlite3.Connection:
+		db_path = pathlib.Path(Config().integrations.local.scryfall.models_path)
+		db_path.parent.mkdir(parents = True, exist_ok = True)
+		db_path.unlink(missing_ok = True)
+		db = sqlite3.connect(db_path)
+		db.executescript( Config().integrations.local.scryfall.db_schema ).close()
+		return db
+
+	@LCAIntegration.in_context
+	def bulk_data (self) -> bytes:
+		for bulk_data_info in self.__execute_paginated_request('bulk-data'):
+			download_uri = next( (obj for obj in bulk_data_info if obj['type'] == 'default_cards') )['jsonl_download_uri']
+			rsp = requests.get(download_uri)
+			if rsp.status_code != 200:
+				raise LCAIntegrationUnexpectedError
+			return rsp.content
 
 	@LCAIntegration.in_context
 	def search (self,

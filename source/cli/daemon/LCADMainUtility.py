@@ -29,20 +29,26 @@ import filelock
 from loguru import logger
 import psutil
 
-from ...Config import *
+from ...Config import Config
+from ...Util import Util
 
-from ..LCAMainUtility import *
-from ...threads.daemon.http_server.LCADHttpServerThread import *
+from ..LCAMainUtility import LCAMainUtility
+from ...threads.daemon.LCADCardDataPreparerTaskThread import LCADCardDataPreparerTaskThread
+from ...threads.daemon.http_server.LCADHttpServerThread import LCADHttpServerThread
 
 class LCADMainUtility (LCAMainUtility):
+
+	__threads: list[QThread]
 	
 	def run (self) -> None:
 		try:
 			with filelock.FileLock(Config().tools.daemon.filelock, timeout = 0):
+				self.__launch_threads()
 				popen = Util.launch_new_instance('launcher')
 				pid_deque = collections.deque([popen.pid])
 				server_thread = LCADHttpServerThread(pid_deque)
 				server_thread.start()
+				self.__threads.append(server_thread)
 				while len(pid_deque):
 					time.sleep(0.2)
 					pids_to_remove = []
@@ -61,4 +67,13 @@ class LCADMainUtility (LCAMainUtility):
 			logger.warning(f'Daemon already spun up, shutting down')
 		except Exception as e:
 			logger.exception(e)
+
+	def __launch_threads (self) -> None:
+		self.__threads = []
+		for thread_type in (
+			LCADCardDataPreparerTaskThread,
+		):
+			thread = thread_type()
+			thread.start()
+			self.__threads.append(thread)
 

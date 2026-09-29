@@ -140,7 +140,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if not isinstance(obj, type) and (self := obj):
 			series_id = self.series_id
 			entry_number = self.entry_number
-		return f'{series_id}-{entry_number:04}'
+		return f'{series_id}-{entry_number:04d}'
 
 	@LCAHybridMethod
 	def split_slug (obj,

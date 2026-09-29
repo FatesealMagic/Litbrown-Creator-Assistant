@@ -32,10 +32,14 @@ class LCAScryfallSearchTaskThread (LCATaskThread):
 		query: str,
 		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
 	) -> list[LCAScryfallCardModel]:
-		results = []
+		with LCAScryfallIntegration() as scryfall:
+			results = scryfall.search_by_name(query, unique = unique)
+			self._emit_update(results)
+			return results
+		'''results = []
 		with LCAScryfallIntegration() as scryfall:
 			for page in scryfall.remote_query(query, unique = unique):
 				results += page
 				self._emit_update(page)
-		return results
+		return results'''
 

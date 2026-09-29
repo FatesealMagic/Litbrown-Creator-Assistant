@@ -111,7 +111,7 @@ class LCAScryfallIntegration (LCAIntegration):
 
 	@LCAIntegration.in_context
 	def refresh_local_data (self) -> None:
-		gzipped_cards = self.bulk_data()
+		gzipped_cards = self.remote_bulk_data()
 		with gzip.GzipFile( fileobj = io.BytesIO(gzipped_cards), mode = 'rb' ) as gzip_file:
 			with io.TextIOWrapper( gzip_file, encoding = 'utf-8' ) as raw_cards:
 				with self.__prepare_local_card_database() as db:
@@ -133,8 +133,47 @@ class LCAScryfallIntegration (LCAIntegration):
 		db.executescript( Config().integrations.local.scryfall.db_schema ).close()
 		return db
 
+	def __get_model_db (self) -> sqlite3.Connection:
+		return sqlite3.connect(pathlib.Path(Config().integrations.local.scryfall.models_path))
+
 	@LCAIntegration.in_context
-	def bulk_data (self) -> bytes:
+	def search_by_name (self,
+		name: str,
+		*,
+		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
+	) -> list[LCAScryfallCardModel]:
+		tokens = [ f'%{token}%' for token in name.lower().split(' ') if token ]
+		query = 'SELECT json FROM cards WHERE '
+		if len(tokens) == 1 and len(tokens[0]) <= 5:
+			tokens[0] = name
+			query += 'LOWER(name) IS ? '
+		else:
+			query += ' AND '.join(['LOWER(name) LIKE ?'] * len(tokens))
+		with self.__get_model_db() as db:
+			cur = db.cursor()
+			cur.execute(query, tokens)
+			results = cur.fetchall()
+			cur.close()
+		db.close()
+		models = [ LCAScryfallCardModel(**json.loads(result[0])) for result in results ]
+		if unique == 'prints':
+			return models
+		if unique == 'art':
+			raise NotImplementedError
+		if unique == 'cards':
+			logger.warning(len(models))
+			collapsed_results = {}
+			for model in models:
+				if getattr(
+					collapsed_results.get(model.name, object()),
+					'released_at',
+					datetime.datetime.fromisoformat('1990-01-01').date()
+				) < model.released_at:
+					collapsed_results[model.name] = model
+			return list(collapsed_results.values())
+
+	@LCAIntegration.in_context
+	def remote_bulk_data (self) -> bytes:
 		for bulk_data_info in self.__execute_paginated_request('bulk-data'):
 			download_uri = next( (obj for obj in bulk_data_info if obj['type'] == 'default_cards') )['jsonl_download_uri']
 			rsp = requests.get(download_uri)

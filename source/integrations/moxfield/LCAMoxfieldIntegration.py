@@ -105,10 +105,7 @@ class LCAMoxfieldIntegration (LCAIntegration):
 			])
 		}
 		with LCAScryfallIntegration() as scryfall:
-			scryfall_cards = {
-				str(card.id): card
-				for card in scryfall.remote_collection([{'id': id} for id in scryfall_ids])
-			}
+			scryfall_cards = { str(card.id): card for card in scryfall.search_by_ids(scryfall_ids) }
 		for mox_board, lca_board in (
 			('mainboard',  'mainboard'),
 			('sideboard',  'sideboard'),

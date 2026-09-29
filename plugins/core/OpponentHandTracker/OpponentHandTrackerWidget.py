@@ -29,19 +29,26 @@ from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 
 from source.Config import Config
+from source.I18n import I18n
 from source.common.LCAProjectState import LCAProjectState
+from source.gui.LCALabel import LCALabel
 from source.gui.LCAMagicCardSelectorWidget import LCAMagicCardSelectorWidget
 from source.gui.LCAPluginWidget import LCAPluginWidget
 from source.integrations.mtgosdk.LCAMtgosdkIntegration import LCAMtgosdkIntegration
 from source.models.LCAProjectStateModel import LCAProjectStateModel
 from source.models.LCAScryfallCardModel import LCAScryfallCardModel
+from source.threads.LCATaskThreadGroup import LCATaskThreadGroup
 from source.threads.common.LCAScryfallSearchTaskThread import LCAScryfallSearchTaskThread
 
 from .OpponentHandTrackerModel import OpponentHandTrackerModel
 
 class OpponentHandTrackerWidget (LCAPluginWidget):
 
-	__hand_tracker: QListWidget()
+	__stacked_widget: QStackedWidget
+	__hand_tracker: QListWidget
+	__potential_new_hand: list[str] | None = None
+	__potential_hand_tracker: QListWidget
+	__scryfall_search_thread_group: LCATaskThreadGroup
 
 	def _project_state_type (self) -> type[pydantic.BaseModel]:
 		return OpponentHandTrackerModel
@@ -50,18 +57,33 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		return OpponentHandTrackerModel()
 
 	def _setup_layout (self) -> None:
-		if widget := QWidget():
-			layout = QVBoxLayout(widget)
+		self.__stacked_widget = QStackedWidget()
+		if tracker_widget := QWidget():
+			tracker_layout = QVBoxLayout(tracker_widget)
 			if hand_tracker := QListWidget():
 				self.__hand_tracker = hand_tracker
 				hand_tracker.itemActivated.connect(self.__evt_item_removed)
 				for card in self._get_project_state_data().hand:
 					hand_tracker.addItem(card.name.split(' // ')[0])
-			layout.addWidget(hand_tracker)
+			tracker_layout.addWidget(hand_tracker)
 			if card_selector := LCAMagicCardSelectorWidget(single_result = True):
 				card_selector.changed.connect(self.__evt_card_selected)
-			layout.addWidget(card_selector)
-		self.setWidget(widget)
+			tracker_layout.addWidget(card_selector)
+		self.__stacked_widget.addWidget(tracker_widget)
+		if approver_widget := QWidget():
+			approver_layout = QVBoxLayout(approver_widget)
+			approver_layout.addWidget(LCALabel(I18n(self).approve.ask))
+			if potential_hand_tracker := QListWidget():
+				self.__potential_hand_tracker = potential_hand_tracker
+			approver_layout.addWidget(potential_hand_tracker)
+			if approver_yes_btn := QPushButton(I18n(self).approve.approve):
+				approver_yes_btn.clicked.connect(lambda : self.__evt_approve_potential_hand(self.__potential_new_hand))
+			approver_layout.addWidget(approver_yes_btn)
+			if approver_no_btn := QPushButton(I18n(self).approve.deny):
+				approver_no_btn.clicked.connect(self.__evt_deny_potential_hand)
+			approver_layout.addWidget(approver_no_btn)
+		self.__stacked_widget.addWidget(approver_widget)
+		self.setWidget(self.__stacked_widget)
 		self.__setup_mtgo_hooks()
 
 	def __evt_card_selected (self, card: LCAScryfallCardModel | None) -> None:
@@ -116,26 +138,11 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 	def __evt_revealed (self, hand: list[str]) -> None:
 		hand = [card_name.split(' // ')[0] for card_name in hand]
 		logger.debug(f'Revealed hand: {hand}')
-		logger.warning(' OR '.join([ f'!"{card_name}"' for card_name in set(hand) ]))
-		self.__scryfall_search_thread = LCAScryfallSearchTaskThread(
-			query = ' OR '.join([ f'!"{card_name}"' for card_name in set(hand) ]),
-			unique = 'cards',
-		)
-		self.__scryfall_search_thread.result.connect(lambda results : self.__evt_set_cards_with_scryfall_data(hand, results))
-		self.__scryfall_search_thread.start()
-
-	def __evt_set_cards_with_scryfall_data (self, hand: list[str], results: list[LCAScryfallCardModel]) -> None:
-		new_hand = []
-		self.__hand_tracker.clear()
+		self.__potential_new_hand = hand
+		self.__potential_hand_tracker.clear()
 		for card_name in hand:
-			self.__hand_tracker.addItem(card_name)
-			for card in results:
-				if card.name.split(' // ')[0] == card_name:
-					new_hand.append(card)
-					break
-		self._set_project_state_data( OpponentHandTrackerModel(
-			hand = new_hand,
-		) )
+			self.__potential_hand_tracker.addItem(card_name)
+		self.__stacked_widget.setCurrentIndex(1)
 
 	def __evt_discard_multiple_cards (self, m: re.Match) -> None:
 		raise NotImplementedError
@@ -148,4 +155,34 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 			items = self.__hand_tracker.findItems(card_name.split(' // ')[0], Qt.MatchFlag.MatchExactly)
 			if items:
 				self.__remove_item(self.__hand_tracker.row(items[-1]))
+
+	def __evt_approve_potential_hand (self, hand: list[str]) -> None:
+		self.setEnabled(False)
+		self.__scryfall_search_thread_group = LCATaskThreadGroup(
+			LCAScryfallSearchTaskThread(query = cardname, unique = 'cards') for cardname in set(hand)
+		)
+		self.__scryfall_search_thread_group.result.connect( lambda result : self.__evt_approve_hand_with_data(hand, result) )
+		self.__scryfall_search_thread_group.complete.connect( lambda _ : self.setEnabled(True) )
+		self.__scryfall_search_thread_group.start()
+
+	def __evt_approve_hand_with_data (self,
+		hand: list[str],
+		all_results: dict[LCAScryfallSearchTaskThread, list[LCAScryfallCardModel]]
+	) -> None:
+		hand_data = []
+		self.__hand_tracker.clear()
+		for card_name in hand:
+			self.__hand_tracker.addItem(card_name)
+			for results in all_results.items():
+				for card in results:
+					if card.name.split(' // ')[0] == card_name:
+						hand_data.append(card)
+						break
+				else:
+					break
+		self._set_project_state_data( OpponentHandTrackerModel(hand = hand_data) )
+		self.__stacked_widget.setCurrentIndex(0)
+
+	def __evt_deny_potential_hand (self) -> None:
+		self.__stacked_widget.setCurrentIndex(0)
 

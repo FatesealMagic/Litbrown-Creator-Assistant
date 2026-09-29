@@ -118,6 +118,8 @@ class LCAScryfallIntegration (LCAIntegration):
 					cur = db.cursor()
 					for raw_card in raw_cards:
 						card = json.loads(raw_card)
+						if card['layout'] in ('token', 'double_faced_token', 'emblem', 'art_series', 'front_card'):
+							continue
 						cur.execute(
 							'INSERT INTO cards (name, set_code, collector_number, scryfall_id, json) VALUES (?, ?, ?, ?, ?)',
 							(card['name'], card['set'], card['collector_number'], card['id'], raw_card),
@@ -136,6 +138,18 @@ class LCAScryfallIntegration (LCAIntegration):
 	def __get_model_db (self) -> sqlite3.Connection:
 		return sqlite3.connect(pathlib.Path(Config().integrations.local.scryfall.models_path))
 
+	def __db_cards_from_query (self,
+		query: str,
+		parameters: tuple | list = (),
+	) -> list[LCAScryfallCardModel]:
+		with self.__get_model_db() as db:
+			cur = db.cursor()
+			cur.execute(query, parameters)
+			results = cur.fetchall()
+			cur.close()
+		db.close()
+		return [ LCAScryfallCardModel( **json.loads(result[0]) ) for result in results ]
+
 	@LCAIntegration.in_context
 	def search_by_name (self,
 		name: str,
@@ -149,13 +163,7 @@ class LCAScryfallIntegration (LCAIntegration):
 			query += 'LOWER(name) IS ? '
 		else:
 			query += ' AND '.join(['LOWER(name) LIKE ?'] * len(tokens))
-		with self.__get_model_db() as db:
-			cur = db.cursor()
-			cur.execute(query, tokens)
-			results = cur.fetchall()
-			cur.close()
-		db.close()
-		models = [ LCAScryfallCardModel(**json.loads(result[0])) for result in results ]
+		models = self.__db_cards_from_query(query, tokens)
 		if unique == 'prints':
 			return models
 		if unique == 'art':
@@ -171,6 +179,15 @@ class LCAScryfallIntegration (LCAIntegration):
 				) < model.released_at:
 					collapsed_results[model.name] = model
 			return list(collapsed_results.values())
+
+	@LCAIntegration.in_context
+	def search_by_ids (self,
+		ids: list[str] | list[uuid.UUID],
+	) -> lsit[LCAScryfallCardModel]:
+		return self.__db_cards_from_query(
+			f'SELECT json FROM cards WHERE LOWER(scryfall_id) IN ({ ', '.join(['?'] * len(ids)) })',
+			ids,
+		)
 
 	@LCAIntegration.in_context
 	def remote_bulk_data (self) -> bytes:

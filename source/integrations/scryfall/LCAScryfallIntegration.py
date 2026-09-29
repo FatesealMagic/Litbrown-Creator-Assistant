@@ -143,7 +143,7 @@ class LCAScryfallIntegration (LCAIntegration):
 			return rsp.content
 
 	@LCAIntegration.in_context
-	def search (self,
+	def remote_query (self,
 		query: str,
 		*,
 		unique: typing.Literal['cards', 'art', 'prints'] = 'prints',
@@ -156,7 +156,7 @@ class LCAScryfallIntegration (LCAIntegration):
 			yield [LCAScryfallCardModel(**raw_card_data) for raw_card_data in page]
 
 	@LCAIntegration.in_context
-	def collection (self, identifiers: collections.abc.Iterable[dict]) -> collections.abc.Iterator[LCAScryfallCardModel]:
+	def remote_collection (self, identifiers: collections.abc.Iterable[dict]) -> collections.abc.Iterator[LCAScryfallCardModel]:
 		for batch in itertools.batched(identifiers, 75):
 			logger.debug(batch)
 			page = self.__execute_paginated_request(

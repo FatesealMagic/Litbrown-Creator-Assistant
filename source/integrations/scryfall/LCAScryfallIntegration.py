@@ -186,7 +186,7 @@ class LCAScryfallIntegration (LCAIntegration):
 	) -> lsit[LCAScryfallCardModel]:
 		return self.__db_cards_from_query(
 			f'SELECT json FROM cards WHERE LOWER(scryfall_id) IN ({ ', '.join(['?'] * len(ids)) })',
-			ids,
+			[ str(id).lower() for id in ids ],
 		)
 
 	@LCAIntegration.in_context

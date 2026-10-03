@@ -89,13 +89,21 @@ class ChatManagerWidget (LCAPluginWidget):
 		self.__update_chat_display()
 
 	def __start_chat_threads (self) -> None:
-		if youtube_broadcast_id := LCAProjectState().model.project.stream.remote_ids.youtube:
+		self.__start_youtube_chat_thread()
+		self.__start_twitch_chat_thread()
+
+	def __start_youtube_chat_thread (self, *_) -> None:
+		if youtube_broadcast_id := 'rFZHOHl-L8A':#LCAProjectState().model.project.stream.remote_ids.youtube:
 			self.__youtube_thread = YoutubeChatMonitorTaskThread(youtube_broadcast_id)
 			self.__youtube_thread.update.connect(self.__slot_new_message)
+			self.__youtube_thread.error.connect(self.__start_youtube_chat_thread)
 			self.__youtube_thread.start()
+
+	def __start_twitch_chat_thread (self, *_) -> None:
 		if twitch_broadcast_id := Settings().integrations.twitch.handle:
 			self.__twitch_thread = TwitchChatMonitorTaskThread(twitch_broadcast_id)
 			self.__twitch_thread.update.connect(self.__slot_new_message)
+			self.__twitch_thread.error.connect(self.__start_twitch_chat_thread)
 			self.__twitch_thread.start()
 
 	@Slot(object)

@@ -61,11 +61,16 @@ class ChatMonitorTaskThread (LCATaskThread):
 	def _js_determine_platform_user_id (self) -> str:
 		raise NotImplementedError
 
+	def _js_prepare_node_for_callback (self) -> str:
+		return '''
+			async (el) => { return true; }
+		'''
+
 	def _run (self,
 	) -> None:
 		self.__queue = queue.SimpleQueue()
 		with playwright.sync_api.sync_playwright() as p:
-			browser = p.chromium.launch(headless = True)
+			browser = p.chromium.launch(headless = False)
 			self.__page = self.__initialize_page(browser)
 			while not self.isInterruptionRequested():
 				while True:
@@ -91,7 +96,7 @@ class ChatMonitorTaskThread (LCATaskThread):
 		page.add_style_tag(content = self.__css_clear_nonactive_siblings())
 		page.expose_function('lca_callback_new_chat', lambda lcaid : self.__queue.put(lcaid))
 		container = page.locator(self._container_selector)
-		container.evaluate(self.__js_prepare_container(), timeout = 15000)
+		container.evaluate(self.__js_prepare_container(), timeout = 100000)
 		return page
 
 	def __process_new_chat (self, message: dict) -> str:
@@ -149,6 +154,8 @@ class ChatMonitorTaskThread (LCATaskThread):
 					const determined_message = determine_message(node);
 					const determined_platform_message_id = determine_platform_message_id(node);
 					const determined_platform_user_id = determine_platform_user_id(node);
+					
+					await prepare_node_for_callback(node);
 
 					window.lca_callback_new_chat({
 						timestamp: node.dataset.lcats,
@@ -165,6 +172,7 @@ class ChatMonitorTaskThread (LCATaskThread):
 				const determine_message             = ''' + self._js_determine_message() + ''';
 				const determine_platform_message_id = ''' + self._js_determine_platform_message_id() + ''';
 				const determine_platform_user_id    = ''' + self._js_determine_platform_user_id() + ''';
+				const prepare_node_for_callback     = ''' + self._js_prepare_node_for_callback() + ''';
 
 				el.replaceChildren();
 				setup_mutation_observer();

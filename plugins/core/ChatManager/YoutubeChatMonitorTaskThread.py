@@ -107,3 +107,17 @@ class YoutubeChatMonitorTaskThread (ChatMonitorTaskThread):
 			}
 		'''
 
+	def _js_prepare_node_for_callback (self) -> str:
+		return '''
+			(el) => {
+				const img = el.querySelector('img#img');
+				return new Promise ((resolve, reject) => {
+					if (el.complete && el.naturalWidth) {
+						resolve(true);
+					} else {
+						img.addEventListener('load', () => resolve(true));
+						img.addEventListener('error', () => reject(new Error('profile photo did not load')));
+					}
+				});
+			}
+		'''

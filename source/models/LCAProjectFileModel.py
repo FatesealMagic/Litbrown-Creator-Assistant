@@ -104,6 +104,8 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		dump = self.model_dump_json()
 		logger.debug('\n' + ''.join(traceback.format_stack()))
 		self._fullpath.parent.mkdir(parents = True, exist_ok = True)
+		for subdir in ('footage', 'state'):
+			(self._fullpath.parent / subdir).mkdir(exist_ok = True)
 		with open(self._fullpath, 'w', encoding='utf-8') as f:
 			f.write(dump)
 

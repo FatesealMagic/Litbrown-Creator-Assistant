@@ -85,7 +85,8 @@ class SingleMatchTrackerWidget (LCAWidget):
 		self.__match_result_btn.set_value(self.__get_match_ref().victory)
 		for i, game in enumerate(self.__get_match_ref().games):
 			self.__game_result_btns[i].setEnabled(True)
-			self.__game_result_btns[i].set_value(game.victory)
+			with QSignalBlocker(self.__game_result_btns[i]):
+				self.__game_result_btns[i].set_value(game.victory)
 
 	def __evt_match_result_changed (self, val: bool | None) -> None:
 		if self.__get_match_ref().victory == val:

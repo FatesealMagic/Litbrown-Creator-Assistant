@@ -559,9 +559,9 @@ LCAMMainWindow:
   buttons:
     start: START
     stop: STOP
-    mistake: MISTAKE
-    mute: CUT
-    unmute: RESUME
+    mistake: "Mistakes:"
+    mute: MUTED
+    unmute: Unmuted
     clip: CLIP
   confirm:
     stop: Are you sure you wish to stop recording?

@@ -21,6 +21,7 @@
   """
 
 import base64
+import ctypes
 import sys
 
 from loguru import logger
@@ -55,7 +56,9 @@ from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import *
 
 class LCAMMainWindow (LCAMainWindow):
 
-	hotkey_pressed = Signal(str)
+	class _Hotkey (QObject):
+		pressed = Signal(str)
+	hotkey = _Hotkey()
 
 	__project: LCAProjectFileModel
 	
@@ -128,7 +131,7 @@ class LCAMMainWindow (LCAMainWindow):
 
 	def __setup_keyboard_hotkey_signals (self) -> None:
 		self.__hotkey_combos = {}
-		self.hotkey_pressed.connect(self.__evt_hotkey_pressed)
+		self.hotkey.pressed.connect(self.__evt_hotkey_pressed)
 		Settings().signals().changed.connect(self.__setup_keyboard_hotkeys)
 
 	def __setup_keyboard_hotkeys (self) -> None:
@@ -149,10 +152,24 @@ class LCAMMainWindow (LCAMainWindow):
 				continue
 			self.__hotkey_combos[combo] = self.__hotkey_combos.get(combo, ()) + (hotkey,)
 		self.__keyboard_listener = pynput.keyboard.GlobalHotKeys({
-			combo: ( lambda l_combo = combo : self.hotkey_pressed.emit(','.join(self.__hotkey_combos[l_combo])) )
+			combo: ( lambda l_combo = combo : self.hotkey.pressed.emit(','.join(self.__hotkey_combos[l_combo])) )
 				for combo in self.__hotkey_combos.keys()
 		})
+		if Settings().tools.multicast.hotkeys.mute == Settings().tools.multicast.hotkeys.unmute:
+			self.__ensure_lock_toggle_matches_mute_status()
 		self.__keyboard_listener.start()
+
+	def __ensure_lock_toggle_matches_mute_status (self) -> None:
+		if vkcode := {
+			'CapsLock':   0x14,
+			'NumLock':    0x90,
+			'ScrollLock': 0x91,
+		}.get(Settings().tools.multicast.hotkeys.mute, None):
+			if LCAProjectState().model.muted == bool(ctypes.windll.user32.GetKeyState(vkcode) & 1):
+				with QSignalBlocker(self.hotkey):
+					# https://stackoverflow.com/a/46200170/13158743
+					ctypes.windll.user32.keybd_event(vkcode, 0, 0, 0)
+					ctypes.windll.user32.keybd_event(vkcode, 0, 0x0002, 0)
 
 	def __set_docking_behaviors (self) -> None:
 		self.setDockNestingEnabled(True)
@@ -195,7 +212,8 @@ class LCAMMainWindow (LCAMainWindow):
 					if addlbtns_widget := QWidget():
 						addlbtns_layout = QHBoxLayout(addlbtns_widget)
 						addlbtns_layout.setContentsMargins(0, 0, 0, 0)
-						if mistake_btn := QPushButton(I18n(self).buttons.mistake):
+						if mistake_btn := QPushButton(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}'):
+							self.__mistake_btn = mistake_btn
 							mistake_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
 						addlbtns_layout.addWidget(mistake_btn)
@@ -207,7 +225,7 @@ class LCAMMainWindow (LCAMainWindow):
 							self.__muteunmute_btn = muteunmute_btn
 							muteunmute_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 							muteunmute_btn.setCheckable(True)
-							muteunmute_btn.setChecked(LCAProjectState().model.muted)
+							muteunmute_btn.setChecked(not LCAProjectState().model.muted)
 							muteunmute_btn.clicked.connect(self.__evt_muteunmute_clicked)
 						addlbtns_layout.addWidget(muteunmute_btn)
 					controls_layout.addWidget(addlbtns_widget)
@@ -345,23 +363,25 @@ class LCAMMainWindow (LCAMainWindow):
 		logger.info('Marking a mistake')
 		with LCAProjectState() as state:
 			state.model.mistake_count += 1
+		self.__mistake_btn.setText(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}')
 
 	def __evt_mute_clicked (self) -> None:
 		logger.info('Muted')
 		with LCAProjectState() as state:
 			state.model.muted = True
-		self.__muteunmute_btn.setChecked(True)
+		self.__muteunmute_btn.setChecked(False)
 		self.__muteunmute_btn.setText(I18n(self).buttons.unmute)
 
 	def __evt_unmute_clicked (self) -> None:
 		logger.info('Unmuted')
 		with LCAProjectState() as state:
 			state.model.muted = False
-		self.__muteunmute_btn.setChecked(False)
+		self.__muteunmute_btn.setChecked(True)
 		self.__muteunmute_btn.setText(I18n(self).buttons.mute)
 
 	def __evt_muteunmute_clicked (self) -> None:
 		self.__evt_unmute_clicked() if LCAProjectState().model.muted else self.__evt_mute_clicked()
+		self.__ensure_lock_toggle_matches_mute_status()
 
 	def __evt_clip_clicked (self) -> None:
 		logger.info('Clip')
@@ -372,6 +392,8 @@ class LCAMMainWindow (LCAMainWindow):
 		muted = LCAProjectState().model.muted
 		if not self.isEnabled():
 			return
+		if hotkeys == 'mute,unmute':
+			return self.__evt_unmute_clicked() if muted else self.__evt_mute_clicked()
 		for hotkey in hotkeys.split(','):
 			if ((hotkey == 'muted') and muted) or ((hotkey == 'unmuted') and not muted):
 				continue

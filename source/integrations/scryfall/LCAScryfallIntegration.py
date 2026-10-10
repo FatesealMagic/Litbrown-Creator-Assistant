@@ -169,7 +169,6 @@ class LCAScryfallIntegration (LCAIntegration):
 		if unique == 'art':
 			raise NotImplementedError
 		if unique == 'cards':
-			logger.warning(len(models))
 			collapsed_results = {}
 			for model in models:
 				if getattr(

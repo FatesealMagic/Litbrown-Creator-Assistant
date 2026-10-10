@@ -112,7 +112,7 @@ class LCAMMainWindow (LCAMainWindow):
 			return
 		self.__update_integration_status('mtgosdk', None)
 		self.__mtgosdk_thread = LCACMtgosdkObserveTaskThread()
-		self.__mtgosdk_thread.error.connect(self.__setup_mtgosdk_thread)
+		self.__mtgosdk_thread.error.connect(lambda _ : self.__update_integration_status('mtgosdk', False))
 		self.__mtgosdk_thread.update.connect(lambda _ : self.__update_integration_status('mtgosdk', True))
 		self.__mtgosdk_thread.start()
 

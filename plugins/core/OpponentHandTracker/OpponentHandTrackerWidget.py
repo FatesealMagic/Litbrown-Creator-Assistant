@@ -115,7 +115,6 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		message: MTGOSDK.API.Chat.Message,
 	) -> None:
 		regexes = Config().integrations.local.mtgosdk.regexes
-		logger.debug(message.Text)
 		for pattern, callback in [
 			(rf'{regexes.player} reveals \d+ cards with {regexes.card}: (.*)\.', self.__evt_revealed_multiple_cards),
 			(rf'{regexes.player} reveals {regexes.card} with {regexes.card}\.', self.__evt_revealed_one_card),
@@ -159,7 +158,7 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 	def __evt_approve_potential_hand (self, hand: list[str]) -> None:
 		self.setEnabled(False)
 		self.__scryfall_search_thread_group = LCATaskThreadGroup(
-			LCAScryfallSearchTaskThread(query = cardname, unique = 'cards') for cardname in set(hand)
+			[LCAScryfallSearchTaskThread(query = cardname, unique = 'cards') for cardname in set(hand)]
 		)
 		self.__scryfall_search_thread_group.result.connect( lambda result : self.__evt_approve_hand_with_data(hand, result) )
 		self.__scryfall_search_thread_group.complete.connect( lambda _ : self.setEnabled(True) )
@@ -170,15 +169,18 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		all_results: dict[LCAScryfallSearchTaskThread, list[LCAScryfallCardModel]]
 	) -> None:
 		hand_data = []
+		logger.debug(all_results)
 		self.__hand_tracker.clear()
 		for card_name in hand:
+			found = False
 			self.__hand_tracker.addItem(card_name)
-			for results in all_results.items():
+			for results in all_results.values():
 				for card in results:
 					if card.name.split(' // ')[0] == card_name:
 						hand_data.append(card)
+						found = True
 						break
-				else:
+				if found:
 					break
 		self._set_project_state_data( OpponentHandTrackerModel(hand = hand_data) )
 		self.__stacked_widget.setCurrentIndex(0)

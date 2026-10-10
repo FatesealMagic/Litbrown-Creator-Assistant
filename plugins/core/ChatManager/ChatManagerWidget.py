@@ -93,7 +93,7 @@ class ChatManagerWidget (LCAPluginWidget):
 		self.__start_twitch_chat_thread()
 
 	def __start_youtube_chat_thread (self, *_) -> None:
-		if youtube_broadcast_id := 'rFZHOHl-L8A':#LCAProjectState().model.project.stream.remote_ids.youtube:
+		if youtube_broadcast_id := LCAProjectState().model.project.stream.remote_ids.youtube:
 			self.__youtube_thread = YoutubeChatMonitorTaskThread(youtube_broadcast_id)
 			self.__youtube_thread.update.connect(self.__slot_new_message)
 			self.__youtube_thread.error.connect(self.__start_youtube_chat_thread)

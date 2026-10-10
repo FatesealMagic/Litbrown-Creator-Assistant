@@ -21,6 +21,7 @@
   """
 
 import functools
+import gc
 import os
 import pathlib
 import sys
@@ -103,6 +104,7 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 	def __establish_mtgo_global_callbacks (self) -> None:
 		import MTGOSDK
 		import System
+		logger.debug('MTGOSDK: Establishing global callbacks')
 		MTGOSDK.API.Play.EventManager.GameJoined += System.Action[
 			MTGOSDK.API.Play.Event,
 			MTGOSDK.API.Play.Games.Game,
@@ -125,6 +127,7 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 		event: MTGOSDK.API.Play.Event,
 		game: MTGOSDK.API.Play.Games.Game,
 	) -> None:
+		logger.info(f'MTGOSDK: Joined game {game.Id} in match {game.Match.Id}')
 		self.signals.on_game_joined.emit(event, game)
 
 	@__callback
@@ -132,6 +135,7 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 		match_: MTGOSDK.API.Play.Match,
 		match_state: MTGOSDK.API.Play.MatchState,
 	) -> None:
+		logger.info(f'MTGOSDK: Match {match_.Id} state changed to {match_state}')
 		self.signals.on_match_state_changed.emit(match_, match_state)
 
 	@__callback
@@ -139,6 +143,7 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 		game: MTGOSDK.API.Play.Games.Game,
 		results: System.Collections.Generic.IList[MTGOSDK.API.Play.Games.GamePlayerResult],
 	) -> None:
+		logger.info(f'MTGOSDK: Game {game.Id} results are in')
 		self.signals.on_game_results_changed.emit(game, results)
 
 	@__callback
@@ -146,11 +151,17 @@ class LCAMtgosdkIntegration (LCAIntegration, metaclass = LCASingleton):
 		channel: MTGOSDK.API.Chat.Channel,
 		message: MTGOSDK.API.Chat.Message,
 	) -> None:
+		logger.info(f'MTGOSDK: Received message "{message.Text}"')
 		self.signals.on_message_received.emit(channel, message)
 
 	def get_username (self) -> str | None:
+		logger.debug('MTGOSDK: Retrieving username')
 		import MTGOSDK
 		try:
+			MTGOSDK
+			MTGOSDK.API
+			MTGOSDK.API.Client()
+			MTGOSDK.API.Client().CurrentUser
 			return MTGOSDK.API.Client().CurrentUser.Name
 		except Exception as e:
 			logger.exception(e)

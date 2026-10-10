@@ -30,7 +30,7 @@ class LCATaskThreadGroup (QObject):
 	
 	complete = Signal(bool)
 	error    = Signal(tuple) # [LCATaskThread, Exception, dict[LCATaskThread, object]]
-	result   = Signal(dict) # [LCATaskThread, object]
+	result   = Signal(object) # [LCATaskThread, object]
 
 	__threads: tuple[LCATaskThread]
 	__results: dict[LCATaskThread, object]

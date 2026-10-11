@@ -200,6 +200,7 @@ LCALMainWindow:
     render:
       title: Render
       intro: Use the Render Tool to assist in editing, rendering, and uploading longform and shortform videos.
+      selector_placeholder: Select a Multicast
       launch: Launch Render Tool
 
 ################################################################################
@@ -649,4 +650,20 @@ LCATSideControlEditorWidget:
     add: Add New Choice
     new_default: New Choice
   warning_delete: Are you sure you wish to remove this control?
+
+################################################################################
+# RENDER
+
+LCARMainWindow:
+  title: LCA Render Tool
+  errors:
+    need_slug: Please select a project when opening the Render Tool.
+  tabs:
+    prepare:
+      name: Prepare
+      proceed: PREPARE SEGMENTS
+    edit:
+      name: Edit
+    render:
+      name: Render
 

@@ -137,10 +137,19 @@ class LCALMainWindow (LCAMainWindow):
 		layout = QVBoxLayout(widget)
 		layout.addWidget(LCALabel(I18n(self).tabs.render.intro))
 		layout.addStretch(1)
+		if render_selector := LCAComboBox():
+			self.__render_selector = render_selector
+			render_selector.setPlaceholderText(I18n(self).tabs.render.selector_placeholder)
+			self.__project_watcher.directoryChanged.connect(self.__rebuild_render_selector)
+			self.__project_watcher.fileChanged.connect(self.__rebuild_render_selector)
+		layout.addWidget(render_selector)
 		if launch_btn := QPushButton(I18n(self).tabs.render.launch):
+			self.__render_launch_btn = launch_btn
 			launch_btn.setStyleSheet(self.__LAUNCHBTN_STYLESHEET)
 			launch_btn.clicked.connect(self.__evt_render_launched)
 		layout.addWidget(launch_btn)
+		self.__rebuild_render_selector()
+		render_selector.currentDataChanged.connect(lambda : launch_btn.setEnabled(True))
 		return widget
 
 	def __rebuild_multicast_selector (self) -> None:
@@ -157,6 +166,20 @@ class LCALMainWindow (LCAMainWindow):
 				except ValueError:
 					continue
 
+	def __rebuild_render_selector (self) -> None:
+		self.__render_launch_btn.setEnabled(False)
+		with QSignalBlocker(self.__render_selector):
+			self.__render_selector.clear()
+			for series_id, entry_number in LCAProjectFileModel.get_existing_slugs_split():
+				try:
+					series = Settings().series_from_id(series_id)
+					self.__render_selector.addItem(
+						f'{series.name} #{entry_number}',
+						LCAProjectFileModel.slug(series_id, entry_number),
+					)
+				except ValueError:
+					continue
+
 	def __evt_configure_launched (self) -> None:
 		Util.launch_new_instance('configure')
 
@@ -166,12 +189,9 @@ class LCALMainWindow (LCAMainWindow):
 	def __evt_multicast_launched (self) -> None:
 		Util.launch_new_instance('multicast', [self.__multicast_selector.currentData()])
 
-	def __evt_edit_launched (self) -> None:
-		Util.launch_new_instance('edit', [self.__edit_combo.currentData()])
-
 	def __evt_thumbnail_launched (self) -> None:
 		Util.launch_new_instance('thumbnail', [])
 
 	def __evt_render_launched (self) -> None:
-		Util.launch_new_instance('render', [self.__render_combo.currentData()])
+		Util.launch_new_instance('render', [self.__render_selector.currentData()])
 

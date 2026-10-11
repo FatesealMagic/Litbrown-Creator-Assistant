@@ -69,7 +69,7 @@ class SingleMatchTrackerWidget (LCAWidget):
 			if game_result_btn := ResultButton():
 				self.__game_result_btns.append(game_result_btn)
 				game_result_btn.setEnabled(False)
-				game_result_btn.changed.connect(lambda val, l_i = i : self.__evt_game_result_changed(i, val))
+				game_result_btn.changed.connect(lambda val, l_i = i : self.__evt_game_result_changed(l_i, val))
 			layout.addWidget(game_result_btn)
 			if notes_input := QLineEdit():
 				notes_input.setPlaceholderText(I18n(self).notes)

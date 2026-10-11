@@ -50,6 +50,8 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 	__potential_hand_tracker: QListWidget
 	__scryfall_search_thread_group: LCATaskThreadGroup
 
+	__match_memory: dict[int, list[bool | None]]
+
 	def _project_state_type (self) -> type[pydantic.BaseModel]:
 		return OpponentHandTrackerModel
 
@@ -85,6 +87,8 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		self.__stacked_widget.addWidget(approver_widget)
 		self.setWidget(self.__stacked_widget)
 		self.__setup_mtgo_hooks()
+		self.__match_memory = {}
+		LCAProjectState().updated_model.connect(self.__evt_model_updated)
 
 	def __evt_card_selected (self, card: LCAScryfallCardModel | None) -> None:
 		if not card:
@@ -105,6 +109,10 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 		self._set_project_state_data( OpponentHandTrackerModel(
 			hand = state.hand[ : i ] + state.hand[ i + 1 : ],
 		) )
+
+	def __clear_items (self) -> None:
+		self.__hand_tracker.clear()
+		self._set_project_state_data( OpponentHandTrackerModel( hand = [] ) )
 
 	def __setup_mtgo_hooks (self) -> None:
 		LCAMtgosdkIntegration().signals.on_message_received.connect(self.__slot_message_received)
@@ -187,4 +195,24 @@ class OpponentHandTrackerWidget (LCAPluginWidget):
 
 	def __evt_deny_potential_hand (self) -> None:
 		self.__stacked_widget.setCurrentIndex(0)
+
+	def __evt_model_updated (self, model: LCAProjectStateModel) -> None:
+		self.__check_for_record_update(model)
+
+	def __check_for_record_update (self, model: LCAProjectStateModel) -> None:
+		updated = False
+		for match in model.mtgo.matches:
+			match_memory = self.__match_memory.get(match.id, None)
+			if not match_memory:
+				logger.debug('making new match')
+				updated = True
+				match_memory = self.__match_memory[match.id] = [None] * match.best_of
+			for i in range(len(match.games)):
+				if match.games[i].victory != match_memory[i]:
+					logger.debug('altering game')
+					updated = True
+					match_memory[i] = match.games[i].victory
+		if not updated:
+			return
+		self.__clear_items()
 

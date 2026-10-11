@@ -87,7 +87,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__setup_keyboard_hotkey_signals()
 		self.__setup_keyboard_hotkeys()
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
-		self.setWindowTitle(I18n(self).title)
+		self.setWindowTitle(f'{I18n(self).title} | {Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}')
 		self.__set_docking_behaviors()
 		if profile := Settings().tools.multicast.profile.get(self.__project.series_id, None):
 			for plugin in profile.loaded_plugins:

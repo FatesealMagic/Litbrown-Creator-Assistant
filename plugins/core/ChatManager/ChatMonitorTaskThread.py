@@ -148,7 +148,7 @@ class ChatMonitorTaskThread (LCATaskThread):
 				const process_node = async (node) => {
 
 					node.dataset.lcats = Temporal.Now.instant().epochMilliseconds.toString() +
-						Math.floor(Math.random() * 1e12).toString().padStart(12, '0');
+						Math.floor(Math.random() * 1e3).toString().padStart(3, '0');
 					console.log(`Processing node w/ ID ${node.dataset.lcats}`);
 
 					const determined_message = determine_message(node);
@@ -165,7 +165,7 @@ class ChatMonitorTaskThread (LCATaskThread):
 						platform_user_id: determined_platform_user_id,
 					});
 					
-					console.log(`Finished processing node w/ ID ${ret}`);
+					console.log(`Finished processing node w/ ID ${node.dataset.lcats}`);
 
 				};
 

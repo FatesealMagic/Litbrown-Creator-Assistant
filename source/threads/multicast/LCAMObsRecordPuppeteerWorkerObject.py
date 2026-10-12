@@ -167,7 +167,7 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 		req_start_ts = time.time()
 		duration = self.__obs.req_client.get_record_status().output_duration / 1000.0
 		req_end_ts = time.time()
-		start_ts = req_start_ts + ((req_end_ts - req_start_ts) / 2) - duration
+		start_ts = int(1e6 * (req_start_ts + ((req_end_ts - req_start_ts) / 2) - duration))
 		with LCAProjectState():
 			LCAProjectState().model.start_timestamps[f'{state.segment_id}-{state.segment_number}'] = start_ts
 

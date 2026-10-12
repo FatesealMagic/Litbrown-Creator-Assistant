@@ -29,7 +29,7 @@ class ChatManagerModel (pydantic.BaseModel, validate_assignment = True, extra = 
 	banned_timestamps: list[int] = []
 
 	class Message (pydantic.BaseModel, validate_assignment = True, extra = 'forbid'):
-		timestamp: str
+		timestamp: int
 		message: str
 		screenshot: str
 		platform_name: typing.Literal['youtube', 'twitch', 'patreon']

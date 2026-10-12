@@ -44,6 +44,7 @@ class LCAAutoeditorIntegration (LCAIntegration):
 	def _disconnect (self) -> None:
 		pass
 
+	@LCAIntegration.in_context
 	def process_slug (self,
 		project: LCAProjectFileModel,
 		segment_slug: str,

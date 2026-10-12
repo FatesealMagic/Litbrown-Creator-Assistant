@@ -31,5 +31,6 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 		project: LCAProjectFileModel,
 		segment_slug: str,
 	) -> None:
-		LCAAutoeditorIntegration().process_slug(project, segment_slug, margin = 0.23)
+		with LCAAutoeditorIntegration() as autoeditor:
+			autoeditor.process_slug(project, segment_slug, margin = 0.23)
 

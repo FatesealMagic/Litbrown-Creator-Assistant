@@ -200,7 +200,7 @@ class LCATaskTrackerWidget (LCAWidget):
 		self.__progressbar.setStyleSheet(self.PROGRESS_STYLE.substitute(**self.__get_progress_style_params(status)))
 		self.__actionbtn.setEnabled(status not in (self.Status.SKIPPED, self.Status.RUNNING, self.Status.SUCCESS))
 		if self.__not_unstagable:
-			self.__actionbtn.setVisible(status == self.Status.DISABLED)
+			self.__actionbtn.setVisible(status in (self.Status.DISABLED, self.Status.ERROR))
 		if status == self.Status.RUNNING:
 			self.__set_progressbar_running()
 			self.__start_task_thread()
@@ -231,7 +231,7 @@ class LCATaskTrackerWidget (LCAWidget):
 		self.error.emit(error)
 
 	def __evt_thread_result (self, result: object) -> None:
-		logger.info('Complete: {self.__thread}')
+		logger.info(f'Complete: {self.__thread}')
 		self.__set_progressbar_stopped()
 		self.__set_status(self.Status.SUCCESS)
 		self.result.emit(result)

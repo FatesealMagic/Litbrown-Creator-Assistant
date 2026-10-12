@@ -23,11 +23,13 @@
 from loguru import logger
 
 from ..LCATaskThread import *
+from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 
 class LCARFootagePreparerTaskThread (LCATaskThread):
 
 	def _run (self,
+		project: LCAProjectFileModel,
 		segment_slug: str,
 	) -> None:
-		pass
+		LCAAutoeditorIntegration().process_slug(project, segment_slug, margin = 0.23)
 

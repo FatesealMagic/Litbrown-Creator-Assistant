@@ -20,6 +20,7 @@
   "
   """
 
+import collections
 import pathlib
 import subprocess
 
@@ -42,4 +43,28 @@ class LCAAutoeditorIntegration (LCAIntegration):
 
 	def _disconnect (self) -> None:
 		pass
+
+	def process_slug (self,
+		project: LCAProjectFileModel,
+		segment_slug: str,
+		/, *,
+		margin: float,
+	) -> int:
+		if not self.is_initialized():
+			raise LCAIntegrationNotInitializedError
+		segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
+		if code := subprocess.run([
+			str(pathlib.Path(Config().integrations.local.autoeditor.executable_location).resolve()),
+			str(project.path_footage(segment_id = segment_id, segment_number = segment_number).resolve()),
+			'--output',
+			str(project.path_shotcut(segment_id = segment_id, segment_number = segment_number).resolve()),
+			'--margin',
+			f'{margin}sec',
+			'--export',
+			'shotcut',
+			'--progress',
+			'none',
+			'--no-cache',
+		]).returncode:
+			raise LCAIntegrationUnexpectedError(f'Auto-Editor processing footage for segment {segment_slug} in project {project.slug()} returned status code {code}')
 

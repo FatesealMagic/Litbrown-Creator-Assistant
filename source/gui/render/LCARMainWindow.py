@@ -48,7 +48,7 @@ class LCARMainWindow (LCAMainWindow):
 	__TAB_NAMES = ('prepare', 'edit', 'render')
 	
 	__prepare_scroll_area: QScrollArea
-	__prepare_task_tracker_widgets: list[LCATaskTrackerWidget]
+	__prepare_task_results: dict[LCATaskTrackerWidget, bool | None]
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -80,15 +80,18 @@ class LCARMainWindow (LCAMainWindow):
 			scroll_area.setWidget(self.__construct_prepare_segments_widget())
 		layout.addWidget(scroll_area)
 		if btns_widget := QWidget():
+			self.__prepare_btns_widget = btns_widget
 			btns_layout = QHBoxLayout(btns_widget)
 			btns_layout.setContentsMargins(0, 0, 0, 0)
 			if refresh_btn := QPushButton(' ' + I18n(self).tabs.prepare.refresh):
 				refresh_btn.setProperty('css_class', 'big')
 				refresh_btn.setIcon(Assets.QIcon('icons/refresh.png'))
+				refresh_btn.clicked.connect(self.__construct_prepare_segments_widget)
 			btns_layout.addWidget(refresh_btn)
 			if proceed_btn := QPushButton(' ' + I18n(self).tabs.prepare.proceed):
 				proceed_btn.setProperty('css_class', 'big')
 				proceed_btn.setIcon(Assets.QIcon('icons/advance.png'))
+				proceed_btn.clicked.connect(self.__evt_do_prepare)
 			btns_layout.addWidget(proceed_btn)
 		layout.addWidget(btns_widget)
 		return widget
@@ -97,7 +100,7 @@ class LCARMainWindow (LCAMainWindow):
 		old_widget = self.__prepare_scroll_area.takeWidget()
 		if old_widget:
 			old_widget.deleteLater()
-		self.__prepare_task_tracker_widgets = []
+		self.__prepare_task_results = {}
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
 		for segment_slug in self.__project.all_segment_slugs():
@@ -105,13 +108,29 @@ class LCARMainWindow (LCAMainWindow):
 			task_tracker_widget = LCATaskTrackerWidget(
 				label = Settings().series_segment_from_id(self.__project.series_id, segment_id).name +
 					(f' #{segment_number}' if segment_number else ''),
-				thread_factory = functools.partial( LCARFootagePreparerTaskThread, segment_slug = segment_slug ),
+				thread_factory = functools.partial(
+					LCARFootagePreparerTaskThread,
+					project = self.__project,
+					segment_slug = segment_slug,
+				),
 				integration = LCAAutoeditorIntegration,
 				not_unstagable = True,
 			)
 			layout.addWidget(task_tracker_widget)
-			self.__prepare_task_tracker_widgets.append(task_tracker_widget)
+			self.__prepare_task_results[task_tracker_widget] = None
 		return widget
+
+	def __evt_do_prepare (self) -> None:
+		self.__prepare_btns_widget.setEnabled(False)
+		for task in self.__prepare_task_results.keys():
+			task.complete.connect(functools.partial(self.__evt_prepare_complete, task = task))
+			task.execute()
+
+	def __evt_prepare_complete (self, task: LCATaskTrackerWidget, complete: bool) -> None:
+		self.__prepare_task_results[task] = complete
+		logger.debug(self.__prepare_task_results)
+		if None not in self.__prepare_task_results.values() and False not in self.__prepare_task_results.values():
+			self.centralWidget().setCurrentIndex(1)
 
 	def __build_edit_tab (self) -> QWidget:
 		return QLabel('edit')

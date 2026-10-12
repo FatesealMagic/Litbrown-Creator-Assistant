@@ -104,7 +104,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		dump = self.model_dump_json()
 		logger.debug('\n' + ''.join(traceback.format_stack()))
 		self._fullpath.parent.mkdir(parents = True, exist_ok = True)
-		for subdir in ('footage', 'rendered', 'state'):
+		for subdir in ('footage', 'rendered', 'shotcut', 'state'):
 			(self._fullpath.parent / subdir).mkdir(exist_ok = True)
 		with open(self._fullpath, 'w', encoding='utf-8') as f:
 			f.write(dump)
@@ -206,6 +206,19 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		/,
 	) -> list[pathlib.Path]:
 		return obj.path_all(slug, glob = 'footage/*.mkv')
+
+	@LCAHybridMethod
+	def path_shotcut (obj,
+		slug: str | None = None,
+		/, *,
+		segment_id: str,
+		segment_number: str | int | None = None,
+	) -> pathlib.Path:
+		filename = f'shotcut/{segment_id}-{ '0000' if segment_number is None else f'{int(segment_number):04}' }.mlt'
+		if isinstance(obj, type) and (cls := obj):
+			return cls.path(slug, filename)
+		elif self := obj:
+			return self.path(filename)
 
 	@LCAHybridMethod
 	def all_segment_ids (obj,

@@ -98,6 +98,8 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 		class LocalModel (pydantic.BaseModel, frozen = True):
 
 			class AutoeditorModel (pydantic.BaseModel, frozen = True):
+				download_uri: str = 'https://github.com/WyattBlue/auto-editor/releases/latest/download/auto-editor-windows-x86_64.exe'
+				install_folder: str = 'install_autoeditor'
 				executable_location: str = 'install_autoeditor/auto-editor.exe'
 			autoeditor: AutoeditorModel = AutoeditorModel()
 			

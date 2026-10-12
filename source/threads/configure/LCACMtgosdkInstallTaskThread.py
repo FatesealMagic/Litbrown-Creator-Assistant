@@ -24,6 +24,7 @@ import contextlib
 import os
 import pathlib
 import shutil
+import stat
 import subprocess
 
 from loguru import logger
@@ -39,6 +40,7 @@ class LCACMtgosdkInstallTaskThread (LCATaskThread):
 		self.__run_command('winget source update')
 		self.__run_command('winget install Microsoft.Dotnet.SDK.10', valid_return_codes = (2316632107,))
 		with contextlib.suppress(FileNotFoundError):
+			os.chmod(Config().integrations.local.mtgosdk.install_folder, stat.S_IWRITE)
 			shutil.rmtree(Config().integrations.local.mtgosdk.install_folder)
 		pathlib.Path(Config().integrations.local.mtgosdk.install_folder).mkdir(parents = True, exist_ok = True)
 		try:

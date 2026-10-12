@@ -242,6 +242,7 @@ LCACFormatHelperDialog:
 LCACMainWindow:
   title: LCA Configure Tool
   tabs:
+    autoeditor: Auto-Editor
     bluesky: Bluesky
     discord: Discord
     foobar: foobar2000
@@ -274,6 +275,19 @@ LCACMainWindow:
         affiliates:
           title: Affiliate Codes
   replacements_help: Show Help Dialog for Creating Dynamic Titles && Descriptions
+
+LCACAutoeditorWidget:
+  info: LCA uses Auto-Editor to remove dead air and create Shotcut project files from your segment footage.
+  install: Click the button below to install Auto-Editor within LCA. This may take some time; do not close this window until the install is complete.
+  install_btn: Create / Refresh Auto-Editor Installation
+  remove_btn: Remove Auto-Editor Installation
+  confirm: Are you sure you wish to proceed with Auto-Editor installation?
+  install_success: Auto-Editor installed successfully.
+  install_failed: Auto-Editor install failed. Please check the application logs and try again.
+  remove_confirm: Are you sure you wish to remove your Auto-Editor installation?
+  remove_success: Auto-Editor installation removed successfully.
+  remove_failed: Auto-Editor installation could not be removed and may be in an indeterminate state. Make sure no LCA tools or other programs are using the Auto-Editor installation folder, then try again. Restart your computer if issues persist.
+  remove_notneeded: Auto-Editor was not installed, so nothing was removed. No changes made.
 
 LCACFoobarWidget:
   info: LCA uses its connection to foobar2000 to automatically play music while streaming and synchronize your music to your videos. You will need a foobar2000 installation with the Beefweb Remote Control component.

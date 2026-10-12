@@ -1,0 +1,102 @@
+"""
+  " SPDX-License-Identifier: AGPL-3.0-or-later
+  "
+  " Litbrown Creator Assistant
+  " Automation Software for Magic: the Gathering Online (TM) Content Creators
+  " Copyright (C) 2026 Reid Litbrown
+  "
+  " This program is free software: you can redistribute it and/or modify
+  " it under the terms of the GNU Affero General Public License as published
+  " by the Free Software Foundation, either version 3 of the License, or
+  " (at your option) any later version.
+  "
+  " This program is distributed in the hope that it will be useful,
+  " but WITHOUT ANY WARRANTY; without even the implied warranty of
+  " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  " GNU Affero General Public License for more details.
+  "
+  " You should have received a copy of the GNU Affero General Public License
+  " along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  "
+  """
+
+import os
+import pathlib
+import shutil
+import stat
+
+from loguru import logger
+
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+
+from ....Assets import *
+from ....Config import *
+from ....I18n import *
+from ....Settings import *
+
+from ...LCALabel import *
+from ...LCAWidget import *
+from ...LCAPopupMessage import *
+from ....threads.configure.LCACAutoeditorInstallTaskThread import *
+
+class LCACAutoeditorWidget (LCAWidget):
+	
+	__install_thread: LCACAutoeditorInstallTaskThread
+
+	def _setup_layout (self) -> None:
+		layout = QVBoxLayout(self)
+		layout.setSpacing(layout.spacing() * 2)
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).install))
+		layout.addStretch()
+		if install_btn := QPushButton(' ' + I18n(self).install_btn):
+			install_btn.setProperty('css_class', 'big')
+			install_btn.setIcon(Assets.QIcon('external/icons/autoeditor.png'))
+			install_btn.clicked.connect(self.__evt_install_clicked)
+		layout.addWidget(install_btn)
+		if remove_btn := QPushButton(I18n(self).remove_btn):
+			remove_btn.setStyleSheet('font-size: 13pt;')
+			remove_btn.clicked.connect(self.__evt_remove_clicked)
+		layout.addWidget(remove_btn)
+
+	def __evt_install_clicked (self) -> None:
+		if LCAPopupMessage.warning(
+			I18n(self).confirm,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+		) != QMessageBox.StandardButton.Ok:
+			return
+		logger.info('Installing Auto-Editor')
+		self.setEnabled(False)
+		self.__install_thread = LCACAutoeditorInstallTaskThread()
+		self.__install_thread.complete.connect(self.__slot_install_complete)
+		self.__install_thread.start()
+
+	@Slot(bool)
+	def __slot_install_complete (self, success: bool) -> None:
+		self.setEnabled(True)
+		if success:
+			LCAPopupMessage.info(I18n(self).install_success)
+		else:
+			LCAPopupMessage.error(I18n(self).install_failed)
+
+	def __evt_remove_clicked (self) -> None:
+		if LCAPopupMessage.warning(
+			I18n(self).remove_confirm,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+		) != QMessageBox.StandardButton.Ok:
+			return
+		logger.info('Removing Auto-Editor')
+		try:
+			path = pathlib.Path(Config().integrations.local.autoeditor.install_folder).resolve()
+			if path.is_dir():
+				os.chmod(path, stat.S_IWRITE)
+				shutil.rmtree(str(path))
+				LCAPopupMessage.info(I18n(self).remove_success)
+			else:
+				LCAPopupMessage.info(I18n(self).remove_notneeded)
+		except Exception as e:
+			logger.exception(e)
+			LCAPopupMessage.error(I18n(self).remove_failed)
+

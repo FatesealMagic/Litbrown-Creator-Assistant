@@ -20,6 +20,11 @@
   "
   """
 
+import os
+import pathlib
+import shutil
+import stat
+
 from loguru import logger
 
 from PySide6.QtCore import *
@@ -51,6 +56,7 @@ class LCACMtgosdkWidget (LCAWidget):
 				disclaimer_lbl.setTextInteractionFlags(Qt.TextBrowserInteraction)
 				disclaimer_lbl.setOpenExternalLinks(True)
 			layout.addWidget(disclaimer_lbl)
+		layout.addStretch()
 		if install_btn := QPushButton(' ' + I18n(self).install_btn):
 			install_btn.setProperty('css_class', 'big')
 			install_btn.setIcon(Assets.QIcon('external/icons/mtgosdk.png'))
@@ -60,7 +66,6 @@ class LCACMtgosdkWidget (LCAWidget):
 			remove_btn.setStyleSheet('font-size: 13pt;')
 			remove_btn.clicked.connect(self.__evt_remove_clicked)
 		layout.addWidget(remove_btn)
-		layout.addStretch()
 
 	def __evt_install_clicked (self) -> None:
 		if LCAPopupMessage.warning(
@@ -92,6 +97,7 @@ class LCACMtgosdkWidget (LCAWidget):
 		try:
 			path = pathlib.Path(Config().integrations.local.mtgosdk.install_folder).resolve()
 			if path.is_dir():
+				os.chmod(path, stat.S_IWRITE)
 				shutil.rmtree(str(path))
 				LCAPopupMessage.info(I18n(self).remove_success)
 			else:

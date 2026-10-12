@@ -75,11 +75,13 @@ class LCATaskTrackerWidget (LCAWidget):
 		label: str,
 		thread_factory: Callable[[], [LCATaskThread]],
 		integration: type[LCAIntegration],
+		not_unstagable: bool = False,
 		*args, **kwargs
 	):
 		self.__label = label
 		self.__thread_factory = thread_factory
 		self.__integration = integration
+		self.__not_unstagable = not_unstagable
 		super().__init__(*args, **kwargs)
 
 	def _setup_layout (self) -> None:
@@ -197,6 +199,8 @@ class LCATaskTrackerWidget (LCAWidget):
 		self.__progressbar.setFormat(I18n(self).progressbar[status.value])
 		self.__progressbar.setStyleSheet(self.PROGRESS_STYLE.substitute(**self.__get_progress_style_params(status)))
 		self.__actionbtn.setEnabled(status not in (self.Status.SKIPPED, self.Status.RUNNING, self.Status.SUCCESS))
+		if self.__not_unstagable:
+			self.__actionbtn.setVisible(status == self.Status.DISABLED)
 		if status == self.Status.RUNNING:
 			self.__set_progressbar_running()
 			self.__start_task_thread()

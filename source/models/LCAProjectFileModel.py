@@ -104,7 +104,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		dump = self.model_dump_json()
 		logger.debug('\n' + ''.join(traceback.format_stack()))
 		self._fullpath.parent.mkdir(parents = True, exist_ok = True)
-		for subdir in ('footage', 'state'):
+		for subdir in ('footage', 'rendered', 'state'):
 			(self._fullpath.parent / subdir).mkdir(exist_ok = True)
 		with open(self._fullpath, 'w', encoding='utf-8') as f:
 			f.write(dump)
@@ -176,20 +176,54 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		)
 
 	@LCAHybridMethod
+	def path_all (obj,
+		slug: str | None = None,
+		/, *,
+		glob: str = '*',
+	) -> list[pathlib.Path]:
+		if not isinstance(obj, type) and (self := obj):
+			slug = self.slug()
+		return sorted(list( (
+			pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(slug)
+		).glob(glob) ))
+
+	@LCAHybridMethod
 	def path_footage (obj,
 		slug: str | None = None,
 		/, *,
 		segment_id: str,
-		segment_number: int | None = None,
+		segment_number: str | int | None = None,
 	) -> pathlib.Path:
-		filename = f'footage/{segment_id}'
-		if segment_number:
-			filename += f'-{segment_number:04}'
-		filename += '.mkv'
+		filename = f'footage/{segment_id}-{ '0000' if segment_number is None else f'{int(segment_number):04}' }.mkv'
 		if isinstance(obj, type) and (cls := obj):
 			return cls.path(slug, filename)
 		elif self := obj:
 			return self.path(filename)
+
+	@LCAHybridMethod
+	def path_footage_all (obj,
+		slug: str | None = None,
+		/,
+	) -> list[pathlib.Path]:
+		return obj.path_all(slug, glob = 'footage/*.mkv')
+
+	@LCAHybridMethod
+	def all_segment_ids (obj,
+		slug: str | None = None,
+		/,
+	) -> list[tuple[str, int]]:
+		ret = []
+		for path in obj.path_footage_all(slug):
+			split = path.stem.split('-')[-2:]
+			ret.append((split[0], int(split[1])))
+		return ret
+
+	@LCAHybridMethod
+	def all_segment_slugs (obj,
+		slug: str | None = None,
+		/,
+	) -> list[str]:
+		return [f'{segment_id}-{segment_number:04}' for segment_id, segment_number in obj.all_segment_ids(slug)]
 
 	@LCAHybridMethod
 	def path_state (obj,
@@ -211,10 +245,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		slug: str | None = None,
 		/,
 	) -> list[pathlib.Path]:
-		if not isinstance(obj, type) and (self := obj):
-			slug = self.slug()
-		project_directory = pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(slug)
-		return sorted(list(project_directory.glob(f'state/*.json')))
+		return obj.path_all(slug, glob = 'state/*.json')
 
 	@LCAHybridMethod
 	def filelock (obj,

@@ -661,6 +661,7 @@ LCARMainWindow:
   tabs:
     prepare:
       name: Prepare
+      refresh: Refresh
       proceed: PREPARE SEGMENTS
     edit:
       name: Edit

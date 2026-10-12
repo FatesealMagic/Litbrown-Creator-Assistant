@@ -20,6 +20,7 @@
   "
   """
 
+import functools
 import sys
 
 from loguru import logger
@@ -37,11 +38,17 @@ from ...Util import Util
 from ..LCAMainWindow import LCAMainWindow
 from ..LCAPopupMessage import LCAPopupMessage
 from ..LCASideTabWidget import LCASideTabWidget
+from ..LCATaskTrackerWidget import LCATaskTrackerWidget
+from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...threads.render.LCARFootagePreparerTaskThread import LCARFootagePreparerTaskThread
 
 class LCARMainWindow (LCAMainWindow):
 
 	__TAB_NAMES = ('prepare', 'edit', 'render')
+	
+	__prepare_scroll_area: QScrollArea
+	__prepare_task_tracker_widgets: list[LCATaskTrackerWidget]
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -65,11 +72,45 @@ class LCARMainWindow (LCAMainWindow):
 	def __build_prepare_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.addStretch(1)
-		if proceed_btn := QPushButton(' ' + I18n(self).tabs.prepare.proceed):
-			proceed_btn.setProperty('css_class', 'big')
-			proceed_btn.setIcon(Assets.QIcon('icons/advance.png'))
-		layout.addWidget(proceed_btn)
+		if scroll_area := QScrollArea():
+			self.__prepare_scroll_area = scroll_area
+			scroll_area.setWidgetResizable(True)
+			scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+			scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+			scroll_area.setWidget(self.__construct_prepare_segments_widget())
+		layout.addWidget(scroll_area)
+		if btns_widget := QWidget():
+			btns_layout = QHBoxLayout(btns_widget)
+			btns_layout.setContentsMargins(0, 0, 0, 0)
+			if refresh_btn := QPushButton(' ' + I18n(self).tabs.prepare.refresh):
+				refresh_btn.setProperty('css_class', 'big')
+				refresh_btn.setIcon(Assets.QIcon('icons/refresh.png'))
+			btns_layout.addWidget(refresh_btn)
+			if proceed_btn := QPushButton(' ' + I18n(self).tabs.prepare.proceed):
+				proceed_btn.setProperty('css_class', 'big')
+				proceed_btn.setIcon(Assets.QIcon('icons/advance.png'))
+			btns_layout.addWidget(proceed_btn)
+		layout.addWidget(btns_widget)
+		return widget
+
+	def __construct_prepare_segments_widget (self) -> QWidget:
+		old_widget = self.__prepare_scroll_area.takeWidget()
+		if old_widget:
+			old_widget.deleteLater()
+		self.__prepare_task_tracker_widgets = []
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		for segment_slug in self.__project.all_segment_slugs():
+			segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
+			task_tracker_widget = LCATaskTrackerWidget(
+				label = Settings().series_segment_from_id(self.__project.series_id, segment_id).name +
+					(f' #{segment_number}' if segment_number else ''),
+				thread_factory = functools.partial( LCARFootagePreparerTaskThread, segment_slug = segment_slug ),
+				integration = LCAAutoeditorIntegration,
+				not_unstagable = True,
+			)
+			layout.addWidget(task_tracker_widget)
+			self.__prepare_task_tracker_widgets.append(task_tracker_widget)
 		return widget
 
 	def __build_edit_tab (self) -> QWidget:

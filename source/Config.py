@@ -96,6 +96,10 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 		remote: RemoteModel = RemoteModel()
 
 		class LocalModel (pydantic.BaseModel, frozen = True):
+
+			class AutoeditorModel (pydantic.BaseModel, frozen = True):
+				executable_location: str = 'install_autoeditor/auto-editor.exe'
+			autoeditor: AutoeditorModel = AutoeditorModel()
 			
 			class MtgosdkModel (pydantic.BaseModel, frozen = True):
 				install_folder: str = 'install_mtgosdk'

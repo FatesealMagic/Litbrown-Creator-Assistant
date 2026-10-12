@@ -245,7 +245,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		ts: float | int | str | None = None,
 	) -> pathlib.Path:
 		if ts is None:
-			ts = time.time() * 1000
+			ts = time.time() * 1e6
 		ts = int(ts)
 		filename = f'state/{ts}.json'
 		return obj(slug, filename)

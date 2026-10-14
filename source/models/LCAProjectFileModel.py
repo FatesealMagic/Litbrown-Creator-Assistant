@@ -248,7 +248,11 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 			ts = time.time() * 1e6
 		ts = int(ts)
 		filename = f'state/{ts}.json'
-		return obj(slug, filename)
+		if isinstance(obj, type) and (cls := obj):
+			return cls.path(slug, filename)
+		elif self := obj:
+			return self.path(filename)
+		return obj.path(slug, filename)
 
 	@LCAHybridMethod
 	def path_state_all (obj,

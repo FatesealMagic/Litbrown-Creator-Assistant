@@ -41,14 +41,18 @@ from ..LCASideTabWidget import LCASideTabWidget
 from ..LCATaskTrackerWidget import LCATaskTrackerWidget
 from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...models.render.LCARPreparedProjectModel import LCARPreparedProjectModel
 from ...threads.render.LCARFootagePreparerTaskThread import LCARFootagePreparerTaskThread
+from ...threads.render.LCARProjectPreparerTaskThread import LCARProjectPreparerTaskThread
 
 class LCARMainWindow (LCAMainWindow):
 
 	__TAB_NAMES = ('prepare', 'edit', 'render')
 	
 	__prepare_scroll_area: QScrollArea
+	__prepare_project_states_task: LCATaskTrackerWidget | None = None
 	__prepare_task_results: dict[LCATaskTrackerWidget, bool | None]
+	__prepared: LCARPreparedProjectModel
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -103,32 +107,51 @@ class LCARMainWindow (LCAMainWindow):
 		self.__prepare_task_results = {}
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
+		if self.__prepare_project_states_task:
+			self.__prepare_project_states_task.deleteLater()
+		if prepare_project_states_task := LCATaskTrackerWidget(
+			label = I18n(self).tabs.prepare.process_state,
+			thread_factory = functools.partial(LCARProjectPreparerTaskThread, project = self.__project),
+			not_unstagable = True,
+		):
+			self.__prepare_project_states_task = prepare_project_states_task
+			prepare_project_states_task.result.connect(self.__evt_prepare_project_states_task_result)
+		layout.addWidget(prepare_project_states_task)
 		for segment_slug in self.__project.all_segment_slugs():
 			segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
 			task_tracker_widget = LCATaskTrackerWidget(
 				label = Settings().series_segment_from_id(self.__project.series_id, segment_id).name +
 					(f' #{segment_number}' if segment_number else ''),
-				thread_factory = functools.partial(
-					LCARFootagePreparerTaskThread,
-					project = self.__project,
-					segment_slug = segment_slug,
+				thread_factory = lambda l_segment_slug = segment_slug : LCARFootagePreparerTaskThread(
+					prepared = self.__prepared,
+					segment_slug = l_segment_slug,
 				),
 				integration = LCAAutoeditorIntegration,
 				not_unstagable = True,
 			)
 			layout.addWidget(task_tracker_widget)
 			self.__prepare_task_results[task_tracker_widget] = None
+		layout.addStretch()
 		return widget
 
 	def __evt_do_prepare (self) -> None:
 		self.__prepare_btns_widget.setEnabled(False)
+		self.__prepare_project_states_task.execute()
+
+	def __evt_prepare_project_states_task_result (self,
+		result: LCARPreparedProjectModel,
+	) -> None:
+		self.__prepared = result
 		for task in self.__prepare_task_results.keys():
 			task.complete.connect(functools.partial(self.__evt_prepare_complete, task = task))
 			task.execute()
 
-	def __evt_prepare_complete (self, task: LCATaskTrackerWidget, complete: bool) -> None:
+	def __evt_prepare_complete (self,
+		complete: bool,
+		*,
+		task: LCATaskTrackerWidget,
+	) -> None:
 		self.__prepare_task_results[task] = complete
-		logger.debug(self.__prepare_task_results)
 		if None not in self.__prepare_task_results.values() and False not in self.__prepare_task_results.values():
 			self.centralWidget().setCurrentIndex(1)
 

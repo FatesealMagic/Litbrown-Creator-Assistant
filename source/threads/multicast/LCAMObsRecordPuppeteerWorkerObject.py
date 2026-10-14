@@ -20,14 +20,16 @@
   "
   """
 
+import os
 import time
 
 from loguru import logger
 
-from ..LCAWorkerObject import *
-from ...common.LCAProjectState import *
-from ...models.LCAProjectStateModel import *
-from ...integrations.obs.LCAObsIntegration import *
+from ..LCAWorkerObject import LCAWorkerObject
+from ...common.LCAProjectState import LCAProjectState
+from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...models.LCAProjectStateModel import LCAProjectStateModel
+from ...integrations.obs.LCAObsIntegration import LCAObsIntegration
 
 class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 	
@@ -164,10 +166,16 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 		)
 
 	def __update_recording_start_time (self, state: LCAProjectStateModel) -> None:
-		req_start_ts = time.time()
-		duration = self.__obs.req_client.get_record_status().output_duration / 1000.0
-		req_end_ts = time.time()
-		start_ts = int(1e6 * (req_start_ts + ((req_end_ts - req_start_ts) / 2) - duration))
+		while True:
+			try:
+				start_ts = os.path.getctime(state.model.path_shotcut(
+					segment_id = state.segment_id,
+					segment_number = state.segment_number,
+				))
+				break
+			except FileNotFoundError:
+				time.sleep(0.2)
+				continue
 		with LCAProjectState():
-			LCAProjectState().model.start_timestamps[f'{state.segment_id}-{state.segment_number}'] = start_ts
+			LCAProjectState().model.start_timestamps[LCAProjectFileModel.slug(state.segment_id, state.segment_number)] = start_ts
 

@@ -71,16 +71,28 @@ class LCATaskTrackerWidget (LCAWidget):
 		}
 	''')
 
+	class LCANullIntegration (LCAIntegration):
+
+		@classmethod
+		def is_initialized (cls) -> bool:
+			return True
+
+		def _connect (self) -> None:
+			pass
+
+		def _disconnect (self) -> None:
+			pass
+
 	def __init__ (self,
 		label: str,
 		thread_factory: Callable[[], [LCATaskThread]],
-		integration: type[LCAIntegration],
+		integration: type[LCAIntegration] | None = None,
 		not_unstagable: bool = False,
 		*args, **kwargs
 	):
 		self.__label = label
 		self.__thread_factory = thread_factory
-		self.__integration = integration
+		self.__integration = integration or self.LCANullIntegration
 		self.__not_unstagable = not_unstagable
 		super().__init__(*args, **kwargs)
 

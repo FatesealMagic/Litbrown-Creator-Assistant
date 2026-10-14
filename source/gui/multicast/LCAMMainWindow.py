@@ -165,7 +165,7 @@ class LCAMMainWindow (LCAMainWindow):
 			'NumLock':    0x90,
 			'ScrollLock': 0x91,
 		}.get(Settings().tools.multicast.hotkeys.mute, None):
-			if LCAProjectState().model.muted == bool(ctypes.windll.user32.GetKeyState(vkcode) & 1):
+			if LCAProjectState().model.muted != bool(ctypes.windll.user32.GetKeyState(vkcode) & 1):
 				with QSignalBlocker(self.hotkey):
 					# https://stackoverflow.com/a/46200170/13158743
 					ctypes.windll.user32.keybd_event(vkcode, 0, 0, 0)
@@ -218,14 +218,14 @@ class LCAMMainWindow (LCAMainWindow):
 							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
 						addlbtns_layout.addWidget(mistake_btn)
 						if muteunmute_btn := QPushButton(
-							I18n(self).buttons.unmute
+							I18n(self).buttons.is_muted
 							if LCAProjectState().model.muted
-							else I18n(self).buttons.mute
+							else I18n(self).buttons.is_unmuted
 						):
 							self.__muteunmute_btn = muteunmute_btn
 							muteunmute_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 							muteunmute_btn.setCheckable(True)
-							muteunmute_btn.setChecked(not LCAProjectState().model.muted)
+							muteunmute_btn.setChecked(LCAProjectState().model.muted)
 							muteunmute_btn.clicked.connect(self.__evt_muteunmute_clicked)
 						addlbtns_layout.addWidget(muteunmute_btn)
 					controls_layout.addWidget(addlbtns_widget)
@@ -255,12 +255,12 @@ class LCAMMainWindow (LCAMainWindow):
 				if segment.repeatable:
 					i = 1
 					while True:
-						if f'{segment.id}-{i}' not in LCAProjectState().model.start_timestamps.keys():
+						if LCAProjectFileModel.slug(segment.id, i) not in LCAProjectState().model.start_timestamps.keys():
 							break
 						i += 1
 					self.__segment_cbo.addItem(f'{segment.name} #{i}', (segment.id, i))
 				else:
-					if f'{segment.id}-0' not in LCAProjectState().model.start_timestamps.keys():
+					if LCAProjectFileModel.slug(segment.id, 0) not in LCAProjectState().model.start_timestamps.keys():
 						self.__segment_cbo.addItem(segment.name, (segment.id, 0))
 
 	def __setup_status_bar (self) -> None:
@@ -365,22 +365,22 @@ class LCAMMainWindow (LCAMainWindow):
 			state.model.mistake_count += 1
 		self.__mistake_btn.setText(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}')
 
-	def __evt_mute_clicked (self) -> None:
-		logger.info('Muted')
+	def __do_mute (self) -> None:
+		logger.info('Do Mute')
 		with LCAProjectState() as state:
 			state.model.muted = True
-		self.__muteunmute_btn.setChecked(False)
-		self.__muteunmute_btn.setText(I18n(self).buttons.unmute)
+		self.__muteunmute_btn.setChecked(True)
+		self.__muteunmute_btn.setText(I18n(self).buttons.is_muted)
 
-	def __evt_unmute_clicked (self) -> None:
-		logger.info('Unmuted')
+	def __do_unmute (self) -> None:
+		logger.info('Do Unmute')
 		with LCAProjectState() as state:
 			state.model.muted = False
-		self.__muteunmute_btn.setChecked(True)
-		self.__muteunmute_btn.setText(I18n(self).buttons.mute)
+		self.__muteunmute_btn.setChecked(False)
+		self.__muteunmute_btn.setText(I18n(self).buttons.is_unmuted)
 
 	def __evt_muteunmute_clicked (self) -> None:
-		self.__evt_unmute_clicked() if LCAProjectState().model.muted else self.__evt_mute_clicked()
+		self.__do_unmute() if LCAProjectState().model.muted else self.__do_mute()
 		self.__ensure_lock_toggle_matches_mute_status()
 
 	def __evt_clip_clicked (self) -> None:
@@ -393,7 +393,7 @@ class LCAMMainWindow (LCAMainWindow):
 		if not self.isEnabled():
 			return
 		if hotkeys == 'mute,unmute':
-			return self.__evt_unmute_clicked() if muted else self.__evt_mute_clicked()
+			return self.__evt_muteunmute_clicked()
 		for hotkey in hotkeys.split(','):
 			if ((hotkey == 'muted') and muted) or ((hotkey == 'unmuted') and not muted):
 				continue

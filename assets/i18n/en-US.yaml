@@ -573,10 +573,10 @@ LCAMMainWindow:
   title: LCA Multicast Tool
   buttons:
     start: START
-    stop: STOP
+    stop: RECORDING
     mistake: "Mistakes:"
-    mute: MUTED
-    unmute: Unmuted
+    is_muted: MUTED
+    is_unmuted: Mute
     clip: CLIP
   confirm:
     stop: Are you sure you wish to stop recording?
@@ -675,6 +675,7 @@ LCARMainWindow:
   tabs:
     prepare:
       name: Prepare
+      process_state: Compile States
       refresh: Refresh
       proceed: PREPARE SEGMENTS
     edit:

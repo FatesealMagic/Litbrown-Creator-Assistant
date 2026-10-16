@@ -20,7 +20,9 @@
   "
   """
 
+import functools
 import json
+import time
 import traceback
 import typing
 
@@ -58,6 +60,7 @@ class LCAProjectState (metaclass = LCASingleton):
 			'active': False,
 			'segment_id': None,
 			'segment_number': 0,
+			'last_modified_ts': int(time.time() * 1e6),
 		} ) )
 		self.__start_ws_server()
 
@@ -95,6 +98,7 @@ class LCAProjectState (metaclass = LCASingleton):
 
 	def __enter__ (self) -> None:
 		self.__mutex.acquire()
+		self.__model.last_modified_ts = int(1e6 * time.time())
 		return self
 
 	def __exit__ (self, exc_type, exc_val, exc_tb):
@@ -103,12 +107,56 @@ class LCAProjectState (metaclass = LCASingleton):
 			return
 		logger.debug('\n' + ''.join(traceback.format_stack()))
 		model_dict = self.__model.model_dump(mode = 'json')
-		self.__project.overwrite_file(
-			self.__project.path_state(),
-			json.dumps({k: v for k, v in model_dict.items() if k not in ('project',)}),
-			text = True,
-		)
+		if self.__model.active:
+			self.__project.overwrite_file(
+				self.__project.path_state(),
+				json.dumps({k: v for k, v in model_dict.items() if k not in ('project',)}),
+				text = True,
+			)
 		self.__mutex.release()
 		self.updated_model.emit(self.__model)
 		self.updated_dict.emit(model_dict)
 
+	def in_context (method):
+		@functools.wraps(method)
+		def wrapper (self, *args, **kwargs):
+			if not self.__mutex.locked():
+				raise RuntimeError(f'Method not called within context manager: {method}')
+			return method(self, *args, **kwargs)
+		return wrapper
+
+	@in_context
+	def set_segment (self, segment_id: str | None, segment_number: int) -> None:
+		self.__model.segment_id = segment_id
+		self.__model.segment_number = segment_number
+		if segment_id:
+			segment_slug = LCAProjectFileModel.slug(segment_id, segment_number)
+			self.__project.events.segments[segment_slug] = LCAProjectFileModel.EventsModel.SegmentModel()
+
+	@property
+	def muted (self) -> bool:
+		return len(self.__project.events.mutes) and not self.__project.events.mutes[-1][1]
+
+	@muted.setter
+	@in_context
+	def muted (self, val: bool) -> None:
+		self.__model.muted = val
+		if val and not self.muted:
+			self.__project.events.mutes.append((self.__model.last_modified_ts, None))
+		if not val and self.muted:
+			self.__project.events.mutes[-1] = (self.__project.events.mutes[-1][0], self.__model.last_modified_ts)
+
+	@in_context
+	def mark_mistake (self) -> None:
+		if self.__model.segment_id is None:
+			return
+		self.__model.mistake_count += 1
+		self.__project.events.segments[LCAProjectFileModel.slug(
+			self.__model.segment_id, self.__model.segment_number
+		)].mistakes_ts.append(self.__model.last_modified_ts)
+
+	@in_context
+	def set_segment_start_ts (self, ts: int) -> None:
+		self.__project.events.segments[LCAProjectFileModel.slug(
+			self.__model.segment_id, self.__model.segment_number
+		)].start_ts = ts

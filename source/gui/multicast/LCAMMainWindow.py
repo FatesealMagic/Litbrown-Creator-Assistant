@@ -223,7 +223,7 @@ class LCAMMainWindow (LCAMainWindow):
 							muteunmute_btn.setChecked(LCAProjectState().model.muted)
 							muteunmute_btn.clicked.connect(self.__evt_muteunmute_clicked)
 						addlbtns_layout.addWidget(muteunmute_btn)
-						if mistake_btn := QPushButton(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}'):
+						if mistake_btn := QPushButton(f'\u26A0\ufe0f {LCAProjectState().model.mistake_count}'):
 							self.__mistake_btn = mistake_btn
 							mistake_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
@@ -252,16 +252,16 @@ class LCAMMainWindow (LCAMainWindow):
 			self.__segment_cbo.clear()
 			self.__segment_cbo.setPlaceholderText(I18n(self).segment.select_placeholder)
 			for segment in Settings().series_from_id(self.__project.series_id).segments:
-				if segment.repeatable:
-					i = 1
-					while True:
-						if LCAProjectFileModel.slug(segment.id, i) not in LCAProjectState().model.start_timestamps.keys():
-							break
-						i += 1
-					self.__segment_cbo.addItem(f'{segment.name} #{i}', (segment.id, i))
-				else:
-					if LCAProjectFileModel.slug(segment.id, 0) not in LCAProjectState().model.start_timestamps.keys():
-						self.__segment_cbo.addItem(segment.name, (segment.id, 0))
+				i = 1 if segment.repeatable else 0
+				while True:
+					slug = LCAProjectFileModel.slug(segment.id, i)
+					if slug not in self.__project.events.segments.keys() or not self.__project.events.segments[slug].start_ts:
+						break
+					if i == 0:
+						i = -1
+						break
+				if i >= 0:
+					self.__segment_cbo.addItem(segment.name + (f' #{i}' if i else ''), (segment.id, i))
 
 	def __setup_status_bar (self) -> None:
 		self.statusBar().setSizeGripEnabled(False)
@@ -311,11 +311,9 @@ class LCAMMainWindow (LCAMainWindow):
 		segment_id, segment_number = segment_info
 		if (LCAProjectState().model.segment_id == segment_id) and (LCAProjectState().model.segment_number == segment_number):
 			return
-		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
 		self.setEnabled(False)
 		with LCAProjectState() as state:
-			state.model.segment_id = segment_id
-			state.model.segment_number = segment_number
+			state.set_segment(segment_id, segment_number)
 
 	def __evt_startstop_clicked (self) -> None:
 		if not LCAProjectState().model.segment_id and not LCAProjectState().model.active:
@@ -329,8 +327,7 @@ class LCAMMainWindow (LCAMainWindow):
 		with LCAProjectState() as state:
 			state.model.active = not state.model.active
 			if not state.model.active:
-				state.model.segment_id = None
-				state.model.segment_number = 0
+				state.set_segment(None, 0)
 
 	def __update_integration_status (self, integration: str, status: bool | None) -> None:
 		if not self.__status_lbls.get(integration, None):
@@ -362,25 +359,25 @@ class LCAMMainWindow (LCAMainWindow):
 	def __evt_mistake_clicked (self) -> None:
 		logger.info('Marking a mistake')
 		with LCAProjectState() as state:
-			state.model.mistake_count += 1
-		self.__mistake_btn.setText(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}')
+			state.mark_mistake()
+		self.__mistake_btn.setText(f'\u26A0\ufe0f {LCAProjectState().model.mistake_count}')
 
 	def __do_mute (self) -> None:
 		logger.info('Do Mute')
 		with LCAProjectState() as state:
-			state.model.muted = True
+			state.muted = True
 		self.__muteunmute_btn.setChecked(True)
 		self.__muteunmute_btn.setText(I18n(self).buttons.is_muted)
 
 	def __do_unmute (self) -> None:
 		logger.info('Do Unmute')
 		with LCAProjectState() as state:
-			state.model.muted = False
+			state.muted = False
 		self.__muteunmute_btn.setChecked(False)
 		self.__muteunmute_btn.setText(I18n(self).buttons.is_unmuted)
 
 	def __evt_muteunmute_clicked (self) -> None:
-		self.__do_unmute() if LCAProjectState().model.muted else self.__do_mute()
+		self.__do_unmute() if LCAProjectState().muted else self.__do_mute()
 		self.__ensure_lock_toggle_matches_mute_status()
 
 	def __evt_clip_clicked (self) -> None:

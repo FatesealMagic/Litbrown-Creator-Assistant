@@ -174,14 +174,14 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 	def __update_recording_start_time (self, state: LCAProjectStateModel) -> None:
 		while True:
 			try:
-				start_ts = os.path.getctime(state.project.path_footage(
+				start_ts = int( 1e6 * os.path.getctime(state.project.path_footage(
 					segment_id = state.segment_id,
 					segment_number = state.segment_number,
-				))
+				)) )
 				break
 			except FileNotFoundError:
 				time.sleep(0.2)
 				continue
-		with LCAProjectState():
-			LCAProjectState().model.start_timestamps[LCAProjectFileModel.slug(state.segment_id, state.segment_number)] = start_ts
+		with LCAProjectState() as state:
+			state.set_segment_start_ts(start_ts)
 

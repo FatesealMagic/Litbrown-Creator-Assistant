@@ -74,6 +74,19 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		thumbnail: pathlib.Path | None = None
 	video: VideoModel = VideoModel()
 
+	class EventsModel (pydantic.BaseModel, validate_assignment = True):
+
+		mutes: list[tuple[typing.Annotated[int, 'start microseconds'], typing.Annotated[int | None, 'end microseconds']]] = []
+
+		class SegmentModel (pydantic.BaseModel, validate_assignment = True):
+			start_ts: int | None = None
+			mistakes_ts: list[typing.Annotated[int, 'microseconds']] = []
+		segments: dict[typing.Annotated[str, 'Segment slug'], SegmentModel] = {}
+
+		plugins: dict[str, pydantic.BaseModel] = {}
+
+	events: EventsModel = EventsModel()
+
 # Implementation ###############################################################
 
 	model_config = pydantic.ConfigDict(

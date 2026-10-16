@@ -28,24 +28,21 @@ from loguru import logger
 from ..LCATaskThread import *
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel
-from ...models.render.LCARPreparedProjectModel import LCARPreparedProjectModel
 from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 from ...integrations.shotcut.LCAShotcutIntegration import LCAShotcutIntegration
 
 class LCARFootagePreparerTaskThread (LCATaskThread):
 
 	def _run (self,
-		prepared: LCARPreparedProjectModel,
+		project: LCAProjectFileModel,
 		segment_slug: str,
 	) -> None:
-		self.__prepared = prepared
+		self.__project = project
 		self.__segment_slug = segment_slug
 		self.__segment_id, self.__segment_number = LCAProjectFileModel.split_slug(self.__segment_slug)
-		self.__last_state = self.__prepared.states[ list(sorted(self.__prepared.states.keys()))[-1] ]
-		self.__start_ts = self.__last_state.start_timestamps[self.__segment_slug]
+		self.__start_ts = self.__project.events.segments[self.__segment_slug].start_ts
 		self.__run_autoeditor()
 		self.__mlt = self.__load_shotcut_file()
-		self.__mlt.write(f'projects/{self.__prepared.project.slug()}/shotcut/original-{segment_slug}.mlt') # TODO remove
 		self.__framerate = LCAShotcutIntegration.get_framerate(self.__mlt)
 		self.__extract_muted_segments()
 		self.__apply_mistake_markers()
@@ -53,11 +50,11 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 
 	def __run_autoeditor (self) -> None:
 		with LCAAutoeditorIntegration() as autoeditor:
-			logger.info(f'Preparing footage for {self.__prepared.project.slug()} {self.__segment_slug}')
-			autoeditor.process_slug(self.__prepared.project, self.__segment_slug, margin = 0.23) # TODO margin as setting
+			logger.info(f'Preparing footage for {self.__project.slug()} {self.__segment_slug}')
+			autoeditor.process_slug(self.__project, self.__segment_slug, margin = 0.23) # TODO margin as setting
 
 	def __load_shotcut_file (self) -> xml.etree.ElementTree:
-		return xml.etree.ElementTree.parse(self.__prepared.project.path_shotcut(
+		return xml.etree.ElementTree.parse(self.__project.path_shotcut(
 			segment_id = self.__segment_id,
 			segment_number = self.__segment_number,
 		))
@@ -71,7 +68,7 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 		for entry in parent.findall('./entry'):
 			start = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['in'],  offset = self.__start_ts)
 			end   = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['out'], offset = self.__start_ts)
-			for mute_start, mute_end in self.__prepared.markers.mutes:
+			for mute_start, mute_end in self.__project.events.mutes:
 				if mute_start < start < end < mute_end:
 					logger.debug(f'{self.__segment_slug}: Deleting entry with producer "{entry.get('producer')}" ({start}, {end}) due to mute ({mute_start}, {mute_end})')
 					to_delete.append(entry)
@@ -98,10 +95,48 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 			e.set('out', LCAShotcutIntegration.lcats_to_mltts(mute_start, offset = self.__start_ts, framerate = self.__framerate))
 
 	def __apply_mistake_markers (self) -> None:
-		pass
+		self.__mlt.getroot().find('./tractor[@id="tractor0"]').append(
+			xml.etree.ElementTree.Element(
+				'properties',
+				{'name': 'shotcut:markers'},
+			)
+		)
+		for i, marker_ts in enumerate(self.__project.events.segments[self.__segment_slug].mistakes_ts):
+			self.__add_mistake_to_mlt( i + 1, self.__determine_mistake_mltts(marker_ts) )
+
+	def __determine_mistake_mltts (self, marker_ts: int) -> str:
+		timeline_length = 0
+		marker_offset = 0
+		end = 0
+		for entry in self.__mlt.getroot().findall('./playlist[@id="playlist0"]/entry'):
+			start = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['in'],  offset = self.__start_ts)
+			end   = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['out'], offset = self.__start_ts)
+			if end > marker_ts:
+				marker_offset = timeline_length + max(0, marker_ts - start)
+				break
+			timeline_length += end - start + int(1e6 / self.__framerate)
+		else:
+			marker_offset = timeline_length
+		return LCAShotcutIntegration.lcats_to_mltts(marker_offset, framerate = self.__framerate)
+
+	def __add_mistake_to_mlt (self, i: int, mltts: str) -> None:
+		marker = xml.etree.ElementTree.Element('properties', {'name': str(i)})
+		text_el  = xml.etree.ElementTree.Element('property', {'name': 'text'})
+		text_el.text = str(i)
+		marker.append(text_el)
+		start_el = xml.etree.ElementTree.Element('property', {'name': 'start'})
+		start_el.text = mltts
+		marker.append(start_el)
+		end_el   = xml.etree.ElementTree.Element('property', {'name': 'end'})
+		end_el.text = mltts
+		marker.append(end_el)
+		color_el = xml.etree.ElementTree.Element('property', {'name': 'color'})
+		color_el.text = '#FF6699'
+		marker.append(color_el)
+		self.__mlt.getroot().find('./tractor[@id="tractor0"]/properties[@name="shotcut:markers"]').append(marker)
 
 	def __save_shotcut_file (self) -> None:
-		self.__mlt.write(self.__prepared.project.path_shotcut(
+		self.__mlt.write(self.__project.path_shotcut(
 			segment_id = self.__segment_id,
 			segment_number = self.__segment_number,
 		))

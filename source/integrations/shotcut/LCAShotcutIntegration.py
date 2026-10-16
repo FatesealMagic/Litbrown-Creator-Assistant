@@ -50,7 +50,7 @@ class LCAShotcutIntegration (LCAIntegration):
 		offset: int = 0,
 	) -> int:
 		h, m, s = mltts.split(':')
-		return offset + int( 1e6 * datetime.timedelta(
+		return int( offset + 1e6 * datetime.timedelta(
 			hours   = int(h),
 			minutes = int(m),
 			seconds = float(s),

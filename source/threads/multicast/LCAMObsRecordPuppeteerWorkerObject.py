@@ -23,7 +23,13 @@
 import os
 import time
 
+import obsws_python
+
 from loguru import logger
+
+from PySide6.QtCore import *
+
+from ...Settings import Settings
 
 from ..LCAWorkerObject import LCAWorkerObject
 from ...common.LCAProjectState import LCAProjectState
@@ -168,7 +174,7 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 	def __update_recording_start_time (self, state: LCAProjectStateModel) -> None:
 		while True:
 			try:
-				start_ts = os.path.getctime(state.model.path_shotcut(
+				start_ts = os.path.getctime(state.project.path_footage(
 					segment_id = state.segment_id,
 					segment_number = state.segment_number,
 				))

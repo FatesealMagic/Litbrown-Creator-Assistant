@@ -212,11 +212,6 @@ class LCAMMainWindow (LCAMainWindow):
 					if addlbtns_widget := QWidget():
 						addlbtns_layout = QHBoxLayout(addlbtns_widget)
 						addlbtns_layout.setContentsMargins(0, 0, 0, 0)
-						if mistake_btn := QPushButton(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}'):
-							self.__mistake_btn = mistake_btn
-							mistake_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
-						addlbtns_layout.addWidget(mistake_btn)
 						if muteunmute_btn := QPushButton(
 							I18n(self).buttons.is_muted
 							if LCAProjectState().model.muted
@@ -228,6 +223,11 @@ class LCAMMainWindow (LCAMainWindow):
 							muteunmute_btn.setChecked(LCAProjectState().model.muted)
 							muteunmute_btn.clicked.connect(self.__evt_muteunmute_clicked)
 						addlbtns_layout.addWidget(muteunmute_btn)
+						if mistake_btn := QPushButton(f'{I18n(self).buttons.mistake}  {LCAProjectState().model.mistake_count}'):
+							self.__mistake_btn = mistake_btn
+							mistake_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+							mistake_btn.clicked.connect(self.__evt_mistake_clicked)
+						addlbtns_layout.addWidget(mistake_btn)
 					controls_layout.addWidget(addlbtns_widget)
 				layout.addWidget(controls_widget, 1)
 			wrapper_layout.addWidget(widget)

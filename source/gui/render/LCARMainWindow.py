@@ -22,6 +22,7 @@
 
 import functools
 import sys
+import xml.etree.ElementTree
 
 from loguru import logger
 
@@ -35,6 +36,8 @@ from ...I18n import I18n
 from ...Settings import Settings
 from ...Util import Util
 
+from ..LCASeparator import LCASeparator
+from ..LCALabel import LCALabel
 from ..LCAMainWindow import LCAMainWindow
 from ..LCAPopupMessage import LCAPopupMessage
 from ..LCASideTabWidget import LCASideTabWidget
@@ -50,6 +53,7 @@ class LCARMainWindow (LCAMainWindow):
 	__project: LCAProjectFileModel
 	__prepare_scroll_area: QScrollArea
 	__prepare_task_results: dict[LCATaskTrackerWidget, bool | None]
+	__edit_scroll_area: QScrollArea
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -79,6 +83,7 @@ class LCARMainWindow (LCAMainWindow):
 			scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 			scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 			scroll_area.setWidget(self.__construct_prepare_segments_widget())
+		logger.debug(self.__prepare_task_results)
 		layout.addWidget(scroll_area)
 		if btns_widget := QWidget():
 			self.__prepare_btns_widget = btns_widget
@@ -87,7 +92,7 @@ class LCARMainWindow (LCAMainWindow):
 			if refresh_btn := QPushButton(' ' + I18n(self).tabs.prepare.refresh):
 				refresh_btn.setProperty('css_class', 'big')
 				refresh_btn.setIcon(Assets.QIcon('icons/refresh.png'))
-				refresh_btn.clicked.connect(self.__construct_prepare_segments_widget)
+				refresh_btn.clicked.connect(lambda : scroll_area.setWidget(self.__construct_prepare_segments_widget()))
 			btns_layout.addWidget(refresh_btn)
 			if proceed_btn := QPushButton(' ' + I18n(self).tabs.prepare.proceed):
 				proceed_btn.setProperty('css_class', 'big')
@@ -99,6 +104,7 @@ class LCARMainWindow (LCAMainWindow):
 
 	def __construct_prepare_segments_widget (self) -> QWidget:
 		old_widget = self.__prepare_scroll_area.takeWidget()
+		logger.debug(old_widget)
 		if old_widget:
 			old_widget.deleteLater()
 		self.__prepare_task_results = {}
@@ -137,7 +143,68 @@ class LCARMainWindow (LCAMainWindow):
 			self.centralWidget().setCurrentIndex(1)
 
 	def __build_edit_tab (self) -> QWidget:
-		return QLabel('edit')
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		layout.addWidget(LCALabel(I18n(self).tabs.edit.segments))
+		if scroll_area := QScrollArea():
+			self.__edit_scroll_area = scroll_area
+			scroll_area.setWidgetResizable(True)
+			scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+			scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+		layout.addWidget(scroll_area)
+		if render_btn := QPushButton(' ' + I18n(self).tabs.edit.proceed):
+			self.__render_btn = render_btn
+			render_btn.setIcon(Assets.QIcon('icons/advance.png'))
+			render_btn.setEnabled(False)
+			render_btn.clicked.connect(self.__evt_do_render)
+		layout.addWidget(render_btn)
+		scroll_area.setWidget(self.__construct_needs_editing_widget())
+		if edit_watcher := QFileSystemWatcher():
+			self.__edit_watcher = edit_watcher
+			edit_watcher.addPath(str(self.__project.path('footage/')))
+			edit_watcher.directoryChanged.connect(lambda : scroll_area.setWidget(self.__construct_needs_editing_widget()))
+		return widget
+
+	def __construct_needs_editing_widget (self) -> QWidget:
+		old_widget = self.__edit_scroll_area.takeWidget()
+		if old_widget:
+			old_widget.deleteLater()
+		self.__render_btn.setEnabled(True)
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		for i, filename in enumerate(self.__project.path('shotcut/').glob('*')):
+			mlt = xml.etree.ElementTree.parse(filename)
+			num_mistakes = len(mlt.getroot().findall('./tractor[@id="tractor0"]/properties[@name="shotcut:markers"]/properties'))
+			if not num_mistakes:
+				continue
+			self.__render_btn.setEnabled(False)
+			segment_id, segment_number = filename.stem.split('-')[-2:]
+			segment_number = int(segment_number)
+			segment_slug = LCAProjectFileModel.slug(segment_id, segment_number)
+			if i:
+				layout.addWidget(LCASeparator.horizontal())
+			if item_widget := QWidget():
+				item_layout = QHBoxLayout(item_widget)
+				item_layout.addWidget(LCALabel(
+					'<html><h3>' +
+					Settings().series_segment_from_id(self.__project.series_id, segment_id).name +
+					(' #{segment_number}' if segment_number else '') +
+					'</h3></html>'
+				), 5)
+				item_layout.addWidget(LCALabel(f'<html><b>\u26A0\ufe0f {num_mistakes}</b></html>'), 2)
+				if shotcut_btn := QPushButton(' ' + I18n(self).tabs.edit.shotcut):
+					shotcut_btn.setIcon(Assets.QIcon('external/icons/shotcut.png'))
+					shotcut_btn.clicked.connect(lambda *args, l_segment_slug = segment_slug : self.__evt_open_shotcut(l_segment_slug))
+				item_layout.addWidget(shotcut_btn)
+			layout.addWidget(item_widget)
+		layout.addStretch()
+		return widget
+
+	def __evt_open_shotcut (self, segment_slug: str) -> None:
+		logger.info(f'Opening segment {segment_slug} in Shotcut')
+
+	def __evt_do_render (self) -> None:
+		pass
 
 	def __build_render_tab (self) -> QWidget:
 		return QLabel('render')

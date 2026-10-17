@@ -680,6 +680,9 @@ LCARMainWindow:
       proceed: PREPARE SEGMENTS
     edit:
       name: Edit
+      segments: "Segments that need editing:"
+      shotcut: Edit in Shotcut
+      proceed: RENDER AND PUBLISH
     render:
       name: Render
 

@@ -185,7 +185,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 			return pathlib.Path(filename)
 		path, name = ([''] + filename.rsplit('/', 1))[-2:]
 		return pathlib.Path(Settings().tools.general.projects_location) / pathlib.Path(
-			f'{slug}/{path}/{slug}{ '-' if name[0] != '.' else '' }{name}'
+			f'{slug}/{path}/{slug if name else ''}{ '-' if name and name[0] != '.' else '' }{name}'
 		)
 
 	@LCAHybridMethod

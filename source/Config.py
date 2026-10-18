@@ -145,11 +145,16 @@ class _ConfigModel (pydantic.BaseModel, frozen = True):
 					COMMIT;
 				'''
 			scryfall: ScryfallModel = ScryfallModel()
-			
+
 			class ShotcutModel (pydantic.BaseModel, frozen = True):
-				pass
+				platform_intel: str = 'win64'
+				platform_arm: str = 'win_ARM'
+				dlinfo_uri: str = 'https://api.github.com/repos/mltframework/shotcut/releases/latest'
+				install_folder: str = 'install_shotcut'
+				shotcut_executable_location: str = 'install_shotcut/Shotcut/shotcut.exe'
+				melt_executable_location: str = 'install_shotcut/Shotcut/melt.exe'
 			shotcut: ShotcutModel = ShotcutModel()
-			
+
 			class VlcModel (pydantic.BaseModel, frozen = True):
 				pass
 			vlc: VlcModel = VlcModel()

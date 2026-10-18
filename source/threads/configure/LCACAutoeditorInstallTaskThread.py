@@ -38,6 +38,9 @@ class LCACAutoeditorInstallTaskThread (LCATaskThread):
 
 	def _run (self) -> None:
 		with contextlib.suppress(FileNotFoundError):
+			for root, dirs, files in os.walk(Config().integrations.local.autoeditor.install_folder):
+				for object in files + dirs:
+					os.chmod(os.path.join(root, object), stat.S_IWRITE)
 			os.chmod(Config().integrations.local.autoeditor.install_folder, stat.S_IWRITE)
 			shutil.rmtree(Config().integrations.local.autoeditor.install_folder)
 		pathlib.Path(Config().integrations.local.autoeditor.install_folder).mkdir(parents = True, exist_ok = True)

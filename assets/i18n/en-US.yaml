@@ -327,6 +327,20 @@ LCACMtgosdkWidget:
   remove_failed: MTGOSDK installation could not be removed and may be in an indeterminate state. Make sure no LCA tools or other programs are using the MTGOSDK installation folder, then try again. Restart your computer if issues persist.
   remove_notneeded: MTGOSDK was not installed, so nothing was removed. No changes made.
 
+LCACShotcutWidget:
+  info: As part of the video editing process, LCA will generate and modify Shotcut project files that you may need to manually edit. LCA also needs to use these Shotcut project files to create rendered video segments in an intermediate rendering step. LCA requires a Shotcut installation to perform these tasks.
+  install: Click the button below to install Shotcut within LCA. This may take some time; do not close this window until the install is complete.
+  installintel_btn: Create / Refresh Shotcut Installation (Intel / AMD)
+  installarm_btn: Create / Refresh Shotcut Installation (ARM)
+  remove_btn: Remove Shotcut Installation
+  confirm: Are you sure you wish to proceed with Shotcut installation?
+  install_success: Shotcut installed successfully.
+  install_failed: Shotcut install failed. Please check the application logs and try again.
+  remove_confirm: Are you sure you wish to remove your Shotcut installation?
+  remove_success: Shotcut installation removed successfully.
+  remove_failed: Shotcut installation could not be removed and may be in an indeterminate state. Make sure no LCA tools or other programs are using the Shotcut installation folder, then try again. Restart your computer if issues persist.
+  remove_notneeded: Shotcut was not installed, so nothing was removed. No changes made.
+
 LCACSettingsAffiliatesWidget:
   affiliate_placeholder: Affiliate Code
 

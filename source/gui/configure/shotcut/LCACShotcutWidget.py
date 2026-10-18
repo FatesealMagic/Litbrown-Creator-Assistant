@@ -20,24 +20,91 @@
   "
   """
 
+import os
+import pathlib
+import shutil
+import stat
+
 from loguru import logger
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Util import *
+from ....Assets import Assets
+from ....Config import Config
+from ....I18n import I18n
+from ....Util import Util
 
-from ...LCALabel import *
-from ...LCAWidget import *
+from ...LCALabel import LCALabel
+from ...LCAPopupMessage import LCAPopupMessage
+from ...LCAWidget import LCAWidget
+from ....threads.configure.LCACShotcutInstallTaskThread import LCACShotcutInstallTaskThread
 
 class LCACShotcutWidget (LCAWidget):
+
+	__install_thread: LCACShotcutInstallTaskThread
 
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(LCALabel('shotcut'))
-		layout.addStretch(1)
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).install))
+		layout.addStretch()
+		if installintel_btn := QPushButton(' ' + I18n(self).installintel_btn):
+			installintel_btn.setProperty('css_class', 'big')
+			installintel_btn.setIcon(Assets.QIcon('external/icons/shotcut.png'))
+			installintel_btn.clicked.connect(lambda : self.__evt_install_clicked(Config().integrations.local.shotcut.platform_intel))
+		layout.addWidget(installintel_btn)
+		if installarm_btn := QPushButton(' ' + I18n(self).installarm_btn):
+			installarm_btn.setProperty('css_class', 'big')
+			installarm_btn.setIcon(Assets.QIcon('external/icons/shotcut.png'))
+			installarm_btn.clicked.connect(lambda : self.__evt_install_clicked(Config().integrations.local.shotcut.platform_arm))
+		layout.addWidget(installarm_btn)
+		if remove_btn := QPushButton(I18n(self).remove_btn):
+			remove_btn.setStyleSheet('font-size: 13pt;')
+			remove_btn.clicked.connect(self.__evt_remove_clicked)
+		layout.addWidget(remove_btn)
+
+	def __evt_install_clicked (self, platform: str) -> None:
+		if LCAPopupMessage.warning(
+			I18n(self).confirm,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+		) != QMessageBox.StandardButton.Ok:
+			return
+		logger.info('Installing Shotcut')
+		self.setEnabled(False)
+		self.__install_thread = LCACShotcutInstallTaskThread(platform = platform)
+		self.__install_thread.complete.connect(self.__slot_install_complete)
+		self.__install_thread.start()
+
+	@Slot(bool)
+	def __slot_install_complete (self, success: bool) -> None:
+		self.setEnabled(True)
+		if success:
+			LCAPopupMessage.info(I18n(self).install_success)
+		else:
+			LCAPopupMessage.error(I18n(self).install_failed)
+
+	def __evt_remove_clicked (self) -> None:
+		if LCAPopupMessage.warning(
+			I18n(self).remove_confirm,
+			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+		) != QMessageBox.StandardButton.Ok:
+			return
+		logger.info('Removing Shotcut')
+		try:
+			path = pathlib.Path(Config().integrations.local.shotcut.install_folder).resolve()
+			if path.is_dir():
+				for root, dirs, files in os.walk(path):
+					for object in files + dirs:
+						os.chmod(os.path.join(root, object), stat.S_IWRITE)
+				os.chmod(path, stat.S_IWRITE)
+				shutil.rmtree(str(path))
+				LCAPopupMessage.info(I18n(self).remove_success)
+			else:
+				LCAPopupMessage.info(I18n(self).remove_notneeded)
+		except Exception as e:
+			logger.exception(e)
+			LCAPopupMessage.error(I18n(self).remove_failed)
 

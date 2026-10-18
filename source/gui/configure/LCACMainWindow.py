@@ -46,7 +46,7 @@ class LCACMainWindow (LCAMainWindow):
 	
 	__TAB_NAMES = (
 		'youtube', 'twitch', 'patreon', 'discord', 'bluesky', 'twitter', 'reddit', 'moxfield',
-		'mtgosdk', 'obs', 'shotcut', 'autoeditor', 'foobar',
+		'mtgosdk', 'foobar', 'obs', 'autoeditor', 'shotcut',
 	)
 	
 	def _initialize_window (self) -> None:

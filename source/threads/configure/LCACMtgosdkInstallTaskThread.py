@@ -40,6 +40,9 @@ class LCACMtgosdkInstallTaskThread (LCATaskThread):
 		self.__run_command('winget source update')
 		self.__run_command('winget install Microsoft.Dotnet.SDK.10', valid_return_codes = (2316632107,))
 		with contextlib.suppress(FileNotFoundError):
+			for root, dirs, files in os.walk(Config().integrations.local.mtgosdk.install_folder):
+				for object in files + dirs:
+					os.chmod(os.path.join(root, object), stat.S_IWRITE)
 			os.chmod(Config().integrations.local.mtgosdk.install_folder, stat.S_IWRITE)
 			shutil.rmtree(Config().integrations.local.mtgosdk.install_folder)
 		pathlib.Path(Config().integrations.local.mtgosdk.install_folder).mkdir(parents = True, exist_ok = True)

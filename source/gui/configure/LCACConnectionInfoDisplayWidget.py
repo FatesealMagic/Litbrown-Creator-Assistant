@@ -27,10 +27,11 @@ from PySide6.QtGui import *
 from PySide6.QtNetwork import *
 from PySide6.QtWidgets import *
 
-from ...Settings import *
+from ...I18n import I18n
+from ...Settings import Settings
 
-from ..LCALabel import *
-from ..LCAWidget import *
+from ..LCALabel import LCALabel
+from ..LCAWidget import LCAWidget
 
 class LCACConnectionInfoDisplayWidget (LCAWidget):
 	

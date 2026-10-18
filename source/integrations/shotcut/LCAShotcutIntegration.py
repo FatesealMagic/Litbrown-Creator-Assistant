@@ -34,8 +34,7 @@ class LCAShotcutIntegration (LCAIntegration):
 
 	@classmethod
 	def is_initialized (cls) -> bool:
-		return True
-		#return pathlib.Path(Config().integrations.local.autoeditor.executable_location).is_file()
+		return pathlib.Path(Config().integrations.local.shotcut.shotcut_executable_location).is_file()
 
 	def _connect (self) -> None:
 		pass

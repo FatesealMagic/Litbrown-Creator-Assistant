@@ -91,6 +91,9 @@ class LCACAutoeditorWidget (LCAWidget):
 		try:
 			path = pathlib.Path(Config().integrations.local.autoeditor.install_folder).resolve()
 			if path.is_dir():
+				for root, dirs, files in os.walk(path):
+					for object in files + dirs:
+						os.chmod(os.path.join(root, object), stat.S_IWRITE)
 				os.chmod(path, stat.S_IWRITE)
 				shutil.rmtree(str(path))
 				LCAPopupMessage.info(I18n(self).remove_success)

@@ -224,10 +224,16 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	def path_shotcut (obj,
 		slug: str | None = None,
 		/, *,
-		segment_id: str,
+		segment_id: str | None = None,
 		segment_number: str | int | None = None,
+		segment_slug: str | None = None,
 	) -> pathlib.Path:
-		filename = f'shotcut/{segment_id}-{ '0000' if segment_number is None else f'{int(segment_number):04}' }.mlt'
+		if segment_slug:
+			segment_id, segment_number = (obj if isinstance(obj, type) else type(obj)).split_slug(segment_slug)
+		if not segment_id:
+			raise ValueError('Need either segment_id or segment_slug parameter')
+		segment_number = segment_number or 0
+		filename = f'shotcut/{segment_id}-{int(segment_number):04}.mlt'
 		if isinstance(obj, type) and (cls := obj):
 			return cls.path(slug, filename)
 		elif self := obj:
@@ -238,10 +244,22 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		slug: str | None = None,
 		/,
 	) -> list[tuple[str, int]]:
-		ret = []
-		for path in obj.path_footage_all(slug):
+		if isinstance(obj, type) and (cls := obj):
+			paths = cls.path_footage_all(slug)
+			series_id = cls.split_slug(slug)[0]
+		elif self := obj:
+			slug = self.slug()
+			paths = self.path_footage_all()
+			series_id = self.split_slug()[0]
+		all = []
+		for path in paths:
 			split = path.stem.split('-')[-2:]
-			ret.append((split[0], int(split[1])))
+			all.append((split[0], int(split[1])))
+		ret = []
+		for segment in Settings().series_from_id(series_id).segments:
+			for id, num in all:
+				if segment.id == id:
+					ret.append((id, num))
 		return ret
 
 	@LCAHybridMethod
@@ -250,6 +268,23 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		/,
 	) -> list[str]:
 		return [f'{segment_id}-{segment_number:04}' for segment_id, segment_number in obj.all_segment_ids(slug)]
+
+	@LCAHybridMethod
+	def path_rendered (obj,
+		slug: str | None = None,
+		/, *,
+		segment_id: str | None = None,
+		segment_number: str | int | None = None,
+		segment_slug: str | None = None,
+	) -> pathlib.Path:
+		if segment_slug:
+			segment_id, segment_number = (obj if isinstance(obj, type) else type(obj)).split_slug(segment_slug)
+		segment_number = segment_number or 0
+		filename = f'rendered/{segment_id}-{int(segment_number):04}.mp4' if segment_id else 'rendered/.mp4'
+		if isinstance(obj, type) and (cls := obj):
+			return cls.path(slug, filename)
+		elif self := obj:
+			return self.path(filename)
 
 	@LCAHybridMethod
 	def path_state (obj,

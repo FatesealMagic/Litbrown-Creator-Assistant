@@ -20,11 +20,13 @@
   "
   """
 
-import collections
+import collections.abc
 import pathlib
 import subprocess
 
 from loguru import logger
+
+from PySide6.QtCore import *
 
 from ...Settings import *
 
@@ -50,11 +52,11 @@ class LCAAutoeditorIntegration (LCAIntegration):
 		segment_slug: str,
 		/, *,
 		margin: float,
-	) -> int:
+	) -> None:
 		if not self.is_initialized():
 			raise LCAIntegrationNotInitializedError
 		segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
-		if code := subprocess.run([
+		ae = subprocess.run([
 			str(pathlib.Path(Config().integrations.local.autoeditor.executable_location).resolve()),
 			str(project.path_footage(segment_id = segment_id, segment_number = segment_number).resolve()),
 			'--output',
@@ -66,6 +68,7 @@ class LCAAutoeditorIntegration (LCAIntegration):
 			'--progress',
 			'none',
 			'--no-cache',
-		]).returncode:
+		])
+		if code := ae.returncode:
 			raise LCAIntegrationUnexpectedError(f'Auto-Editor processing footage for segment {segment_slug} in project {project.slug()} returned status code {code}')
 

@@ -83,6 +83,10 @@ class LCATaskTrackerWidget (LCAWidget):
 		def _disconnect (self) -> None:
 			pass
 
+	@property
+	def status (self) -> Status:
+		return self.__status
+
 	def __init__ (self,
 		label: str,
 		thread_factory: Callable[[], [LCATaskThread]],
@@ -114,7 +118,7 @@ class LCATaskTrackerWidget (LCAWidget):
 				font.setPointSize(font.pointSize() * 1.4)
 				font.setWeight(QFont.Weight.Bold)
 				label.setFont(font)
-			status_layout.addWidget(label, alignment = Qt.AlignCenter)
+			status_layout.addWidget(label)
 			if progressbar := QProgressBar():
 				self.__progressbar = progressbar
 				self.__progressbar.setTextVisible(True)

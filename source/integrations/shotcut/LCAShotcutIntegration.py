@@ -68,7 +68,7 @@ class LCAShotcutIntegration (LCAIntegration):
 		h = int(total_seconds / 3600)
 		m = int((total_seconds / 60) % 60)
 		s = float(total_seconds % 60)
-		return f'{sign}{h:02}:{m:02}:{s:.03f}'
+		return f'{sign}{h:02}:{m:02}:{s:06.3f}'
 
 	@staticmethod
 	def get_framerate (

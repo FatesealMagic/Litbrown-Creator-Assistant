@@ -86,6 +86,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__setup_foobar_thread()
 		self.__setup_keyboard_hotkey_signals()
 		self.__setup_keyboard_hotkeys()
+		self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
 		self.setWindowIcon(Assets.QIcon('icons/multicast.ico'))
 		self.setWindowTitle(f'{I18n(self).title} | {Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}')
 		self.__set_docking_behaviors()
@@ -260,6 +261,7 @@ class LCAMMainWindow (LCAMainWindow):
 					if i == 0:
 						i = -1
 						break
+					i += 1
 				if i >= 0:
 					self.__segment_cbo.addItem(segment.name + (f' #{i}' if i else ''), (segment.id, i))
 

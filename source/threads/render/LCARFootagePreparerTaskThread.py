@@ -45,13 +45,18 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 		self.__mlt = self.__load_shotcut_file()
 		self.__framerate = LCAShotcutIntegration.get_framerate(self.__mlt)
 		self.__extract_muted_segments()
+		self.__update_project_length()
 		self.__apply_mistake_markers()
 		self.__save_shotcut_file()
 
 	def __run_autoeditor (self) -> None:
 		with LCAAutoeditorIntegration() as autoeditor:
 			logger.info(f'Preparing footage for {self.__project.slug()} {self.__segment_slug}')
-			autoeditor.process_slug(self.__project, self.__segment_slug, margin = 0.23) # TODO margin as setting
+			autoeditor.process_slug(
+				self.__project,
+				self.__segment_slug,
+				margin = 0.23, # TODO margin as setting
+			)
 
 	def __load_shotcut_file (self) -> xml.etree.ElementTree:
 		return xml.etree.ElementTree.parse(self.__project.path_shotcut(
@@ -69,6 +74,7 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 			start = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['in'],  offset = self.__start_ts)
 			end   = LCAShotcutIntegration.mltts_to_lcats(entry.attrib['out'], offset = self.__start_ts)
 			for mute_start, mute_end in self.__project.events.mutes:
+				mute_end = mute_end or 9999999999999999
 				if mute_start < start < end < mute_end:
 					logger.debug(f'{self.__segment_slug}: Deleting entry with producer "{entry.get('producer')}" ({start}, {end}) due to mute ({mute_start}, {mute_end})')
 					to_delete.append(entry)
@@ -93,6 +99,18 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 			e.set('in',  LCAShotcutIntegration.lcats_to_mltts(mute_end,   offset = self.__start_ts, framerate = self.__framerate))
 		for e, mute_start in to_update_end:
 			e.set('out', LCAShotcutIntegration.lcats_to_mltts(mute_start, offset = self.__start_ts, framerate = self.__framerate))
+
+	def __update_project_length (self) -> None:
+		length = 0
+		for entry in self.__mlt.getroot().findall('./playlist[@id="playlist0"]/entry'):
+			length += \
+				LCAShotcutIntegration.mltts_to_lcats(entry.attrib['out'], offset = 0) - \
+				LCAShotcutIntegration.mltts_to_lcats(entry.attrib['in'],  offset = 0)
+		length_mltts = LCAShotcutIntegration.lcats_to_mltts(length, offset = 0, framerate = self.__framerate)
+		root = self.__mlt.getroot()
+		root.find('./producer[@id="bg"]/property[@name="length"]').text = length_mltts
+		root.find('./playlist[@id="background"]/entry[@producer="bg"]').set('out', length_mltts)
+		root.find('./tractor[@id="tractor0"]').set('out', length_mltts)
 
 	def __apply_mistake_markers (self) -> None:
 		self.__mlt.getroot().find('./tractor[@id="tractor0"]').append(

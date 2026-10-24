@@ -689,14 +689,18 @@ LCARMainWindow:
   tabs:
     prepare:
       name: Prepare
-      process_state: Compile States
       refresh: Refresh
-      proceed: PREPARE SEGMENTS
-    edit:
-      name: Edit
-      segments: "Segments that need editing:"
-      shotcut: Edit in Shotcut
-      proceed: RENDER AND PUBLISH
+      start_autoeditor: PREPARE SEGMENTS
+      start_render_no: RENDER WHEN COMPLETE?
+      start_render_yes: RENDERING WHEN COMPLETE
+      start_render: START RENDER
     render:
       name: Render
+    publish:
+      name: Publish
+
+LCARSegmentPreparerWidget:
+  autoeditor_task: Auto-Edit
+  open_shotcut: Edit
+  melt_task: Render
 

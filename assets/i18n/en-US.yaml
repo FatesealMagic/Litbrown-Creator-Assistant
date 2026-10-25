@@ -449,14 +449,26 @@ LCACSettingsOrganizationSeriesWidget:
   title_default: New series
 
 LCACSettingsOrganizationSeriesSegmentWidget:
-  name: Name
-  id: Id (immutable)
-  repeatable:
-    label: Repeatable?
-    option_yes: "Yes"
-    option_no: "No"
-  obs_scene_name: OBS Scene Name
-  chapter: '<html>Chapter Name:<br/><i>Used to name this segment in video timestamps</i></html>'
+  tabs:
+    general:
+      title: General
+      name: Name
+      id: Id (immutable)
+      repeatable:
+        label: Repeatable?
+        option_yes: "Yes"
+        option_no: "No"
+    obs:
+      title: OBS
+      scene_name: "Name of Scene Template:"
+      adread_scene_names: "Ad-read Scene Names:"
+      adread_selection_behavior:
+        title: "Ad-read Selection Behavior:"
+        in_order: In Order
+        random: Random
+    video:
+      title: Video
+      chapter: '<html>Chapter Name:<br/><i>Used to name this segment in video timestamps</i></html>'
 
 LCACSettingsOrganizationSeriesVariantWidget:
   mtgformat: Default MTG Format

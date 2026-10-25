@@ -71,7 +71,6 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 			streamduration_spin.setMaximum(60 * 48)
 			streamduration_spin.setSingleStep(15)
 			self._mapper.addMapping(streamduration_spin, self.model.get_column_index('stream_duration'))
-			#streamduration_spin.valueChanged.connect(lambda val : self._mapper.submit())
 		layout.addRow(I18n(self).tabs.general.stream_duration, streamduration_spin)
 		return widget
 
@@ -94,20 +93,13 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 	def __build_videoinfo_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QFormLayout(widget)
-		#layout.setSpacing(layout.spacing() * 2)
-		'''if format := LCAToggleButtonGroupWidget():
-			format.addButton(I18n(self).tabs.videoinfo.longform, 'long')
-			format.addButton(I18n(self).tabs.videoinfo.shortform, 'short')
-			self._mapper.addMapping(format, self.model.get_column_index('video_format'))
-			format.signal_changed.connect(self._mapper.submit)
-		layout.addRow(I18n(self).tabs.videoinfo.format, format)'''
 		if enabledoutputs_widget := QWidget():
 			enabledoutputs_layout = QHBoxLayout(enabledoutputs_widget)
 			enabledoutputs_layout.setContentsMargins(0, 0, 0, 0)
 			enabledoutputs_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.supported_outputs + ' '))
 			self.__enabledoutputs_checkboxes = {}
 			for i, output in enumerate(('stream', 'video', 'clip')):
-				output_checkbox = QCheckBox(I18n(self).tabs.videoinfo[f'{output}info_tab_title'])
+				output_checkbox = QCheckBox(I18n(self).tabs.videoinfo[f'{output}info_tab_title'] + ' ')
 				self.__enabledoutputs_checkboxes[output] = output_checkbox
 				output_checkbox.checkStateChanged.connect(
 					lambda state, i=i: self.__videostream_tabwidget.widget(i).setEnabled(state == Qt.CheckState.Checked)

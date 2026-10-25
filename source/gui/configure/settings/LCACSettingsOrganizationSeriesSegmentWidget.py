@@ -43,27 +43,62 @@ from ....common.LCATextTemplate import *
 class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget):
 
 	def _setup_layout (self) -> None:
-		layout = QFormLayout(self)
+		layout = QHBoxLayout(self)
+		tab_widget = QTabWidget()
+		for tab in ('general', 'obs', 'video'):
+			tab_widget.addTab(
+				getattr(self, f'__build_{tab}_tab')(),
+				I18n(self).tabs[tab].title,
+			)
+		layout.addWidget(tab_widget)
+		self._finalize_mapper()
+
+	def __build_general_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QFormLayout(widget)
 		layout.setSpacing(layout.spacing() * 2)
 		if name_input := QLineEdit():
 			self._mapper.addMapping(name_input, self.model.get_column_index('name'))
-		layout.addRow(LCALabel(I18n(self).name), name_input)
+		layout.addRow(LCALabel(I18n(self).tabs.general.name), name_input)
 		if id_input := QLineEdit():
 			id_input.setReadOnly(True)
 			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
-		layout.addRow(LCALabel(I18n(self).id), id_input)
+		layout.addRow(LCALabel(I18n(self).tabs.general.id), id_input)
 		if repeatable_input := LCAToggleButtonGroupWidget(rows = 1):
-			repeatable_input.addButton(I18n(self).repeatable.option_yes, True)
-			repeatable_input.addButton(I18n(self).repeatable.option_no,  False)
+			repeatable_input.addButton(I18n(self).tabs.general.repeatable.option_yes, True)
+			repeatable_input.addButton(I18n(self).tabs.general.repeatable.option_no,  False)
 			self._mapper.addMapping(repeatable_input, self.model.get_column_index('repeatable'))
 			repeatable_input.set_value(self.model.data((self._model_row, 'repeatable')))
 			repeatable_input.changed.connect(self._mapper.submit)
-		layout.addRow(LCALabel(I18n(self).repeatable.label), repeatable_input)
+		layout.addRow(LCALabel(I18n(self).tabs.general.repeatable.label), repeatable_input)
+		return widget
+
+	def __build_obs_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		layout.addWidget(LCALabel(I18n(self).tabs.obs.scene_name))
 		if obsname_input := QLineEdit():
 			self._mapper.addMapping(obsname_input, self.model.get_column_index('obs_scene_name'))
-		layout.addRow(LCALabel(I18n(self).obs_scene_name), obsname_input)
-		layout.addRow(LCASeparator.horizontal())
-		layout.addRow(LCALabel(I18n(self).chapter))
+		layout.addWidget(obsname_input)
+		layout.addWidget(LCASeparator.horizontal())
+		layout.addWidget(LCALabel(I18n(self).tabs.obs.adread_scene_names))
+		# TODO write and add the selection widget
+		layout.addWidget(QListWidget())
+		layout.addSpacing(layout.spacing())
+		layout.addWidget(LCALabel(I18n(self).tabs.obs.adread_selection_behavior.title))
+		if selection_behavior := LCAToggleButtonGroupWidget(rows = 1):
+			selection_behavior.addButton(I18n(self).tabs.obs.adread_selection_behavior.in_order, 'in_order')
+			selection_behavior.addButton(I18n(self).tabs.obs.adread_selection_behavior.random,   'random')
+			self._mapper.addMapping(selection_behavior, self.model.get_column_index('adread_selection_behavior'))
+			selection_behavior.set_value(self.model.data((self._model_row, 'adread_selection_behavior')))
+			selection_behavior.changed.connect(self._mapper.submit)
+		layout.addWidget(selection_behavior)
+		return widget
+
+	def __build_video_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QFormLayout(widget)
+		layout.addRow(LCALabel(I18n(self).tabs.video.chapter))
 		if chapter_widget := QWidget():
 			chapter_layout = QHBoxLayout(chapter_widget)
 			chapter_layout.setContentsMargins(0, 0, 0, 0)
@@ -76,5 +111,5 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 				Qt.Orientation.Horizontal,
 			) )
 		layout.addRow(chapter_widget)
-		self._finalize_mapper()
+		return widget
 

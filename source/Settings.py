@@ -134,8 +134,10 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		class SegmentModel (pydantic.BaseModel, validate_assignment = True):
 			id: str
 			name: str
-			obs_scene_name: str = ''
 			repeatable: bool = False
+			obs_scene_name: str = ''
+			adread_scene_names: list[str] = []
+			adread_selection_behavior: typing.Literal['in_order', 'random'] = 'in_order'
 			chapter_name: str = '${segment_name}'
 			# TODO implement ad reads, link here, account for pluralability
 		segments: list[SegmentModel] = []

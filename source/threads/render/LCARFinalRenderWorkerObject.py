@@ -125,6 +125,8 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 						item_id = scene_item['sceneItemId'],
 						dest_scene_name = copy_scene_name,
 					)
+			self.__obs.req_client.set_current_program_scene(copy_scene_name)
+			time.sleep(1)
 		self.task_success.emit('create_scenes_from_templates')
 
 	def __deinitialize_state (self) -> None:

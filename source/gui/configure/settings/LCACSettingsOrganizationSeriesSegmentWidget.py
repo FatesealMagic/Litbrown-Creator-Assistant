@@ -26,19 +26,20 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Assets import *
-from ....Settings import *
-from ....Util import *
+from ....Config import Config
+from ....I18n import I18n
+from ....Assets import Assets
+from ....Settings import Settings
+from ....Util import Util
 
-from ..LCACFormatHelperWidget import *
-from ...LCAFilePickerWidget import *
-from ...LCALabel import *
-from ...LCASeparator import *
-from ...LCATabbedDataViewPanelWidget import *
-from ...LCAToggleButtonGroupWidget import *
-from ....common.LCATextTemplate import *
+from ..LCACFormatHelperWidget import LCACFormatHelperWidget
+from ...LCAFilePickerWidget import LCAFilePickerWidget
+from ...LCALabel import LCALabel
+from ...LCAListCreatorWidget import LCAListCreatorWidget
+from ...LCASeparator import LCASeparator
+from ...LCATabbedDataViewPanelWidget import LCATabbedDataViewPanelWidget
+from ...LCAToggleButtonGroupWidget import LCAToggleButtonGroupWidget
+from ....common.LCATextTemplate import LCATextTemplate
 
 class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget):
 
@@ -80,10 +81,18 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 		if obsname_input := QLineEdit():
 			self._mapper.addMapping(obsname_input, self.model.get_column_index('obs_scene_name'))
 		layout.addWidget(obsname_input)
+		layout.addWidget(LCALabel(I18n(self).tabs.obs.recording_name))
+		if recordingname_input := QLineEdit():
+			self._mapper.addMapping(recordingname_input, self.model.get_column_index('recording_source_name'))
+		layout.addWidget(recordingname_input)
 		layout.addWidget(LCASeparator.horizontal())
 		layout.addWidget(LCALabel(I18n(self).tabs.obs.adread_scene_names))
 		# TODO write and add the selection widget
-		layout.addWidget(QListWidget())
+		if adread_scenes := LCAListCreatorWidget():
+			self._mapper.addMapping(adread_scenes, self.model.get_column_index('adread_scene_names'))
+			adread_scenes.set_value(self.model.data((self._model_row, 'adread_scene_names')))
+			adread_scenes.changed.connect(self._mapper.submit)
+		layout.addWidget(adread_scenes)
 		layout.addSpacing(layout.spacing())
 		layout.addWidget(LCALabel(I18n(self).tabs.obs.adread_selection_behavior.title))
 		if selection_behavior := LCAToggleButtonGroupWidget(rows = 1):

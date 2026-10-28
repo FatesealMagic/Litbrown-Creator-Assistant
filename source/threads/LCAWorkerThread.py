@@ -20,6 +20,8 @@
   "
   """
 
+from loguru import logger
+
 from PySide6.QtCore import *
 
 from .LCAWorkerObject import *
@@ -34,6 +36,7 @@ class LCAWorkerThread (QThread):
 		worker.moveToThread(self)
 		worker.construct.connect(worker.slot_construct)
 		worker.destruct.connect(worker.slot_destruct)
+		worker.quit.connect(self.__slot_quit, Qt.ConnectionType.DirectConnection)
 
 	def start (self) -> None:
 		super().start()
@@ -41,5 +44,8 @@ class LCAWorkerThread (QThread):
 
 	def quit (self) -> None:
 		self.worker.destruct.emit()
+
+	@Slot()
+	def __slot_quit (self) -> None:
 		super().quit()
 

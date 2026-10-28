@@ -45,6 +45,8 @@ from ..LCASideTabWidget import LCASideTabWidget
 from ..LCATaskTrackerWidget import LCATaskTrackerWidget
 from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...threads.LCAWorkerThread import LCAWorkerThread
+from ...threads.render.LCARFinalRenderWorkerObject import LCARFinalRenderWorkerObject
 from ...threads.render.LCARFootagePreparerTaskThread import LCARFootagePreparerTaskThread
 
 class LCARMainWindow (LCAMainWindow):
@@ -53,8 +55,11 @@ class LCARMainWindow (LCAMainWindow):
 
 	__project: LCAProjectFileModel
 	__prepare_scroll_area: QScrollArea
+	__start_render_btn: QPushButton
 	__preparer_widgets: list[LCARSegmentPreparerWidget]
-	__edit_scroll_area: QScrollArea
+	__render_scroll_area: QScrollArea
+	__start_publish_btn: QPushButton
+	__render_thread: LCAWorkerThread[LCARFinalRenderWorkerObject]
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -136,14 +141,10 @@ class LCARMainWindow (LCAMainWindow):
 
 	@Slot(bool)
 	def __evt_preparer_complete (self, val: bool, preparer: LCARSegmentPreparerWidget) -> None:
-		logger.debug(self.__preparer_widgets)
-		logger.debug(val)
-		logger.debug(preparer in self.__preparer_widgets)
 		if val and preparer in self.__preparer_widgets:
 			self.__preparer_widgets.remove(preparer)
 		if not val and preparer not in self.__preparer_widgets:
 			self.__preparer_widgets.append(preparer)
-		logger.debug(self.__preparer_widgets)
 		if not self.__preparer_widgets:
 			if self.__start_render_btn.isChecked():
 				self.__evt_start_render()
@@ -161,9 +162,63 @@ class LCARMainWindow (LCAMainWindow):
 
 	def __evt_start_render (self) -> None:
 		self.centralWidget().setCurrentIndex(1)
+		self.__render_thread = LCAWorkerThread(LCARFinalRenderWorkerObject(self.__project))
+		self.__render_thread.worker.task_started.connect(self.__evt_render_task_started)
+		self.__render_thread.worker.task_success.connect(self.__evt_render_task_success)
+		self.__render_thread.worker.task_failure.connect(self.__evt_render_task_failure)
+		self.__render_thread.worker.complete.connect(self.__evt_render_complete)
+		self.__render_thread.start()
+		logger.debug('after render thread start')
 
 	def __build_render_tab (self) -> QWidget:
-		return QLabel('render')
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		if scroll_area := QScrollArea():
+			self.__render_scroll_area = scroll_area
+			scroll_area.setWidgetResizable(True)
+			scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+			scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+			if scroll_widget := QWidget():
+				scroll_layout = QVBoxLayout(scroll_widget)
+				scroll_layout.addStretch()
+			scroll_area.setWidget(scroll_widget)
+		layout.addWidget(scroll_area)
+		if start_publish_btn := QPushButton(' ' + I18n(self).tabs.render.start_publish_yes):
+			self.__start_publish_btn = start_publish_btn
+			start_publish_btn.setCheckable(True)
+			start_publish_btn.setChecked(True)
+			start_publish_btn.setProperty('css_class', 'big')
+			start_publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
+			start_publish_btn.clicked.connect(self.__evt_start_publish_clicked)
+		layout.addWidget(start_publish_btn)
+		return widget
+
+	def __evt_start_publish_clicked (self) -> None:
+		if self.__start_publish_btn.isCheckable():
+			self.__start_publish_btn.setText(
+				' ' + getattr(I18n(self).tabs.render, f'start_publish_{'yes' if self.__start_publish_btn.isChecked() else 'no'}')
+			)
+		else:
+			self.__evt_start_publish()
+
+	def __evt_render_task_started (self, task: str) -> None:
+		logger.info(f'Task started: {task}')
+
+	def __evt_render_task_success (self, task: str) -> None:
+		logger.info(f'Task success: {task}')
+
+	def __evt_render_task_failure (self, task: str) -> None:
+		logger.info(f'Task failure: {task}')
+
+	def __evt_render_complete (self) -> None:
+		if self.__start_publish_btn.isChecked():
+			self.__evt_start_publish()
+		else:
+			self.__start_publish_btn.setCheckable(False)
+			self.__start_publish_btn.setText(' ' + I18n(self).tabs.prepare.start_publish)
+
+	def __evt_start_publish (self) -> None:
+		self.__render_thread.quit()
 
 	def __build_publish_tab (self) -> QWidget:
 		return QLabel('publish')

@@ -76,4 +76,5 @@ class LCAProjectStateWebsocketWorkerObject (LCAWorkerObject):
 	def slot_destruct (self) -> None:
 		self.__wss.close()
 		self.__wss = None
+		self.quit.emit()
 

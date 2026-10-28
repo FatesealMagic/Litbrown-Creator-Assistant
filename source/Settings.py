@@ -136,6 +136,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			name: str
 			repeatable: bool = False
 			obs_scene_name: str = ''
+			recording_source_name: str = ''
 			adread_scene_names: list[str] = []
 			adread_selection_behavior: typing.Literal['in_order', 'random'] = 'in_order'
 			chapter_name: str = '${segment_name}'
@@ -157,6 +158,8 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		moxfield: MoxfieldIntegrationModel = MoxfieldIntegrationModel()
 
 		class ObsIntegrationModel (pydantic.BaseModel, validate_assignment = True):
+			ass_event_text: str = 'LCAEVT_ADREAD_FINISHED'
+
 			class ObsInstanceIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 				host: str = '127.0.0.1'
 				port: int = 4455
@@ -165,6 +168,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			stream: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
 			video: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
 			clip: ObsInstanceIntegrationModel = ObsInstanceIntegrationModel()
+
 		obs: ObsIntegrationModel = ObsIntegrationModel()
 
 		class RemoteIntegrationModel (pydantic.BaseModel, validate_assignment = True):

@@ -461,6 +461,7 @@ LCACSettingsOrganizationSeriesSegmentWidget:
     obs:
       title: OBS
       scene_name: "Name of Scene Template:"
+      recording_name: "Name of Raw Footage Source:"
       adread_scene_names: "Ad-read Scene Names:"
       adread_selection_behavior:
         title: "Ad-read Selection Behavior:"
@@ -488,6 +489,8 @@ LCACObsWidget:
     stream: Streaming
     video: Video Rendering
     clip: Clip Rendering
+  ass_info: <html>LCA additionally requires an installation of Advanced Scene Switcher on all OBS installs that it uses to render videos with ad-reads. LCA will automatically play ad-reads as specified by the current segment's OBS settings, but in order for LCA to know when the ad-read has ended and the next segment must begin, it needs to receive a <a href="https://github.com/WarmUpTill/SceneSwitcher/wiki/Websockets">Websocket Scene Switcher message of type Event</a> with the exact text shown below.
+  ass_placeholder: Scene Switcher Event message text
 
 LCACPatreonWidget:
   info: LCA connects to your Patreon account to view your Patreon members and schedule livestreams. Due to limitations of Patreon's API, LCA cannot create posts for you.
@@ -708,6 +711,11 @@ LCARMainWindow:
       start_render: START RENDER
     render:
       name: Render
+      start_publish_no: PUBLISH WHEN COMPLETE?
+      start_publish_yes: PUBLISHING WHEN COMPLETE
+      start_publish: START PUBLISH
+      tasks:
+        wait_for_state_initialization: Waiting on other Render / Multicast instances to finish...
     publish:
       name: Publish
 

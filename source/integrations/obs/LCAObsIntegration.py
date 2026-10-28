@@ -43,6 +43,12 @@ class LCAObsIntegration (LCAIntegration):
 		self.__host = integration_model.host
 		self.__port = integration_model.port
 		self.__pswd = integration_model.pswd
+		super().__init__()
+
+	@classmethod
+	def is_initialized (cls) -> bool:
+		# Impossible to tell if OBS is installed without attempting to connect
+		return True
 
 	def _connect (self) -> None:
 		self.connect()
@@ -59,7 +65,4 @@ class LCAObsIntegration (LCAIntegration):
 		self.evt_client.disconnect()
 		self.req_client = None
 		self.evt_client = None
-
-	def is_initialized (self) -> bool:
-		return bool(self.req_client) and bool(self.evt_client)
 

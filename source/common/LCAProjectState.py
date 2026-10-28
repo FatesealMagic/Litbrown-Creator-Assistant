@@ -77,7 +77,9 @@ class LCAProjectState (metaclass = LCASingleton):
 		self.__signals.updated_dict.connect(self.__thread.worker.slot_project_state_updated)
 		self.__thread.start()
 		if ret := loop.exec():
-			raise RuntimeError(f'Project state server already running {ret}')
+			self.__thread.quit()
+			self.__thread.wait()
+			raise RuntimeError('Project state server already running')
 
 	@property
 	def updated_dict (self) -> Signal:
@@ -93,8 +95,10 @@ class LCAProjectState (metaclass = LCASingleton):
 
 	def shutdown (self) -> None:
 		self.frozen = True
+		logger.debug('Shutting down state server thread')
 		self.__thread.quit()
 		self.__thread.wait()
+		logger.debug('State server thread is shut down')
 
 	def __enter__ (self) -> None:
 		self.__mutex.acquire()

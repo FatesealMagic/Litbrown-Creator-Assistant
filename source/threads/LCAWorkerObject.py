@@ -26,6 +26,7 @@ class LCAWorkerObject (QObject):
 	
 	construct = Signal()
 	destruct = Signal()
+	quit = Signal()
 
 	@Slot()
 	def slot_construct (self) -> None:
@@ -33,5 +34,5 @@ class LCAWorkerObject (QObject):
 
 	@Slot()
 	def slot_destruct (self) -> None:
-		raise NotImplementedError
+		self.quit.emit()
 

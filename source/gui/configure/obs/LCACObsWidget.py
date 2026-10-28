@@ -44,7 +44,6 @@ class LCACObsWidget (LCAWidget):
 			grid_layout.addWidget(QLabel(I18n(self).connect.host), 0, 1, alignment = Qt.AlignHCenter)
 			grid_layout.addWidget(QLabel(I18n(self).connect.port), 0, 2, alignment = Qt.AlignHCenter)
 			grid_layout.addWidget(QLabel(I18n(self).connect.pswd), 0, 3, alignment = Qt.AlignHCenter)
-			grid_layout.addWidget(LCASeparator.horizontal(),           1, 0, 1, 4)
 			grid_layout.addWidget(QLabel(I18n(self).instances.record + ' '), 2, 0, alignment = Qt.AlignRight)
 			grid_layout.addWidget(QLabel(I18n(self).instances.stream + ' '), 3, 0, alignment = Qt.AlignRight) # TODO do i need this?
 			grid_layout.addWidget(QLabel(I18n(self).instances.video  + ' '), 4, 0, alignment = Qt.AlignRight)
@@ -55,5 +54,11 @@ class LCACObsWidget (LCAWidget):
 					Settings().bind(line_edit, f'integrations.obs.{instance}.{property}')
 					grid_layout.addWidget( line_edit, i + 2, p + 1 )
 		layout.addWidget(grid_widget)
+		layout.addWidget(LCASeparator.horizontal())
+		layout.addWidget(LCALabel(I18n(self).ass_info))
+		if ass_event_text := QLineEdit():
+			ass_event_text.setPlaceholderText(I18n(self).ass_placeholder)
+			Settings().bind(ass_event_text, 'integrations.obs.ass_event_text')
+		layout.addWidget(ass_event_text)
 		layout.addStretch(1)
 

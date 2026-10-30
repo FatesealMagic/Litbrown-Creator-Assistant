@@ -103,8 +103,6 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	@tracked_task
 	def __organize_project_state_data (self) -> None:
 		for segment_slug in self.__project.all_segment_slugs():
-			if segment_slug != 'match-0001':
-				continue
 			logger.debug(f'Organizing project state data for segment {segment_slug}')
 			elapsed_us_to_lcats = self.__build_elapsed_us_to_lcats(segment_slug)
 			lcats_to_state = self.__build_lcats_to_state(
@@ -112,9 +110,6 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				list(elapsed_us_to_lcats.values())[-1],
 			)
 			self.__state_data[segment_slug] = self.__build_elapsed_us_to_state(elapsed_us_to_lcats, lcats_to_state)
-			logger.warning(elapsed_us_to_lcats)
-			logger.warning(lcats_to_state.keys())
-			logger.warning(self.__state_data[segment_slug].keys())
 
 	def __build_elapsed_us_to_lcats (self,
 		segment_slug: str,

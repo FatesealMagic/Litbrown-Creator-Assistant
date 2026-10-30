@@ -23,6 +23,8 @@
 import collections
 import functools
 import json
+import random
+import threading
 import time
 import typing
 import xml
@@ -39,6 +41,7 @@ from ..LCAWorkerObject import LCAWorkerObject
 from ...common.LCAProjectState import LCAProjectState
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel
+from ...integrations.foobar.LCAFoobarIntegration import LCAFoobarIntegration
 from ...integrations.obs.LCAObsIntegration import LCAObsIntegration
 from ...integrations.shotcut.LCAShotcutIntegration import LCAShotcutIntegration
 
@@ -51,13 +54,29 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 
 	__project: LCAProjectFileModel
 	__obs: LCAObsIntegration
-	__state_data: dict[typing.Annotated[str, 'Segment slug'], dict[typing.Annotated[int, 'microseconds'], LCAProjectStateModel]]
+	__state_data: collections.OrderedDict[
+		typing.Annotated[str, 'Segment slug'],
+		collections.OrderedDict[
+			typing.Annotated[int, 'elapsed microseconds'],
+			LCAProjectStateModel
+		]
+	]
+	__ass_event: threading.Event
+	__adreads: dict[ typing.Annotated[str, 'segment id'], list[ typing.Annotated[str, 'obs adread scene name'] ] ]
 
 	def __init__ (self,
 		project: LCAProjectFileModel,
 	):
 		self.__project = project
 		self.__state_data = {}
+		self.__ass_event = threading.Event()
+		self.__adreads = {}
+		for segment in Settings().series_from_id(self.__project.series_id).segments:
+			match segment.adread_selection_behavior:
+				case 'in_order':
+					self.__adreads[segment.id] = segment.adread_scene_names.copy()
+				case 'random':
+					self.__adreads[segment.id] = random.sample(segment.adread_scene_names, len(segment.adread_scene_names))
 		super().__init__()
 
 	@Slot()
@@ -66,13 +85,20 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		try:
 			with LCAObsIntegration('video') as obs:
 				self.__obs = obs
+				self.__obs.evt_client.callback.register(self.on_vendor_event)
+				self.__start_foobar()
 				self.__organize_project_state_data()
 				self.__obs_inject_project_settings()
 				self.__obs_create_scenes_from_templates()
 				self.__obs_prepare_first_segment_video()
+				self.__obs_render_video()
 				self.__obs_remove_scenes()
 		finally:
 			self.__deinitialize_state()
+
+	def on_vendor_event (self, e: obsws_python.util.VendorEventDataclass) -> None:
+		if e.event_data['message'] == Settings().integrations.obs.ass_event_text:
+			self.__ass_event.set()
 
 	def tracked_task (fn):
 		@functools.wraps(fn)
@@ -90,6 +116,11 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				self.task_failure.emit(task_name)
 				raise
 		return wrapper
+
+	@tracked_task
+	def __start_foobar (self) -> None:
+		with LCAFoobarIntegration() as foobar:
+			foobar.stop_music()
 
 	@tracked_task
 	def __wait_for_state_initialization (self) -> None:
@@ -153,14 +184,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		with self.__project:
 			for path in state_paths:
 				ret[lcats_from_path(path)] = LCAProjectStateModel(
-					**( json.loads(self.__project.read_file(path, text = True)) | {
-						'project': self.__project,
-						'music': {
-							'artist': '',
-							'title': '',
-							'path': '',
-						},
-					} )
+					**( json.loads(self.__project.read_file(path, text = True)) | { 'project': self.__project } )
 				)
 		ret[9999999999999999] = None
 		return ret
@@ -176,7 +200,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		],
 	) -> collections.OrderedDict[
 		typing.Annotated[int, 'elapsed microseconds'],
-		LCAProjectStateModel
+		LCAProjectStateModel | None
 	]:
 
 		def elapsed_to_lcats (elapsed: int) -> typing.Annotated[int, 'microseconds since epoch']:
@@ -217,6 +241,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				offset_within_clip_us += us_until_next_state_change
 				state_lcats_key = next_state_lcats_key
 				ret[elapsed] = lcats_to_state[state_lcats_key]
+		ret[elapsed] = None
 		return ret
 
 	@tracked_task
@@ -289,12 +314,53 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
 		scene_name = f'{segment.obs_scene_name} | {segment_slug}'
 		input_name = f'{segment.recording_source_name} | {segment_slug}'
+		with LCAProjectState() as state:
+			state.overwrite(list(self.__state_data[segment_slug].values())[0])
 		self.__obs.req_client.set_current_program_scene(scene_name)
 		self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART')
 		time.sleep(1)
 		self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PAUSE')
 		time.sleep(1)
 		self.__obs.req_client.set_media_input_cursor(input_name, 0)
+		time.sleep(1)
+
+	@tracked_task
+	def __obs_render_video (self) -> None:
+		LCAFoobarIntegration().play_music()
+		self.__obs.req_client.start_record()
+		for segment_slug in self.__project.all_segment_slugs():
+			self.__render_segment(segment_slug)
+		self.__obs.req_client.stop_record()
+		time.sleep(1)
+		LCAFoobarIntegration().stop_music()
+
+	def __render_segment (self, segment_slug: str) -> typing.Annotated[int, 'elapsed microseconds']:
+		segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
+		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
+		obs_scene_name = f'{segment.obs_scene_name} | {segment_slug}'
+		obs_input_name = f'{segment.recording_source_name} | {segment_slug}'
+		self.__obs.req_client.set_current_program_scene(obs_scene_name)
+		self.__obs.req_client.trigger_media_input_action(obs_input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY')
+		start_lcats = int(1e6 * time.time())
+		while True:
+			elapsed = int(1e6 * time.time()) - start_lcats
+			if elapsed >= list(self.__state_data[segment_slug].keys())[0]:
+				_, state_data = self.__state_data[segment_slug].popitem(last = False)
+				if not state_data:
+					break
+				with LCAProjectState() as state:
+					state.overwrite(state_data)
+			time.sleep(0.01)
+		self.__ass_event.clear()
+		if adread_scene_name := self.__select_adread_scene(segment_id):
+			self.__obs.req_client.set_current_program_scene(adread_scene_name)
+			self.__ass_event.wait()
+		return int(1e6 * time.time()) - start_lcats
+
+	def __select_adread_scene (self, segment_id: str) -> str | None:
+		if not self.__adreads.get(segment_id, None):
+			return None
+		return self.__adreads[segment_id].pop(0)
 
 	@tracked_task
 	def __obs_remove_scenes (self) -> None:

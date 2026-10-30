@@ -44,6 +44,10 @@ class LCAProjectState (metaclass = LCASingleton):
 		updated_model = Signal(LCAProjectStateModel)
 		updated_dict = Signal(dict)
 
+	__NONOVERWRITABLE_FIELDS = (
+		'music',
+	)
+
 	__project: LCAProjectFileModel
 	__signals: _LCAProjectStateSignals
 	__mutex: threading.Lock
@@ -164,3 +168,12 @@ class LCAProjectState (metaclass = LCASingleton):
 		self.__project.events.segments[LCAProjectFileModel.slug(
 			self.__model.segment_id, self.__model.segment_number
 		)].start_ts = ts
+
+	@in_context
+	def overwrite (self, state: LCAProjectState) -> None:
+		self.__model = state.model_copy( update = {
+			k: getattr(self.__model, k, None)
+			for k in LCAProjectStateModel.model_fields
+			if k in self.__NONOVERWRITABLE_FIELDS
+		} | { 'active': False } )
+

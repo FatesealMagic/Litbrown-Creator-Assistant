@@ -716,10 +716,12 @@ LCARMainWindow:
       start_publish: START PUBLISH
       tasks:
         wait_for_state_initialization: Waiting on other Render / Multicast instances to finish
+        start_foobar: Initializing foobar2000
         organize_project_state_data: Reading and organizing recorded stream data
         obs_inject_project_settings: Injecting project settings into OBS
         obs_create_scenes_from_templates: Creating OBS scenes from templates
         obs_prepare_first_segment_video: Preparing first segment
+        obs_render_video: Rendering video -- this is done in real time, it will take a while...
         obs_remove_scenes: Cleaning up duplicated scenes
     publish:
       name: Publish

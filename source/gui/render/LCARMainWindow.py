@@ -202,13 +202,15 @@ class LCARMainWindow (LCAMainWindow):
 			self.__evt_start_publish()
 
 	def __evt_render_task_started (self, task: str) -> None:
-		logger.info(f'Task started: {task}')
+		label = LCALabel(f'\u23F3 {getattr(I18n(self).tabs.render.tasks, task)}')
+		label.setObjectName(task)
+		self.__render_scroll_area.widget().layout().addWidget(label)
 
 	def __evt_render_task_success (self, task: str) -> None:
-		logger.info(f'Task success: {task}')
+		self.findChild(LCALabel, name = task).setText(f'\u2705 {getattr(I18n(self).tabs.render.tasks, task)}')
 
 	def __evt_render_task_failure (self, task: str) -> None:
-		logger.info(f'Task failure: {task}')
+		self.findChild(LCALabel, name = task).setText(f'\u274C {getattr(I18n(self).tabs.render.tasks, task)}')
 
 	def __evt_render_complete (self) -> None:
 		if self.__start_publish_btn.isChecked():

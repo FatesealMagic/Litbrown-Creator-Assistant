@@ -21,6 +21,7 @@
   """
 
 import base64
+import contextlib
 import datetime
 import pathlib
 import re
@@ -112,6 +113,9 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		self._filelock.release()
 		self._filelocklock.release()
 		return False
+
+	def is_locked (self) -> bool:
+		return self._filelock.is_locked
 
 	def _save (self) -> None:
 		dump = self.model_dump_json()
@@ -280,7 +284,7 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if segment_slug:
 			segment_id, segment_number = (obj if isinstance(obj, type) else type(obj)).split_slug(segment_slug)
 		segment_number = segment_number or 0
-		filename = f'rendered/{segment_id}-{int(segment_number):04}.mp4' if segment_id else 'rendered/.mp4'
+		filename = f'rendered/{segment_id}-{int(segment_number):04}.mp4' if segment_id else 'rendered/.mkv'
 		if isinstance(obj, type) and (cls := obj):
 			return cls.path(slug, filename)
 		elif self := obj:
@@ -403,7 +407,10 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		if not (text ^ binary):
 			raise ValueError(f'Need one of text {text} or binary {binary} to be true, not both or neither')
 		try:
-			with self, open( self.path(filename), 'r' if text else 'rb', encoding = 'utf-8' if text else None ) as f:
+			with (
+				self if not self.is_locked() else contextlib.nullcontext(),
+				open( self.path(filename), 'r' if text else 'rb', encoding = 'utf-8' if text else None ) as f,
+			):
 				return f.read()
 		except FileNotFoundError:
 			return None
@@ -415,7 +422,10 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		text: bool = False,
 		binary: bool = False,
 	) -> None:
-		with self, LCAFileOverwriter( self.path(filename), binary = binary, text = text ) as f:
+		with (
+			self if not self.is_locked() else contextlib.nullcontext(),
+			LCAFileOverwriter( self.path(filename), binary = binary, text = text ) as f,
+		):
 			f.write(contents)
 
 	def generate_stream_texts (self) -> None:

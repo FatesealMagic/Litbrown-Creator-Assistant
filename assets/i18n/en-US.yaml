@@ -715,7 +715,12 @@ LCARMainWindow:
       start_publish_yes: PUBLISHING WHEN COMPLETE
       start_publish: START PUBLISH
       tasks:
-        wait_for_state_initialization: Waiting on other Render / Multicast instances to finish...
+        wait_for_state_initialization: Waiting on other Render / Multicast instances to finish
+        organize_project_state_data: Reading and organizing recorded stream data
+        obs_inject_project_settings: Injecting project settings into OBS
+        obs_create_scenes_from_templates: Creating OBS scenes from templates
+        obs_prepare_first_segment_video: Preparing first segment
+        obs_remove_scenes: Cleaning up duplicated scenes
     publish:
       name: Publish
 

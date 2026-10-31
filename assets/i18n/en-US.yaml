@@ -462,9 +462,9 @@ LCACSettingsOrganizationSeriesSegmentWidget:
       title: OBS
       scene_name: "Name of Scene Template:"
       recording_name: "Name of Raw Footage Source:"
-      adread_scene_names: "Ad-read Scene Names:"
-      adread_selection_behavior:
-        title: "Ad-read Selection Behavior:"
+      segue_scene_names: "Segue Scene Names:"
+      segue_selection_behavior:
+        title: "Segue Selection Behavior:"
         in_order: In Order
         random: Random
     video:

@@ -62,7 +62,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		]
 	]
 	__ass_event: threading.Event
-	__adreads: dict[ typing.Annotated[str, 'segment id'], list[ typing.Annotated[str, 'obs adread scene name'] ] ]
+	__segues: dict[ typing.Annotated[str, 'segment id'], list[ typing.Annotated[str, 'obs segue scene name'] ] ]
 
 	def __init__ (self,
 		project: LCAProjectFileModel,
@@ -70,13 +70,13 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		self.__project = project
 		self.__state_data = {}
 		self.__ass_event = threading.Event()
-		self.__adreads = {}
+		self.__segues = {}
 		for segment in Settings().series_from_id(self.__project.series_id).segments:
-			match segment.adread_selection_behavior:
+			match segment.segue_selection_behavior:
 				case 'in_order':
-					self.__adreads[segment.id] = segment.adread_scene_names.copy()
+					self.__segues[segment.id] = segment.segue_scene_names.copy()
 				case 'random':
-					self.__adreads[segment.id] = random.sample(segment.adread_scene_names, len(segment.adread_scene_names))
+					self.__segues[segment.id] = random.sample(segment.segue_scene_names, len(segment.segue_scene_names))
 		super().__init__()
 
 	@Slot()
@@ -352,15 +352,15 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 					state.overwrite(state_data)
 			time.sleep(0.01)
 		self.__ass_event.clear()
-		if adread_scene_name := self.__select_adread_scene(segment_id):
-			self.__obs.req_client.set_current_program_scene(adread_scene_name)
+		if segue_scene_name := self.__select_segue_scene(segment_id):
+			self.__obs.req_client.set_current_program_scene(segue_scene_name)
 			self.__ass_event.wait()
 		return int(1e6 * time.time()) - start_lcats
 
-	def __select_adread_scene (self, segment_id: str) -> str | None:
-		if not self.__adreads.get(segment_id, None):
+	def __select_segue_scene (self, segment_id: str) -> str | None:
+		if not self.__segues.get(segment_id, None):
 			return None
-		return self.__adreads[segment_id].pop(0)
+		return self.__segues[segment_id].pop(0)
 
 	@tracked_task
 	def __obs_remove_scenes (self) -> None:

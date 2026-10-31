@@ -181,7 +181,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			class RemoteMembershipTierModel (pydantic.BaseModel, validate_assignment = True):
 				remote_id: str
 				remote_name: str
-				cents: int
+				cents: int | None = None
 			remote_membership_tiers: list[RemoteMembershipTierModel] = []
 			
 			def reset (self) -> None:
@@ -197,11 +197,17 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		twitch: RemoteIntegrationModel = RemoteIntegrationModel()
 		patreon: RemoteIntegrationModel = RemoteIntegrationModel()
 
+		class DiscordIntegrationModel (pydantic.BaseModel, validate_assignment = True):
+			token: str = ''
+		discord: DiscordIntegrationModel = DiscordIntegrationModel()
+
 	integrations: IntegrationsModel = IntegrationsModel()
 
 	class MembershipTierModel (pydantic.BaseModel, validate_assignment = True):
 		id: str
 		name: str
+		discord_remote_role_names: list[str] = []
+		discord_managed_role_name: str = ''
 		
 		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
 			youtube: str | None = None

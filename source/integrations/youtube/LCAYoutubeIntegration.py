@@ -178,9 +178,14 @@ class LCAYoutubeIntegration (LCAIntegration):
 
 	@LCAIntegration.in_context
 	def get_membertiers_info (self) -> list[Settings().IntegrationsModel.RemoteIntegrationModel.RemoteMembershipTierModel]:
-		# NOTE Access to the /membershipsLevels/list endpoint is restricted to all but the biggest creators, try to change this!
-		return []
-		rsp = self.__execute_request( lambda : self.yt().membershipsLevels().list(part = 'id, snippet') )
+		try:
+			rsp = self.__execute_request( lambda : self.yt().membershipsLevels().list(part = 'id,snippet') )
+			return [ Settings().IntegrationsModel.RemoteIntegrationModel.RemoteMembershipTierModel(
+				remote_id = item['id'],
+				remote_name = item['snippet']['levelDetails']['displayName'],
+			) for item in rsp['items'] ]
+		except:
+			return []
 
 	@LCAIntegration.in_context
 	def create_broadcast (self, /,

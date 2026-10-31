@@ -29,14 +29,15 @@ from PySide6.QtGui import *
 from PySide6.QtNetwork import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Settings import *
+from ....Config import Config
+from ....I18n import I18n
+from ....Settings import Settings
 
-from ..LCACConnectButton import *
-from ..LCACConnectionInfoDisplayWidget import *
-from ...LCALabel import *
-from ...LCAWidget import *
+from ..LCACConnectButton import LCACConnectButton
+from ..LCACConnectionInfoDisplayWidget import LCACConnectionInfoDisplayWidget
+from ...LCALabel import LCALabel
+from ...LCAWidget import LCAWidget
+from ....threads.configure.LCACYoutubeRefreshTiersTaskThread import LCACYoutubeRefreshTiersTaskThread
 
 class LCACYoutubeWidget (LCAWidget):
 	
@@ -48,6 +49,10 @@ class LCACYoutubeWidget (LCAWidget):
 		if connect_btn := LCACConnectButton('youtube'):
 			connect_btn.clicked.connect(self.__start_oauth_flow)
 		layout.addWidget(connect_btn)
+		if refreshtiers_btn := QPushButton(I18n(self).refresh_tiers):
+			refreshtiers_btn.setStyleSheet('QPushButton { font-size: 14pt; font-weight: bold; padding: 0.25em; }')
+			refreshtiers_btn.clicked.connect(self.__refresh_tiers)
+		layout.addWidget(refreshtiers_btn)
 		layout.addStretch(1)
 
 	def __start_oauth_flow (self) -> None:
@@ -55,4 +60,8 @@ class LCACYoutubeWidget (LCAWidget):
 			Settings().integrations.youtube.reset()
 		logger.info(f'Starting Youtube oauth flow at URL {Config().integrations.remote.youtube.oauth_url}')
 		webbrowser.open(Config().integrations.remote.youtube.oauth_url)
+
+	def __refresh_tiers (self) -> None:
+		self.__refresh_tiers_thread = LCACYoutubeRefreshTiersTaskThread()
+		self.__refresh_tiers_thread.start()
 

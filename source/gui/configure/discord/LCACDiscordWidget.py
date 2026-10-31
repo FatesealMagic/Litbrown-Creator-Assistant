@@ -37,6 +37,12 @@ class LCACDiscordWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
-		layout.addWidget(LCALabel('discord'))
+		layout.addWidget(LCALabel(I18n(self).info))
+		layout.addWidget(LCALabel(I18n(self).tos_limitation))
+		if token_input := QLineEdit():
+			token_input.setPlaceholderText(I18n(self).token_placeholder)
+			Settings().bind(token_input, 'integrations.discord.token')
+		layout.addWidget(token_input)
+		layout.addWidget(LCALabel(I18n(self).requirements))
 		layout.addStretch(1)
 

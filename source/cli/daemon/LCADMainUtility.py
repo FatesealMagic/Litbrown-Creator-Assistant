@@ -34,6 +34,7 @@ from ...Util import Util
 
 from ..LCAMainUtility import LCAMainUtility
 from ...threads.daemon.LCADCardDataPreparerTaskThread import LCADCardDataPreparerTaskThread
+from ...threads.daemon.LCADDiscordBotTaskThread import LCADDiscordBotTaskThread
 from ...threads.daemon.http_server.LCADHttpServerThread import LCADHttpServerThread
 
 class LCADMainUtility (LCAMainUtility):
@@ -72,6 +73,7 @@ class LCADMainUtility (LCAMainUtility):
 		self.__threads = []
 		for thread_type in (
 			LCADCardDataPreparerTaskThread,
+			LCADDiscordBotTaskThread,
 		):
 			thread = thread_type()
 			thread.start()

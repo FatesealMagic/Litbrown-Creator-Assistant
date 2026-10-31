@@ -297,10 +297,6 @@ LCACFoobarWidget:
   beefweb_port: "Beefweb's networking port:"
   additional_arguments: "Additional arguments to pass to foobar2000 on startup:"
 
-LCACManapoolWidget:
-  include_in_decklists: Include a link to purchase deck on Mana Pool above each decklist in description
-  affiliate_code: "Your Mana Pool affiliate code:"
-
 LCACMoxfieldWidget:
   info: LCA connects to Moxfield to pull decklists for various purposes, like inserting them into your video descriptions.
   agent: <html>Your copy of LCA cannot connect to Moxfield without a "User-Agent", which is simply a unique identifier that you must ask Moxfield support to create for you. Send an email to <a href="mailto:support@moxfield.com">support@moxfield.com</a>, and explain who you are and that your copy of the Litbrown Creator Assistant needs a "User-Agent" to connect to Moxfield's API. You may need to agree to their terms; LCA will automatically respect them for you.</html>
@@ -378,10 +374,13 @@ LCACSettingsMembershipTierWidget:
   id: Id
   name: Name
   remote_tiers:
-    header: "Analogous Tiers on Other Platforms:"
+    header: "Analogous tiers on other platforms:"
     no_analogous_tier: = None =
+    youtube: Youtube
     twitch: Twitch
     patreon: Patreon
+  associated_discord_role: "Unified Discord role name for this membership tier:"
+  other_discord_roles: "Discord role names for this membership tier assigned by third parties:"
 
 LCACSettingsOrganizationSeriesWidget:
   tabs:
@@ -501,11 +500,13 @@ LCACTwitchWidget:
 
 LCACYoutubeWidget:
   info: LCA connects to your Youtube account to set up your livestreams, upload your videos, and manage your playlists.
-  no_channel_connected: "<html><i>No channel connected</i></html>"
-  blank_channel_connected: "<html><i>Blank channel connected</i></html>"
-  disallowed_channel_connected: Aborted attempt to connect to a channel not whitelisted under your license. Please contact me if this is in error.
-  other_error: LCA encountered an unknown error while attempting to connect to yout Youtube channel. Please contact me for assistance if this issue persists.
-  refresh: Create / Refresh Connection to Youtube
+  refresh_tiers: Refresh Membership Tiers Info from Youtube
+
+LCACDiscordWidget:
+  info: LCA connects to your Discord server to manage roles, read membership information, and promote content.
+  tos_limitation: <html>Due to <a href="https://support.discord.com/hc/en-us/articles/115002192352-Automated-User-Accounts-Self-Bots">restrictions in Discord's Terms of Service</a>, LCA cannot directly connect to your personal Discord account in the same way it connects to your Youtube or Twitch accounts. Instead, you must first <a href="https://docs.discord.com/developers/quick-start/getting-started#step-1-creating-an-app">create a dedicated bot account</a>, connect that bot account to your Discord server with the correct permissions, then enter your bot's token into the field below. Once you do, LCA can take actions on your behalf through the bot account.
+  token_placeholder: Your Discord Bot's Token
+  requirements: Please ensure your bot account is authorized on exactly one server and has the "Server Members" intent enabled.
 
 ################################################################################
 # SCHEDULE

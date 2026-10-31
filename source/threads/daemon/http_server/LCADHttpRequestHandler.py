@@ -27,8 +27,8 @@ import urllib.parse
 from loguru import logger
 import requests
 
-from ....I18n import *
-from ....Settings import *
+from ....I18n import I18n
+from ....Settings import Settings
 
 from ....integrations.LCAIntegration import *
 
@@ -105,8 +105,11 @@ class LCADHttpRequestHandler (http.server.SimpleHTTPRequestHandler):
 				user = integration.get_user_info()
 			with Settings():
 				setattr(Settings().integrations, integration_name, user)
-			with IntegrationClass():
-				pass # Always ensure connected account is whitelisted
+			if integration_name in ('youtube', 'twitch', 'patreon'):
+				with IntegrationClass() as integration:
+					tiers = integration.get_membertiers_info()
+				with Settings():
+					getattr(Settings().integrations, integration_name).remote_membership_tiers = tiers
 			self._send_response(200, I18n(self).oauth_successful)
 		except Exception as e:
 			logger.exception(e)
@@ -114,42 +117,3 @@ class LCADHttpRequestHandler (http.server.SimpleHTTPRequestHandler):
 				getattr(Settings().integrations, integration_name).reset()
 			self._send_response(499, I18n(self).oauth_aborted)
 	
-	'''def __handle_twitch_oauth (self, code: str) -> None:
-		try:
-			assert code
-			rsp = requests.get(f'{Config().integrations.remote.oauth_service_url}/twitch?code={code}')
-			assert rsp.status_code == 200
-			with Settings():
-				Settings().integrations.twitch.auth = rsp.json()
-			with LCATwitchIntegration(suppress_checks = True) as twitch:
-				user_info = twitch.get_user_info()
-				with Settings():
-					for k, v in user_info.items():
-						setattr(getattr(Settings().integrations, 'twitch'), k, v)
-			with LCATwitchIntegration():
-				pass # Validate user information only
-			self._send_response(200, I18n(self).oauth_successful)
-		except Exception as e:
-			logger.exception(e)
-			with Settings():
-				Settings().integrations.twitch.reset()
-			self._send_response(499, I18n(self).oauth_aborted)
-
-	def __handle_youtube_oauth (self, code: str) -> None:
-		try:
-			assert code
-			rsp = requests.get(f'{Config().integrations.remote.oauth_service_url}/youtube?code={code}')
-			assert rsp.status_code == 200
-			with Settings():
-				Settings().integrations.youtube.auth = rsp.json()
-			with LCAYoutubeIntegration(suppress_checks = True) as youtube:
-				user_info = youtube.get_user_info()
-				with Settings():
-					pass
-			self._send_response(200, I18n(self).oauth_successful)
-		except Exception as e:
-			logger.exception(e)
-			with Settings():
-				Settings().integrations.youtube.reset()
-			self._send_response(499, I18n(self).oauth_aborted)'''
-

@@ -72,7 +72,14 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	stream: StreamModel = StreamModel()
 	
 	class VideoModel (pydantic.BaseModel, validate_assignment = True):
+		timestamps: str = ''
 		thumbnail: pathlib.Path | None = None
+		membertier_id: str = ''
+		title_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
+		description_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
+		thumbnail: pathlib.Path | None = None
+		full_title: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 100))] = ''
+		full_description: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 5000))] = ''
 	video: VideoModel = VideoModel()
 
 	class EventsModel (pydantic.BaseModel, validate_assignment = True):
@@ -428,31 +435,42 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 		):
 			f.write(contents)
 
-	def generate_stream_texts (self) -> None:
-		decklists = self.__generate_decklists_text('stream')
+	def generate_content_texts (self,
+		content_type: typing.Literal['stream', 'video'],
+	) -> None:
+		decklists = self.__generate_decklists_text(content_type)
 		substitutions = {
 			'decklists': decklists,
-			'description_hook': self.stream.description_hook,
+			'description_hook': getattr(self, content_type).description_hook,
 			'entry_number': self.entry_number,
 			'mtg_format': self.mtg_format,
 			'series_name': Settings().series_from_id(self.series_id).name,
-			'stream_date': self.stream.start,
-			'title_hook': self.stream.title_hook,
+			'title_hook': getattr(self, content_type).title_hook,
 			'variant_description': Settings().series_variant_from_id(self.series_id, self.variant_id).description \
 				if self.variant_id else '',
 			'variant_name': Settings().series_variant_from_id(self.series_id, self.variant_id).name \
 				if self.variant_id else '',
 		}
-		self.stream.full_title = LCATextTemplate(
-			Settings().series_from_id(self.series_id).stream.title_template,
-			LCATextTemplate.VariableGroup.STREAM,
+		if content_type == 'stream':
+			substitutions |= {
+				'stream_data': self.stream.start,
+			}
+		if content_type == 'video':
+			substitutions |= {
+				'timestamps': self.video.timestamps,
+			}
+		getattr(self, content_type).full_title = LCATextTemplate(
+			getattr(Settings().series_from_id(self.series_id), content_type).title_template,
+			getattr(LCATextTemplate.VariableGroup, content_type.upper()),
 		).substitute(substitutions)
-		self.stream.full_description = LCATextTemplate(
-			Settings().series_from_id(self.series_id).stream.description_template,
-			LCATextTemplate.VariableGroup.STREAM,
+		getattr(self, content_type).full_description = LCATextTemplate(
+			getattr(Settings().series_from_id(self.series_id), content_type).description_template,
+			getattr(LCATextTemplate.VariableGroup, content_type.upper()),
 		).substitute(substitutions)
 
-	def __generate_decklists_text (self, key: str) -> str:
+	def __generate_decklists_text (self,
+		key: typing.Literal['stream', 'video'],
+	) -> str:
 		return getattr(Settings().series_from_id(self.series_id), key).decklist_separator.join([ LCATextTemplate(
 			getattr(Settings().series_from_id(self.series_id), key).decklist_template,
 			LCATextTemplate.VariableGroup.DECKLISTS,

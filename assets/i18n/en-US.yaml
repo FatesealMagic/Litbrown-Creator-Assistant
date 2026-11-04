@@ -42,6 +42,16 @@ LCAConnectionLabelWidget:
   starcitygames: Star City Games
   toamagic: TOAMagic
 
+LCAContentDetailsEditingWidget:
+  thumbnail:
+    launch: Launch Thumbnail Tool
+    source:
+      none: NO THUMBNAIL
+      channel: Default for Channel
+      series: Default for Series
+      variant: Default for Variant
+      multicast: Dedicated Thumbnail
+
 LCAFilePickerWidget:
   picker_btn: Choose File
 
@@ -397,27 +407,28 @@ LCACSettingsOrganizationSeriesWidget:
     segments:
       typename: Segment
       tab_title: Segments
-    videoinfo:
+    output:
       tab_title: Output Info
-      format: Video Format
-      longform: Long Form (Horizontal)
-      shortform: Short Form (Vertical)
-      supported_outputs: "Supported Outputs:"
-      membership_nostream: "= Record Only, No Stream ="
-      membership_public: "= Public ="
-      membership_andup: "& Up"
-      streaminfo_tab_title: Streams
-      stream_title: Stream Title
-      stream_to: Stream To
-      stream_desc: Description
-      videoinfo_tab_title: Videos
-      video_title: Video Title
-      video_to: Release To
-      video_desc: Description
-      clipinfo_tab_title: Clips
-      clip_title: Clip Title
-      clip_to: Release To
-      clip_desc: Description
+      supported_outputs: "<html>Supported&nbsp;Outputs:&nbsp;&nbsp;</html>"
+      output_types:
+        stream: Streams
+        video: Videos
+        clip: Clips
+      tabs:
+        metadata:
+          tab_title: Metadata
+          content_title: Title
+          description: Description
+        publishing:
+          tab_title: Publishing
+          publish_to: "Publish to Member Tiers:"
+          playlists: "Add to Youtube Playlists with IDs:"
+        obs:
+          tab_title: OBS
+          start_scene: "Name of OBS scene for renders to start on:"
+      membership:
+        public: "= Public ="
+        and_up: "& Up"
     formatting:
       tab_title: Variable Formatting
       decklists:
@@ -488,7 +499,7 @@ LCACObsWidget:
     stream: Streaming
     video: Video Rendering
     clip: Clip Rendering
-  ass_info: <html>LCA additionally requires an installation of Advanced Scene Switcher on all OBS installs that it uses to render videos with ad-reads. LCA will automatically play ad-reads as specified by the current segment's OBS settings, but in order for LCA to know when the ad-read has ended and the next segment must begin, it needs to receive a <a href="https://github.com/WarmUpTill/SceneSwitcher/wiki/Websockets">Websocket Scene Switcher message of type Event</a> with the exact text shown below.
+  ass_info: <html>LCA additionally requires an installation of Advanced Scene Switcher on all OBS installs that it uses to render videos with segues between segments. LCA will automatically play segues as specified by the current segment's OBS settings, but in order for LCA to know when the segue has ended and the next segment must begin, it needs to receive a <a href="https://github.com/WarmUpTill/SceneSwitcher/wiki/Websockets">Websocket Scene Switcher message of type Event</a> with the exact text shown below.
   ass_placeholder: Scene Switcher Event message text
 
 LCACPatreonWidget:
@@ -544,16 +555,6 @@ LCASMainWindow:
       publish_btn: PUBLISH SCHEDULE
       youtube_broadcastpublish: Schedule Livestreams
       twitch_updatestreamschedule: Update Stream Schedule
-
-LCASDetailsEditingWidget:
-  thumbnail:
-    launch: Launch Thumbnail Tool
-    source:
-      none: NO THUMBNAIL
-      channel: Default for Channel
-      series: Default for Series
-      variant: Default for Variant
-      multicast: Dedicated Thumbnail
 
 LCASPublishManagerWidget:
   patreon:
@@ -712,18 +713,21 @@ LCARMainWindow:
       start_render: START RENDER
     render:
       name: Render
-      start_publish_no: PUBLISH WHEN COMPLETE?
-      start_publish_yes: PUBLISHING WHEN COMPLETE
-      start_publish: START PUBLISH
+      restart_render: Restart Render
+      start_review: BEGIN REVIEW
       tasks:
         wait_for_state_initialization: Waiting on other Render / Multicast instances to finish
         start_foobar: Initializing foobar2000
+        obs_initialize: Initializing OBS with project settings
         organize_project_state_data: Reading and organizing recorded stream data
-        obs_inject_project_settings: Injecting project settings into OBS
         obs_create_scenes_from_templates: Creating OBS scenes from templates
         obs_prepare_first_segment_video: Preparing first segment
         obs_render_video: Rendering video -- this is done in real time, it will take a while...
         obs_remove_scenes: Cleaning up duplicated scenes
+    review:
+      name: Review
+      placeholder_title_hook: Title hook
+      placeholder_description_hook: Description hook
     publish:
       name: Publish
 

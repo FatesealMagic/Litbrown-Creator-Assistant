@@ -26,9 +26,9 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ..Assets import *
+from ..Assets import Assets
 
-from .LCAWidget import *
+from .LCAWidget import LCAWidget
 
 class LCACarouselWidget (LCAWidget):
 	
@@ -37,7 +37,10 @@ class LCACarouselWidget (LCAWidget):
 	__margin: bool
 
 	__datas: list[object]
-	__widgets = list[QWidget]
+	__widgets: list[QWidget]
+
+	__decrement_btn: QPushButton
+	__increment_btn: QPushButton
 
 	def __init__ (self,
 		margin: bool = False,
@@ -55,6 +58,7 @@ class LCACarouselWidget (LCAWidget):
 			group_layout = QHBoxLayout(group_widget)
 			group_layout.setContentsMargins(0, 0, 0, 0)
 			if decrement_btn := QPushButton():
+				self.__decrement_btn = decrement_btn
 				decrement_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 				decrement_btn.setProperty('css_class', 'decrement')
 				decrement_btn.setIcon(Assets.QIcon('style/leftarrow.svg'))
@@ -65,6 +69,7 @@ class LCACarouselWidget (LCAWidget):
 				stacked_widget.currentChanged.connect(self.__evt_current_changed)
 			group_layout.addWidget(stacked_widget)
 			if increment_btn := QPushButton():
+				self.__increment_btn = increment_btn
 				increment_btn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 				increment_btn.setProperty('css_class', 'increment')
 				increment_btn.setIcon(Assets.QIcon('style/rightarrow.svg'))
@@ -87,6 +92,8 @@ class LCACarouselWidget (LCAWidget):
 			wrapper_layout.setContentsMargins(0, 0, 0, 0)
 		wrapper_layout.addWidget(widget, 1, alignment = alignment)
 		self.__stacked_widget.addWidget(wrapper_widget)
+		self.__decrement_btn.setVisible(self.count() > 1)
+		self.__increment_btn.setVisible(self.count() > 1)
 
 	def clear (self) -> None:
 		self.__datas = []
@@ -96,6 +103,8 @@ class LCACarouselWidget (LCAWidget):
 				to_delete = self.__stacked_widget.widget(0)
 				self.__stacked_widget.removeWidget(to_delete)
 				to_delete.deleteLater()
+		self.__decrement_btn.hide()
+		self.__increment_btn.hide()
 		self.changed.emit(None)
 
 	def count (self) -> int:

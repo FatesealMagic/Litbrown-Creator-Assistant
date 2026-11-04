@@ -32,6 +32,7 @@ class LCAWorkerThread (QThread):
 
 	def __init__ (self, worker: LCAWorkerObject):
 		super().__init__()
+		worker.thread = self
 		self.worker = worker
 		worker.moveToThread(self)
 		worker.construct.connect(worker.slot_construct)

@@ -24,6 +24,7 @@ import collections
 import functools
 import json
 import random
+import sys
 import threading
 import time
 import typing
@@ -51,6 +52,9 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	task_success = Signal(str)
 	task_failure = Signal(str)
 	complete = Signal()
+
+	class _RenderCancelledError (RuntimeError):
+		pass
 
 	__project: LCAProjectFileModel
 	__obs: LCAObsIntegration
@@ -82,19 +86,21 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	@Slot()
 	def slot_construct (self) -> None:
 		self.__wait_for_state_initialization()
-		try:
-			with LCAObsIntegration('video') as obs:
-				self.__obs = obs
+		with LCAObsIntegration('video') as obs:
+			self.__obs = obs
+			try:
 				self.__obs.evt_client.callback.register(self.on_vendor_event)
 				self.__start_foobar()
+				self.__obs_initialize()
 				self.__organize_project_state_data()
-				self.__obs_inject_project_settings()
 				self.__obs_create_scenes_from_templates()
 				self.__obs_prepare_first_segment_video()
 				self.__obs_render_video()
+			finally:
+				logger.warning('in finally')
 				self.__obs_remove_scenes()
-		finally:
-			self.__deinitialize_state()
+				self.__deinitialize_state()
+				self.complete.emit()
 
 	def on_vendor_event (self, e: obsws_python.util.VendorEventDataclass) -> None:
 		if e.event_data['message'] == Settings().integrations.obs.ass_event_text:
@@ -103,6 +109,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	def tracked_task (fn):
 		@functools.wraps(fn)
 		def wrapper (self, *args, **kwargs):
+			self.__check_for_interruption_request()
 			task_name = fn.__name__.lstrip('_')
 			logger.debug(f'Task started: {task_name}')
 			self.task_started.emit(task_name)
@@ -115,7 +122,12 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				logger.error(f'Task failure: {task_name}')
 				self.task_failure.emit(task_name)
 				raise
+			self.__check_for_interruption_request()
 		return wrapper
+
+	def __check_for_interruption_request (self) -> None:
+		if self.thread.isInterruptionRequested() and type(sys.exception()) is not self._RenderCancelledError:
+			raise self._RenderCancelledError
 
 	@tracked_task
 	def __start_foobar (self) -> None:
@@ -125,6 +137,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	@tracked_task
 	def __wait_for_state_initialization (self) -> None:
 		while True:
+			self.__check_for_interruption_request()
 			try:
 				LCAProjectState(self.__project)
 				break
@@ -132,8 +145,41 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				time.sleep(2)
 
 	@tracked_task
+	def __obs_initialize (self) -> None:
+		try:
+			self.__obs.req_client.stop_record()
+		except:
+			pass
+		recording_path = self.__project.path_rendered().resolve()
+		for _ in range(5):
+			try:
+				self.__obs.req_client.set_profile_parameter('SimpleOutput', 'FilePath', str(recording_path.parent))
+				self.__obs.req_client.set_profile_parameter('AdvOut', 'RecFilePath', str(recording_path.parent))
+				self.__obs.req_client.set_profile_parameter(
+					'Output',
+					'FilenameFormatting',
+					str(recording_path.parts[-1]).split('.')[0],
+				)
+				break
+			except:
+				logger.warning('OBS refused accepting profile parameters, likely because recording is still being stopped. Trying again...')
+				time.sleep(2)
+		else:
+			raise RuntimeError('OBS continually refused accepting profile parameters')
+		for _ in range(5):
+			try:
+				recording_path.unlink(missing_ok = True)
+				break
+			except:
+				logger.warning('unable to unlink final render file, trying again...')
+				time.sleep(1)
+		else:
+			raise RuntimeError('continuously unable to unlink final render file')
+
+	@tracked_task
 	def __organize_project_state_data (self) -> None:
 		for segment_slug in self.__project.all_segment_slugs():
+			self.__check_for_interruption_request()
 			logger.debug(f'Organizing project state data for segment {segment_slug}')
 			elapsed_us_to_lcats = self.__build_elapsed_us_to_lcats(segment_slug)
 			lcats_to_state = self.__build_lcats_to_state(
@@ -245,15 +291,9 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		return ret
 
 	@tracked_task
-	def __obs_inject_project_settings (self) -> None:
-		recording_path = self.__project.path_rendered().resolve()
-		self.__obs.req_client.set_profile_parameter('SimpleOutput', 'FilePath', str(recording_path.parent))
-		self.__obs.req_client.set_profile_parameter('AdvOut', 'RecFilePath', str(recording_path.parent))
-		self.__obs.req_client.set_profile_parameter('Output', 'FilenameFormatting', str(recording_path.parts[-1]).split('.')[0])
-
-	@tracked_task
 	def __obs_create_scenes_from_templates (self) -> None:
 		for segment_id, segment_number in self.__project.all_segment_ids():
+			self.__check_for_interruption_request()
 			segment_slug = LCAProjectFileModel.slug(segment_id, segment_number)
 			segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
 			orig_scene_name = segment.obs_scene_name
@@ -343,6 +383,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		self.__obs.req_client.trigger_media_input_action(obs_input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY')
 		start_lcats = int(1e6 * time.time())
 		while True:
+			self.__check_for_interruption_request()
 			elapsed = int(1e6 * time.time()) - start_lcats
 			if elapsed >= list(self.__state_data[segment_slug].keys())[0]:
 				_, state_data = self.__state_data[segment_slug].popitem(last = False)
@@ -354,7 +395,9 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		self.__ass_event.clear()
 		if segue_scene_name := self.__select_segue_scene(segment_id):
 			self.__obs.req_client.set_current_program_scene(segue_scene_name)
-			self.__ass_event.wait()
+			while not self.__ass_event.is_set():
+				self.__check_for_interruption_request()
+				time.sleep(0.01)
 		return int(1e6 * time.time()) - start_lcats
 
 	def __select_segue_scene (self, segment_id: str) -> str | None:
@@ -365,10 +408,13 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	@tracked_task
 	def __obs_remove_scenes (self) -> None:
 		for segment_id, segment_number in self.__project.all_segment_ids():
-			segment_slug = LCAProjectFileModel.slug(segment_id, segment_number)
-			segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
-			scene_name = f'{segment.obs_scene_name} | {segment_slug}'
-			self.__obs.req_client.remove_scene(scene_name)
+			try:
+				segment_slug = LCAProjectFileModel.slug(segment_id, segment_number)
+				segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
+				scene_name = f'{segment.obs_scene_name} | {segment_slug}'
+				self.__obs.req_client.remove_scene(scene_name)
+			except:
+				logger.debug(f'Could not remove scene {scene_name}')
 
 	def __deinitialize_state (self) -> None:
 		LCAProjectState().shutdown()

@@ -58,7 +58,6 @@ class LCAListCreatorWidget (LCAWidget):
 		layout.addWidget(top_widget)
 		if list_widget := QListWidget():
 			self.__list_widget = list_widget
-			list_widget.setSortingEnabled(True)
 			list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
 			list_widget.setDropIndicatorShown(True)
 			list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)

@@ -37,11 +37,13 @@ from ...Settings import Settings
 from ...Util import Util
 
 from .LCARSegmentPreparerWidget import LCARSegmentPreparerWidget
-from ..LCASeparator import LCASeparator
+from ..LCAContentDetailsEditingWidget import LCAContentDetailsEditingWidget
 from ..LCALabel import LCALabel
 from ..LCAMainWindow import LCAMainWindow
 from ..LCAPopupMessage import LCAPopupMessage
+from ..LCASeparator import LCASeparator
 from ..LCASideTabWidget import LCASideTabWidget
+from ..LCATableModel import LCATableModel
 from ..LCATaskTrackerWidget import LCATaskTrackerWidget
 from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
 from ...models.LCAProjectFileModel import LCAProjectFileModel
@@ -51,15 +53,17 @@ from ...threads.render.LCARFootagePreparerTaskThread import LCARFootagePreparerT
 
 class LCARMainWindow (LCAMainWindow):
 
-	__TAB_NAMES = ('prepare', 'render', 'publish')
+	__TAB_NAMES = ('prepare', 'render', 'review', 'publish')
 
 	__project: LCAProjectFileModel
+	__model: LCATableModel[LCAProjectFileModel]
 	__prepare_scroll_area: QScrollArea
 	__start_render_btn: QPushButton
 	__preparer_widgets: list[LCARSegmentPreparerWidget]
 	__render_scroll_area: QScrollArea
-	__start_publish_btn: QPushButton
-	__render_thread: LCAWorkerThread[LCARFinalRenderWorkerObject]
+	__start_review_btn: QPushButton
+	__render_thread: LCAWorkerThread[LCARFinalRenderWorkerObject] | None = None
+	__details_widget: LCAContentDetailsEditingWidget
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -67,8 +71,9 @@ class LCARMainWindow (LCAMainWindow):
 			sys.exit()
 		self.setWindowIcon(Assets.QIcon('icons/render.ico'))
 		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
+		self.__model = LCATableModel(LCAProjectFileModel, lambda : [self.__project], self.__project)
 		self.setWindowTitle(f'{I18n(self).title} | {Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}')
-		self.resize(450, 600)
+		self.resize(710, 850)
 
 	def _setup_layout (self) -> None:
 		central_widget = LCASideTabWidget(orientation = Qt.Orientation.Horizontal, enabled = False, headers = False)
@@ -162,6 +167,9 @@ class LCARMainWindow (LCAMainWindow):
 
 	def __evt_start_render (self) -> None:
 		self.centralWidget().setCurrentIndex(1)
+		self.__reset_render_scroll_area()
+		self.__restart_render_btn.setEnabled(True)
+		self.__start_review_btn.setEnabled(False)
 		self.__render_thread = LCAWorkerThread(LCARFinalRenderWorkerObject(self.__project))
 		self.__render_thread.worker.task_started.connect(self.__evt_render_task_started)
 		self.__render_thread.worker.task_success.connect(self.__evt_render_task_success)
@@ -178,28 +186,46 @@ class LCARMainWindow (LCAMainWindow):
 			scroll_area.setWidgetResizable(True)
 			scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 			scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-			if scroll_widget := QWidget():
-				scroll_layout = QVBoxLayout(scroll_widget)
-				scroll_layout.addStretch()
-			scroll_area.setWidget(scroll_widget)
+			self.__reset_render_scroll_area()
 		layout.addWidget(scroll_area)
-		if start_publish_btn := QPushButton(' ' + I18n(self).tabs.render.start_publish_yes):
-			self.__start_publish_btn = start_publish_btn
-			start_publish_btn.setCheckable(True)
-			start_publish_btn.setChecked(True)
-			start_publish_btn.setProperty('css_class', 'big')
-			start_publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
-			start_publish_btn.clicked.connect(self.__evt_start_publish_clicked)
-		layout.addWidget(start_publish_btn)
+		if btns_widget := QWidget():
+			btns_layout = QHBoxLayout(btns_widget)
+			btns_layout.setContentsMargins(0, 0, 0, 0)
+			if restart_render_btn := QPushButton(' ' + I18n(self).tabs.render.restart_render):
+				self.__restart_render_btn = restart_render_btn
+				restart_render_btn.setProperty('css_class', 'big')
+				restart_render_btn.setIcon(Assets.QIcon('icons/refresh.png'))
+				restart_render_btn.clicked.connect(self.__evt_restart_render)
+			btns_layout.addWidget(restart_render_btn)
+			if start_review_btn := QPushButton(' ' + I18n(self).tabs.render.start_review):
+				self.__start_review_btn = start_review_btn
+				start_review_btn.setEnabled(False)
+				start_review_btn.setProperty('css_class', 'big')
+				start_review_btn.setIcon(Assets.QIcon('icons/advance.png'))
+				start_review_btn.clicked.connect(self.__evt_start_review_clicked)
+			btns_layout.addWidget(start_review_btn)
+		layout.addWidget(btns_widget)
 		return widget
 
-	def __evt_start_publish_clicked (self) -> None:
-		if self.__start_publish_btn.isCheckable():
-			self.__start_publish_btn.setText(
-				' ' + getattr(I18n(self).tabs.render, f'start_publish_{'yes' if self.__start_publish_btn.isChecked() else 'no'}')
-			)
+	def __reset_render_scroll_area (self) -> None:
+		old_widget = self.__render_scroll_area.takeWidget()
+		if old_widget:
+			old_widget.deleteLater()
+		scroll_widget = QWidget()
+		scroll_layout = QVBoxLayout(scroll_widget)
+		scroll_layout.addStretch()
+		self.__render_scroll_area.setWidget(scroll_widget)
+
+	def __evt_restart_render (self) -> None:
+		if self.__render_thread:
+			self.__restart_render_btn.setEnabled(False)
+			self.__render_thread.requestInterruption()
 		else:
-			self.__evt_start_publish()
+			self.__evt_start_render()
+
+	def __evt_start_review_clicked (self) -> None:
+		self.__details_widget.refresh()
+		self.centralWidget().setCurrentIndex(2)
 
 	def __evt_render_task_started (self, task: str) -> None:
 		label = LCALabel(f'\u23F3 {getattr(I18n(self).tabs.render.tasks, task)}')
@@ -213,14 +239,42 @@ class LCARMainWindow (LCAMainWindow):
 		self.findChild(LCALabel, name = task).setText(f'\u274C {getattr(I18n(self).tabs.render.tasks, task)}')
 
 	def __evt_render_complete (self) -> None:
-		if self.__start_publish_btn.isChecked():
-			self.__evt_start_publish()
-		else:
-			self.__start_publish_btn.setCheckable(False)
-			self.__start_publish_btn.setText(' ' + I18n(self).tabs.prepare.start_publish)
-
-	def __evt_start_publish (self) -> None:
 		self.__render_thread.quit()
+		self.__render_thread.wait()
+		self.__render_thread = None
+		if self.__restart_render_btn.isEnabled():
+			self.__start_review_btn.setEnabled(True)
+		else:
+			self.__evt_start_render()
+
+	def __build_review_tab (self) -> QWidget:
+		mapper = QDataWidgetMapper(self)
+		mapper.setModel(self.__model)
+		mapper.setCurrentIndex(0)
+		self.__mapper = mapper
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		if title_hook := QLineEdit():
+			mapper.addMapping(title_hook, self.__model.get_column_index('video.title_hook'))
+			title_hook.setPlaceholderText(I18n(self).tabs.review.placeholder_title_hook)
+			title_hook.editingFinished.connect(self.__regenerate_video_texts)
+		layout.addWidget(title_hook)
+		if description_hook := QLineEdit():
+			mapper.addMapping(description_hook, self.__model.get_column_index('video.description_hook'))
+			description_hook.setPlaceholderText(I18n(self).tabs.review.placeholder_description_hook)
+			description_hook.editingFinished.connect(self.__regenerate_video_texts)
+		layout.addWidget(description_hook)
+		if details_widget := LCAContentDetailsEditingWidget(self.__model, 'video'):
+			self.__details_widget = details_widget
+		layout.addWidget(details_widget)
+		mapper.revert()
+		self.__regenerate_video_texts()
+		return widget
+
+	def __regenerate_video_texts (self) -> None:
+		with self.__project:
+			self.__project.generate_content_texts('video')
+		self.__details_widget.reload_content_texts()
 
 	def __build_publish_tab (self) -> QWidget:
 		return QLabel('publish')

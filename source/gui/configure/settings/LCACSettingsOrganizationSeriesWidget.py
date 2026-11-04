@@ -26,27 +26,32 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Assets import *
-from ....Settings import *
-from ....Util import *
+from ....Config import Config
+from ....I18n import I18n
+from ....Assets import Assets
+from ....Settings import Settings
+from ....Util import Util
 
-from .LCACSettingsOrganizationSeriesSegmentWidget import *
-from .LCACSettingsOrganizationSeriesVariantWidget import *
-from ..LCACFormatHelperWidget import *
-from ...LCALabel import *
-from ...LCATabbedDataViewWidget import *
-from ...LCATabbedDataViewPanelWidget import *
-from ...LCAToggleButtonGroupWidget import *
-from ....common.LCATextTemplate import *
+from .LCACSettingsOrganizationSeriesSegmentWidget import LCACSettingsOrganizationSeriesSegmentWidget
+from .LCACSettingsOrganizationSeriesVariantWidget import LCACSettingsOrganizationSeriesVariantWidget
+from ..LCACFormatHelperWidget import LCACFormatHelperWidget
+from ...LCALabel import LCALabel
+from ...LCAListCreatorWidget import LCAListCreatorWidget
+from ...LCASeparator import LCASeparator
+from ...LCATabbedDataViewWidget import LCATabbedDataViewWidget
+from ...LCATabbedDataViewPanelWidget import LCATabbedDataViewPanelWidget
+from ...LCATableModel import LCATableModel
+from ...LCAToggleButtonGroupWidget import LCAToggleButtonGroupWidget
+from ....common.LCATextTemplate import LCATextTemplate
 
 class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
+
+	__CONTENT_TYPES = ('stream', 'video', 'clip')
 	
 	def _setup_layout (self) -> None:
 		layout = QHBoxLayout(self)
 		tab_widget = QTabWidget()
-		for tab in ('general', 'variants', 'segments', 'videoinfo', 'formatting',):
+		for tab in ('general', 'variants', 'segments', 'output', 'formatting',):
 			tab_widget.addTab(
 				getattr(self, f'__build_{tab}_tab')(),
 				I18n(self).tabs[tab].tab_title
@@ -90,16 +95,16 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 			'name'
 		)
 
-	def __build_videoinfo_tab (self) -> QWidget:
+	def __build_output_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QFormLayout(widget)
 		if enabledoutputs_widget := QWidget():
 			enabledoutputs_layout = QHBoxLayout(enabledoutputs_widget)
 			enabledoutputs_layout.setContentsMargins(0, 0, 0, 0)
-			enabledoutputs_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.supported_outputs + ' '))
+			enabledoutputs_layout.addWidget(LCALabel(I18n(self).tabs.output.supported_outputs + ' '))
 			self.__enabledoutputs_checkboxes = {}
-			for i, output in enumerate(('stream', 'video', 'clip')):
-				output_checkbox = QCheckBox(I18n(self).tabs.videoinfo[f'{output}info_tab_title'] + ' ')
+			for i, output in enumerate(self.__CONTENT_TYPES):
+				output_checkbox = QCheckBox(I18n(self).tabs.output.output_types[output] + ' ')
 				self.__enabledoutputs_checkboxes[output] = output_checkbox
 				output_checkbox.checkStateChanged.connect(
 					lambda state, i=i: self.__videostream_tabwidget.widget(i).setEnabled(state == Qt.CheckState.Checked)
@@ -108,119 +113,88 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 				enabledoutputs_layout.addWidget(output_checkbox)
 			enabledoutputs_layout.addStretch()
 		layout.addWidget(enabledoutputs_widget)
+		self.__content_to_cbos = {}
 		if videostream_tabwidget := QTabWidget():
 			self.__videostream_tabwidget = videostream_tabwidget
-			if stream_widget := QWidget():
-				stream_layout = QFormLayout(stream_widget)
-				stream_layout.setSpacing(stream_layout.spacing() * 2)
-				if streamtitle_widget := QWidget():
-					streamtitle_layout = QHBoxLayout(streamtitle_widget)
-					streamtitle_layout.setContentsMargins(0, 0, 0, 0)
-					if stream_title := QLineEdit():
-						self._mapper.addMapping(stream_title, self.model.get_column_index('stream.title_template'))
-					streamtitle_layout.addWidget(stream_title)
-					streamtitle_layout.addWidget( LCACFormatHelperWidget(
-						LCATextTemplate.VariableGroup.STREAM,
-						stream_title,
-						Qt.Orientation.Horizontal,
-					) )
-				stream_layout.addRow(I18n(self).tabs.videoinfo.stream_title, streamtitle_widget)
-				if stream_to := QComboBox():
-					self.__stream_to = stream_to
-					stream_to.currentIndexChanged.connect(self.__stream_to_index_changed)
-					stream_to.setItemDelegate(QStyledItemDelegate(stream_to))
-				stream_layout.addRow(I18n(self).tabs.videoinfo.stream_to, stream_to)
-				if stream_desc := QPlainTextEdit():
-					if stream_desclbl_widget := QWidget():
-						stream_desclbl_layout = QVBoxLayout(stream_desclbl_widget)
-						stream_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						stream_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.stream_desc))
-						stream_desclbl_layout.addSpacing(stream_desclbl_layout.spacing() / 2)
-						stream_desclbl_layout.addWidget( LCACFormatHelperWidget(
-							LCATextTemplate.VariableGroup.STREAM,
-							stream_desc,
-							Qt.Orientation.Vertical,
-						) )
-						stream_desclbl_layout.addStretch()
-					self._mapper.addMapping(stream_desc, self.model.get_column_index('stream.description_template'))
-				stream_layout.addRow(stream_desclbl_widget, stream_desc)
-				stream_widget.setEnabled(self.__enabledoutputs_checkboxes['stream'].isChecked())
-			videostream_tabwidget.addTab(stream_widget, I18n(self).tabs.videoinfo.streaminfo_tab_title)
-			if video_widget := QWidget():
-				video_layout = QFormLayout(video_widget)
-				video_layout.setSpacing(video_layout.spacing() * 2)
-				if videotitle_widget := QWidget():
-					videotitle_layout = QHBoxLayout(videotitle_widget)
-					videotitle_layout.setContentsMargins(0, 0, 0, 0)
-					if video_title := QLineEdit():
-						self._mapper.addMapping(video_title, self.model.get_column_index('video.title_template'))
-					videotitle_layout.addWidget(video_title)
-					videotitle_layout.addWidget( LCACFormatHelperWidget(
-						LCATextTemplate.VariableGroup.VIDEO,
-						video_title,
-						Qt.Orientation.Horizontal,
-					) )
-				video_layout.addRow(I18n(self).tabs.videoinfo.video_title, videotitle_widget)
-				if video_to := QComboBox():
-					self.__video_to = video_to
-					video_to.currentIndexChanged.connect(self.__video_to_index_changed)
-					video_to.setItemDelegate(QStyledItemDelegate(video_to))
-				video_layout.addRow(I18n(self).tabs.videoinfo.video_to, video_to)
-				if video_desc := QPlainTextEdit():
-					if video_desclbl_widget := QWidget():
-						video_desclbl_layout = QVBoxLayout(video_desclbl_widget)
-						video_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						video_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.video_desc))
-						video_desclbl_layout.addSpacing(video_desclbl_layout.spacing() / 2)
-						video_desclbl_layout.addWidget( LCACFormatHelperWidget(
-							LCATextTemplate.VariableGroup.VIDEO,
-							video_desc,
-							Qt.Orientation.Vertical,
-						) )
-						video_desclbl_layout.addStretch()
-					self._mapper.addMapping(video_desc, self.model.get_column_index('video.description_template'))
-				video_layout.addRow(video_desclbl_widget, video_desc)
-				video_widget.setEnabled(self.__enabledoutputs_checkboxes['video'].isChecked())
-			videostream_tabwidget.addTab(video_widget, I18n(self).tabs.videoinfo.videoinfo_tab_title)
-			if clip_widget := QWidget():
-				clip_layout = QFormLayout(clip_widget)
-				clip_layout.setSpacing(clip_layout.spacing() * 2)
-				if cliptitle_widget := QWidget():
-					cliptitle_layout = QHBoxLayout(cliptitle_widget)
-					cliptitle_layout.setContentsMargins(0, 0, 0, 0)
-					if clip_title := QLineEdit():
-						self._mapper.addMapping(clip_title, self.model.get_column_index('clip.title_template'))
-					cliptitle_layout.addWidget(clip_title)
-					cliptitle_layout.addWidget( LCACFormatHelperWidget(
-						LCATextTemplate.VariableGroup.CLIP,
-						clip_title,
-						Qt.Orientation.Horizontal,
-					) )
-				clip_layout.addRow(I18n(self).tabs.videoinfo.clip_title, cliptitle_widget)
-				if clip_to := QComboBox():
-					self.__clip_to = clip_to
-					clip_to.currentIndexChanged.connect(self.__clip_to_index_changed)
-					clip_to.setItemDelegate(QStyledItemDelegate(clip_to))
-				clip_layout.addRow(I18n(self).tabs.videoinfo.clip_to, clip_to)
-				if clip_desc := QPlainTextEdit():
-					if clip_desclbl_widget := QWidget():
-						clip_desclbl_layout = QVBoxLayout(clip_desclbl_widget)
-						clip_desclbl_layout.setContentsMargins(0, 0, 0, 0)
-						clip_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.videoinfo.clip_desc))
-						clip_desclbl_layout.addSpacing(clip_desclbl_layout.spacing() / 2)
-						clip_desclbl_layout.addWidget( LCACFormatHelperWidget(
-							LCATextTemplate.VariableGroup.CLIP,
-							clip_desc,
-							Qt.Orientation.Vertical,
-						) )
-						clip_desclbl_layout.addStretch()
-					self._mapper.addMapping(clip_desc, self.model.get_column_index('clip.description_template'))
-				clip_layout.addRow(clip_desclbl_widget, clip_desc)
-				clip_widget.setEnabled(self.__enabledoutputs_checkboxes['clip'].isChecked())
-			videostream_tabwidget.addTab(clip_widget, I18n(self).tabs.videoinfo.clipinfo_tab_title)
-			self.__rebuild_streamvideoclipto_comboboxes()
-			Settings().signals().changed.connect(self.__rebuild_streamvideoclipto_comboboxes)
+			for content_type in self.__CONTENT_TYPES:
+				if content_widget := QWidget():
+					content_layout = QVBoxLayout(content_widget)
+					if content_tabwidget := QTabWidget():
+						for content_tab_name in (
+							('metadata', 'publishing', 'obs') if content_type in ('video', 'clip')
+							else ('metadata', 'publishing')
+						):
+							content_tabwidget.addTab(
+								getattr(self, f'__build_content_{content_tab_name}_tab')(content_type),
+								I18n(self).tabs.output.tabs[content_tab_name].tab_title
+							)
+					content_layout.addWidget(content_tabwidget)
+				videostream_tabwidget.addTab(content_widget, I18n(self).tabs.output.output_types[content_type])
 		layout.addRow(videostream_tabwidget)
+		self.__rebuild_streamvideoclipto_comboboxes()
+		Settings().signals().changed.connect(self.__rebuild_streamvideoclipto_comboboxes)
+		return widget
+
+	def __build_content_metadata_tab (self, content_type: str) -> QWidget:
+		widget = QWidget()
+		layout = QFormLayout(widget)
+		if contenttitle_widget := QWidget():
+			contenttitle_layout = QHBoxLayout(contenttitle_widget)
+			contenttitle_layout.setContentsMargins(0, 0, 0, 0)
+			if content_title := QLineEdit():
+				self._mapper.addMapping(content_title, self.model.get_column_index(f'{content_type}.title_template'))
+			contenttitle_layout.addWidget(content_title)
+			contenttitle_layout.addWidget( LCACFormatHelperWidget(
+				getattr(LCATextTemplate.VariableGroup, content_type.upper()),
+				content_title,
+				Qt.Orientation.Horizontal,
+			) )
+		layout.addRow(I18n(self).tabs.output.tabs.metadata.content_title, contenttitle_widget)
+		if content_desc := QPlainTextEdit():
+			if content_desclbl_widget := QWidget():
+				content_desclbl_layout = QVBoxLayout(content_desclbl_widget)
+				content_desclbl_layout.setContentsMargins(0, 0, 0, 0)
+				content_desclbl_layout.addSpacing(content_desclbl_layout.spacing())
+				content_desclbl_layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.metadata.description))
+				content_desclbl_layout.addSpacing(content_desclbl_layout.spacing())
+				content_desclbl_layout.addWidget( LCACFormatHelperWidget(
+					getattr(LCATextTemplate.VariableGroup, content_type.upper()),
+					content_desc,
+					Qt.Orientation.Vertical,
+				) )
+				content_desclbl_layout.addStretch()
+			self._mapper.addMapping(content_desc, self.model.get_column_index(f'{content_type}.description_template'))
+		layout.addRow(content_desclbl_widget, content_desc)
+		return widget
+
+	def __build_content_publishing_tab (self, content_type: str) -> QWidget:
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.publishing.publish_to))
+		if content_to := QComboBox(self):
+			self.__content_to_cbos[content_type] = content_to
+			content_to.currentIndexChanged.connect(
+				lambda i, l_content_type = content_type : self.__content_to_index_changed(i, l_content_type)
+			)
+			content_to.setItemDelegate(QStyledItemDelegate(content_to))
+		layout.addWidget(content_to)
+		layout.addSpacing(layout.spacing())
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.publishing.playlists))
+		if playlists := LCAListCreatorWidget():
+			self._mapper.addMapping(playlists, self.model.get_column_index(f'{content_type}.add_to_playlists'))
+			playlists.changed.connect(self._mapper.submit)
+		layout.addWidget(playlists)
+		layout.addStretch()
+		return widget
+
+	def __build_content_obs_tab (self, content_type: str) -> QWidget:
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.obs.start_scene))
+		if start_scene := QLineEdit():
+			self._mapper.addMapping(start_scene, self.model.get_column_index(f'{content_type}.starting_obs_scene'))
+		layout.addWidget(start_scene)
+		layout.addStretch()
 		return widget
 
 	def __build_formatting_tab (self) -> QWidget:
@@ -231,7 +205,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 				decklists_layout = QVBoxLayout(decklists_widget)
 				decklists_layout.addWidget(LCALabel(I18n(self).tabs.formatting.decklists.info))
 				if decklists_tabwidget := QTabWidget():
-					for decklists_type in ('stream', 'video', 'clip'):
+					for decklists_type in self.__CONTENT_TYPES:
 						if decklist_widget := QWidget():
 							decklist_layout = QFormLayout(decklist_widget)
 							if decklist_separator_widget := QPlainTextEdit():
@@ -277,17 +251,14 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		return widget
 
 	def __rebuild_streamvideoclipto_comboboxes (self) -> None:
-		for combobox, key in (
-			(self.__stream_to, 'stream.publish_to_membership_id'),
-			(self.__video_to,  'video.publish_to_membership_id'),
-			(self.__clip_to,   'clip.publish_to_membership_id'),
-		):
+		for content_type in self.__CONTENT_TYPES:
+			combobox = self.__content_to_cbos[content_type]
+			key = f'{content_type}.publish_to_membership_id'
 			combobox.blockSignals(True)
 			combobox.clear()
-			combobox.addItem(I18n(self).tabs.videoinfo.membership_public, '~public')
-			#combobox.insertSeparator(1)
+			combobox.addItem(I18n(self).tabs.output.membership.public, '~public')
 			for tier in reversed(Settings().membership_tiers):
-				combobox.addItem(tier.name + ' ' + I18n(self).tabs.videoinfo.membership_andup, tier.id)
+				combobox.addItem(tier.name + ' ' + I18n(self).tabs.output.membership.and_up, tier.id)
 			try:
 				id_to_select = self.model.data(self.model.index(self._model_row, self.model.get_column_index(key)))
 			except IndexError:
@@ -298,24 +269,9 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 			combobox.setCurrentIndex(i)
 			combobox.blockSignals(False)
 
-	def __stream_to_index_changed (self, i: int) -> None:
-		logger.debug(i)
+	def __content_to_index_changed (self, i: int, content_type: str) -> None:
 		self.model.setData(
-			self.model.index(self._model_row, self.model.get_column_index('stream.publish_to_membership_id')),
-			self.__stream_to.currentData()
-		)
-
-	def __video_to_index_changed (self, i: int) -> None:
-		logger.debug(i)
-		self.model.setData(
-			self.model.index(self._model_row, self.model.get_column_index('video.publish_to_membership_id')),
-			self.__video_to.currentData()
-		)
-
-	def __clip_to_index_changed (self, i: int) -> None:
-		logger.debug(i)
-		self.model.setData(
-			self.model.index(self._model_row, self.model.get_column_index('clip.publish_to_membership_id')),
-			self.__clip_to.currentData()
+			self.model.index(self._model_row, self.model.get_column_index(f'{content_type}.publish_to_membership_id')),
+			self.__content_to_cbos[content_type].currentData()
 		)
 

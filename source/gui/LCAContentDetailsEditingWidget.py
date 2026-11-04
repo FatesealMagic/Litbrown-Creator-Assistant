@@ -28,27 +28,31 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ...Assets import *
-from ...Config import *
-from ...I18n import *
-from ...Util import *
+from ..Assets import *
+from ..Config import *
+from ..I18n import *
+from ..Util import *
 
-from ..LCACarouselWidget import *
-from ..LCALabel import *
-from ..LCATableModel import *
-from ..LCAWidget import *
-from ...common.LCAProjectWatcher import *
-from ...models.LCAProjectFileModel import *
+from .LCACarouselWidget import *
+from .LCALabel import *
+from .LCATableModel import *
+from .LCAWidget import *
+from ..common.LCAProjectWatcher import *
+from ..models.LCAProjectFileModel import *
 
-class LCASDetailsEditingWidget (LCAWidget):
+class LCAContentDetailsEditingWidget (LCAWidget):
 
 	__thumbnail_source_lbls: list[LCALabel] = []
 	__thumbnail_display_lbls: list[LCALabel] = []
 	__model: LCATableModel[LCAProjectFileModel]
 	__carousel_widget: LCACarouselWidget
 
-	def __init__ (self, model: LCATableModel[LCAProjectFileModel], *args, **kwargs):
+	def __init__ (self,
+		model: LCATableModel[LCAProjectFileModel],
+		content_type: typing.Literal['stream', 'video'],
+	*args, **kwargs):
 		self.__model = model
+		self.__content_type = content_type
 		self.__watcher = LCAProjectWatcher()
 		self.__watcher.fileChanged.connect(self.__refresh_thumbnail_lbls)
 		self.__watcher.directoryChanged.connect(self.__refresh_thumbnail_lbls)
@@ -56,9 +60,11 @@ class LCASDetailsEditingWidget (LCAWidget):
 	
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
+		layout.setContentsMargins(0, 0, 0, 0)
 		if carousel_widget := LCACarouselWidget():
 			self.__carousel_widget = carousel_widget
 		layout.addWidget(carousel_widget)
+		self.refresh()
 
 	def refresh (self) -> None:
 		self.__thumbnail_source_lbls = []
@@ -74,7 +80,7 @@ class LCASDetailsEditingWidget (LCAWidget):
 					source_layout = QHBoxLayout(source_widget)
 					source_layout.setContentsMargins(0, 0, 0, 0)
 					source_layout.addWidget(LCALabel(
-						f'<html><h3>{Settings().series_from_id(project.series_id).name} {project.entry_number}</h3></html>'
+						f'<html><h3>{Settings().series_from_id(project.series_id).name} #{project.entry_number}</h3></html>'
 					), alignment=Qt.AlignmentFlag.AlignVCenter)
 					if thumbnail_launch_btn := QPushButton(' ' + I18n(self).thumbnail.launch):
 						thumbnail_launch_btn.setStyleSheet('font-size: 13pt; font-weight: bold;')
@@ -93,10 +99,10 @@ class LCASDetailsEditingWidget (LCAWidget):
 					thumbnail_display_lbl.setStyleSheet('background: black;')
 				layout.addWidget(thumbnail_display_lbl)
 				if title_input := QLineEdit():
-					mapper.addMapping(title_input, self.__model.get_column_index('stream.full_title'))
+					mapper.addMapping(title_input, self.__model.get_column_index(f'{self.__content_type}.full_title'))
 				layout.addWidget(title_input)
 				if desc_input := QPlainTextEdit():
-					mapper.addMapping(desc_input, self.__model.get_column_index('stream.full_description'))
+					mapper.addMapping(desc_input, self.__model.get_column_index(f'{self.__content_type}.full_description'))
 				layout.addWidget(desc_input)
 			mapper.setCurrentIndex(i)
 			self.__carousel_widget.addItem(widget)
@@ -104,12 +110,7 @@ class LCASDetailsEditingWidget (LCAWidget):
 
 	def __refresh_thumbnail_lbls (self) -> None:
 		for i, project in enumerate(self.__model.get_data_reference()):
-			path, path_type = project.update_thumbnail_path('stream')
-			logger.debug(path)
-			logger.debug(path_type)
-			if path:
-				with open(path, 'rb') as f:
-					logger.debug(len(f.read()))
+			path, path_type = project.update_thumbnail_path(self.__content_type)
 			if path_type:
 				pixmap = QPixmap(path)
 				self.__thumbnail_display_lbls[i].setPixmap(pixmap)
@@ -118,3 +119,7 @@ class LCASDetailsEditingWidget (LCAWidget):
 				self.__thumbnail_display_lbls[i].clear()
 				self.__thumbnail_source_lbls[i].setText(I18n(self).thumbnail.source.none)
 				
+	def reload_content_texts (self) -> None:
+		for mapper in self.findChildren(QDataWidgetMapper):
+			mapper.revert()
+

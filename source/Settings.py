@@ -66,6 +66,8 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		stream_duration: int = 180
 		
 		class OutputTypeModel (pydantic.BaseModel, validate_assignment = True):
+			starting_obs_scene: str = ''
+			add_to_playlists: list[str] = []
 			decklist_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			decklist_separator: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			description_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
@@ -102,8 +104,6 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 				Decklists used in this video:
 
 				${decklists}
-
-				This content was streamed on ${stream_date}
 				'''.strip().replace('\t', ''),
 			enabled = True,
 			publish_to_membership_id = '~public',

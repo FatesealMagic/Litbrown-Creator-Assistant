@@ -60,8 +60,6 @@ class LCATableModel [T: pydantic.BaseModel] (QAbstractTableModel):
 		self.__model_reference_factory = model_reference_factory or (lambda : self.__model_reference)
 		self.__context_manager = context_manager if context_manager is not None else contextlib.nullcontext()
 		self.__columns = tuple(self.__determine_columns(self.__model_class, [], ''))
-		logger.debug(self.__columns)
-		logger.debug(self.__model_reference)
 
 	def __determine_columns (self, reference: type[T], columns: list, base: str) -> list:
 		for field_name, field_info in reference.model_fields.items():
@@ -105,13 +103,10 @@ class LCATableModel [T: pydantic.BaseModel] (QAbstractTableModel):
 			path = self.__columns[index.column()]
 			reference, attr = self.__reduce_path(row, path)
 			if getattr(reference, attr) == value:
-				logger.debug(f'aborting assignment | row {index.row()} col {path}')
 				return True
-			logger.debug(f'model[{index.row()}][{path}] = {value}')
 			with self.__ctx():
 				setattr(reference, attr, value)
 			self.dataChanged.emit(index, index)
-			logger.debug(self.__model_reference_factory())
 			return True
 		return False
 
@@ -129,7 +124,6 @@ class LCATableModel [T: pydantic.BaseModel] (QAbstractTableModel):
 		return len(self.__columns)
 
 	def insertRows (self, row: int, count: int, parent: QModelIndex | None = None, *, model_args: dict = {}) -> bool:
-		logger.debug(f'Inserting {count} rows at pos {row}')
 		self.beginInsertRows(parent or QModelIndex(), row, row + count - 1)
 		with self.__ctx():
 			for _ in range(count):
@@ -161,6 +155,5 @@ class LCATableModel [T: pydantic.BaseModel] (QAbstractTableModel):
 			raise
 
 	def get_data_reference (self) -> list[T]:
-		logger.debug(self.__model_reference_factory())
 		return self.__model_reference_factory()
 

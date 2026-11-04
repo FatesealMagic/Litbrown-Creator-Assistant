@@ -31,23 +31,23 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ...Config import *
-from ...I18n import *
-from ...Assets import *
-from ...Util import *
+from ...Config import Config
+from ...I18n import I18n
+from ...Assets import Assets
+from ...Util import Util
 
-from ..LCACarouselWidget import *
-from ..LCAMainWindow import *
-from ..LCAPopupMessage import *
-from ..LCASideTabWidget import *
-from ..LCATableModel import *
-from ..LCAWebEngineView import *
-from .LCASDetailsEditingWidget import *
-from .LCASScheduleEditingWidget import *
-from .LCASPublishManagerWidget import *
-from ...models.LCAProjectFileModel import *
-from ...threads.LCATaskThreadGroup import *
-from ...threads.common.LCADeckFetcherTaskThread import *
+from .LCASScheduleEditingWidget import LCASScheduleEditingWidget
+from .LCASPublishManagerWidget import LCASPublishManagerWidget
+from ..LCACarouselWidget import LCACarouselWidget
+from ..LCAContentDetailsEditingWidget import LCAContentDetailsEditingWidget
+from ..LCAMainWindow import LCAMainWindow
+from ..LCAPopupMessage import LCAPopupMessage
+from ..LCASideTabWidget import LCASideTabWidget
+from ..LCATableModel import LCATableModel
+from ..LCAWebEngineView import LCAWebEngineView
+from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...threads.LCATaskThreadGroup import LCATaskThreadGroup
+from ...threads.common.LCADeckFetcherTaskThread import LCADeckFetcherTaskThread
 
 class LCASMainWindow (LCAMainWindow):
 	
@@ -126,7 +126,7 @@ class LCASMainWindow (LCAMainWindow):
 	def __build_details_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		if details_widget := LCASDetailsEditingWidget(self.__model):
+		if details_widget := LCAContentDetailsEditingWidget(self.__model, 'stream'):
 			self.__details_widget = details_widget
 		layout.addWidget(details_widget)
 		if buttons_widget := QWidget():
@@ -203,7 +203,7 @@ class LCASMainWindow (LCAMainWindow):
 	def __generate_stream_texts (self) -> bool:
 		for multicast in self.__model.get_data_reference():
 			try:
-				multicast.generate_stream_texts()
+				multicast.generate_content_texts('stream')
 			except (ValueError, KeyError) as e:
 				logger.exception(e)
 				LCAPopupMessage.error(string.Template(I18n(self).errors.bad_template).substitute(

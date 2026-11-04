@@ -23,6 +23,8 @@
 from PySide6.QtCore import *
 
 class LCAWorkerObject (QObject):
+
+	thread: QThread
 	
 	construct = Signal()
 	destruct = Signal()

@@ -87,10 +87,8 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 		layout.addWidget(recordingname_input)
 		layout.addWidget(LCASeparator.horizontal())
 		layout.addWidget(LCALabel(I18n(self).tabs.obs.segue_scene_names))
-		# TODO write and add the selection widget
 		if segue_scenes := LCAListCreatorWidget():
 			self._mapper.addMapping(segue_scenes, self.model.get_column_index('segue_scene_names'))
-			segue_scenes.set_value(self.model.data((self._model_row, 'segue_scene_names')))
 			segue_scenes.changed.connect(self._mapper.submit)
 		layout.addWidget(segue_scenes)
 		layout.addSpacing(layout.spacing())

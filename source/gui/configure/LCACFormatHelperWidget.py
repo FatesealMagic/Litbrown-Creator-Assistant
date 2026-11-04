@@ -83,7 +83,6 @@ class LCACFormatHelperWidget (LCAWidget):
 		self.__connected_input = connected_input
 		self.__orientation = orientation
 		super().__init__(*args, **kwargs)
-		logger.debug('making a formathelperwidget')
 
 	def _setup_layout (self) -> None:
 		if self.__orientation == Qt.Orientation.Horizontal:

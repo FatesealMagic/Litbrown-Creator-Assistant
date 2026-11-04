@@ -29,21 +29,22 @@ from PySide6.QtGui import *
 from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWidgets import *
 
-from ...Config import *
-from ...I18n import *
-from ...Assets import *
-from ...Util import *
+from ...Assets import Assets
+from ...Config import Config
+from ...I18n import I18n
+from ...Settings import Settings
+from ...Util import Util
 
-from .LCATBottomControlsWidget import *
-from .LCATSideControlsWidget import *
-from ..LCAComboBox import *
-from ..LCAMainWindow import *
-from ..LCASideTabWidget import *
-from ..LCATableModel import *
-from ..LCAToggleButtonGroupWidget import *
-from ..LCAWebEngineView import *
-from ...models.LCAProjectFileModel import *
-from ...models.thumbnail.LCATThumbnailModel import *
+from .LCATBottomControlsWidget import LCATBottomControlsWidget
+from .LCATSideControlsWidget import LCATSideControlsWidget
+from ..LCAComboBox import LCAComboBox
+from ..LCAMainWindow import LCAMainWindow
+from ..LCASideTabWidget import LCASideTabWidget
+from ..LCATableModel import LCATableModel
+from ..LCAToggleButtonGroupWidget import LCAToggleButtonGroupWidget
+from ..LCAWebEngineView import LCAWebEngineView
+from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...models.thumbnail.LCATThumbnailModel import LCATThumbnailModel
 
 class LCATMainWindow (LCAMainWindow):
 	
@@ -56,7 +57,6 @@ class LCATMainWindow (LCAMainWindow):
 		self.setWindowState(Qt.WindowMaximized)
 		self.__thumbnail_model = LCATThumbnailModel()
 		self.__model = LCATableModel(LCATThumbnailModel, lambda : [self.__thumbnail_model], self.__thumbnail_model)
-		self.__model.insertRows(0, 1)
 		self.__thumbnail_model.signals().changed.connect( self.__evt_thumbnail_model_changed )
 
 	def _setup_layout (self) -> None:

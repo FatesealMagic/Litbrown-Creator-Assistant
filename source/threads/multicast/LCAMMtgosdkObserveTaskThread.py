@@ -29,7 +29,7 @@ from ...common.LCAProjectState import *
 from ...models.LCAProjectStateModel import *
 from ...integrations.mtgosdk.LCAMtgosdkIntegration import *
 
-class LCACMtgosdkObserveTaskThread (LCATaskThread):
+class LCAMMtgosdkObserveTaskThread (LCATaskThread):
 
 	__sdk: LCAMtgosdkIntegration
 

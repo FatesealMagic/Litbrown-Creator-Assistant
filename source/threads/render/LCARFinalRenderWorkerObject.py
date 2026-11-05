@@ -38,6 +38,7 @@ from PySide6.QtCore import *
 
 from ...Settings import Settings
 
+from .LCARFoobarListenerTaskThread import LCARFoobarListenerTaskThread
 from ..LCAWorkerObject import LCAWorkerObject
 from ...common.LCAProjectState import LCAProjectState
 from ...models.LCAProjectFileModel import LCAProjectFileModel
@@ -67,6 +68,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	]
 	__ass_event: threading.Event
 	__segues: dict[ typing.Annotated[str, 'segment id'], list[ typing.Annotated[str, 'obs segue scene name'] ] ]
+	__foobar_listener_thread: LCARFoobarListenerTaskThread
 
 	def __init__ (self,
 		project: LCAProjectFileModel,
@@ -97,7 +99,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				self.__obs_prepare_first_segment_video()
 				self.__obs_render_video()
 			finally:
-				logger.warning('in finally')
+				self.__cleanup_foobar()
 				self.__obs_remove_scenes()
 				self.__deinitialize_state()
 				self.complete.emit()
@@ -133,6 +135,8 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	def __start_foobar (self) -> None:
 		with LCAFoobarIntegration() as foobar:
 			foobar.stop_music()
+		self.__foobar_listener_thread = LCARFoobarListenerTaskThread()
+		self.__foobar_listener_thread.start()
 
 	@tracked_task
 	def __wait_for_state_initialization (self) -> None:
@@ -410,6 +414,11 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		if not self.__segues.get(segment_id, None):
 			return None
 		return self.__segues[segment_id].pop(0)
+
+	def __cleanup_foobar (self) -> None:
+		self.__foobar_listener_thread.requestInterruption()
+		with LCAFoobarIntegration() as foobar:
+			foobar.stop_music()
 
 	@tracked_task
 	def __obs_remove_scenes (self) -> None:

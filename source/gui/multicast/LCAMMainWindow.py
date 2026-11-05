@@ -50,10 +50,10 @@ from ...common.LCAKeySequence import LCAKeySequence
 from ...integrations.LCAIntegrationErrors import *
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...threads.LCAWorkerThread import LCAWorkerThread
-from ...threads.multicast.LCACFoobarControllerTaskThread import LCACFoobarControllerTaskThread
-from ...threads.multicast.LCACMtgosdkObserveTaskThread import LCACMtgosdkObserveTaskThread
+from ...threads.multicast.LCAMFoobarControllerTaskThread import LCAMFoobarControllerTaskThread
+from ...threads.multicast.LCAMMtgosdkObserveTaskThread import LCAMMtgosdkObserveTaskThread
 from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import LCAMObsRecordPuppeteerWorkerObject
-from ...threads.multicast.LCACTwitchInitializationTaskThread import LCACTwitchInitializationTaskThread
+from ...threads.multicast.LCAMTwitchInitializationTaskThread import LCAMTwitchInitializationTaskThread
 
 class LCAMMainWindow (LCAMainWindow):
 
@@ -70,9 +70,9 @@ class LCAMMainWindow (LCAMainWindow):
 	__plugins_menu: QMenu
 
 	__obs_thread: LCAWorkerThread[LCAMObsRecordPuppeteerWorkerObject]
-	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
-	__foobar_thread: LCACFoobarControllerTaskThread
-	__twitch_thread: LCACTwitchInitializationTaskThread
+	__mtgosdk_thread: LCAMMtgosdkObserveTaskThread
+	__foobar_thread: LCAMFoobarControllerTaskThread
+	__twitch_thread: LCAMTwitchInitializationTaskThread
 
 	__BUTTONS_STYLESHEET = 'font-size: 13pt; font-weight: bold; padding: 0.3em;'
 	
@@ -118,7 +118,7 @@ class LCAMMainWindow (LCAMainWindow):
 			self.__update_integration_status('mtgosdk', False)
 			return
 		self.__update_integration_status('mtgosdk', None)
-		self.__mtgosdk_thread = LCACMtgosdkObserveTaskThread()
+		self.__mtgosdk_thread = LCAMMtgosdkObserveTaskThread()
 		self.__mtgosdk_thread.error.connect(lambda _ : self.__update_integration_status('mtgosdk', False))
 		self.__mtgosdk_thread.update.connect(lambda _ : self.__update_integration_status('mtgosdk', True))
 		self.__mtgosdk_thread.start()
@@ -128,13 +128,13 @@ class LCAMMainWindow (LCAMainWindow):
 			self.__update_integration_status('foobar', False)
 			return
 		self.__update_integration_status('foobar', None)
-		self.__foobar_thread = LCACFoobarControllerTaskThread()
+		self.__foobar_thread = LCAMFoobarControllerTaskThread()
 		self.__foobar_thread.error.connect(self.__setup_foobar_thread)
 		self.__foobar_thread.update.connect(lambda _ : self.__update_integration_status('foobar', True))
 		self.__foobar_thread.start()
 
 	def __setup_twitch_thread (self) -> None:
-		self.__twitch_thread = LCACTwitchInitializationTaskThread(project = self.__project)
+		self.__twitch_thread = LCAMTwitchInitializationTaskThread(project = self.__project)
 		self.__twitch_thread.error.connect(lambda _ : LCAPopupMessage.warning(I18n(self).errors.twitch_stream_title_not_set))
 		self.__twitch_thread.start()
 

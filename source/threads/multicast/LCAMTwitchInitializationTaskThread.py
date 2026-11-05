@@ -20,26 +20,15 @@
   "
   """
 
-import time
+from ..LCATaskThread import LCATaskThread
+from ...integrations.twitch.LCATwitchIntegration import LCATwitchIntegration
+from ...models.LCAProjectFileModel import LCAProjectFileModel
 
-from loguru import logger
+class LCAMTwitchInitializationTaskThread (LCATaskThread):
 
-from ..LCATaskThread import *
-from ...common.LCAProjectState import *
-from ...models.LCAProjectStateModel import *
-from ...integrations.foobar.LCAFoobarIntegration import *
-
-class LCACFoobarControllerTaskThread (LCATaskThread):
-
-	def _run (self) -> None:
-		with LCAFoobarIntegration() as foobar:
-			foobar.play_music()
-			self.update.emit(True)
-			while not self.isInterruptionRequested():
-				time.sleep(0.1)
-				new_music = foobar.get_current_music()
-				if new_music != LCAProjectState().model.music:
-					with LCAProjectState() as state:
-						state.model.music = new_music
-			foobar.stop_music()
+	def _run (self,
+		project: LCAProjectFileModel,
+	) -> None:
+		with LCATwitchIntegration() as twitch:
+			twitch.set_stream_title( project.stream.full_title or ' ' )
 

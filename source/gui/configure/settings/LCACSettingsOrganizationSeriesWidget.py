@@ -204,6 +204,16 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 			start_scene_time.setSingleStep(0.1)
 			self._mapper.addMapping(start_scene_time, self.model.get_column_index(f'{content_type}.time_on_starting_obs_scene'))
 		layout.addWidget(start_scene_time)
+		layout.addWidget(LCASeparator.horizontal())
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.rendering.autoeditor_margin))
+		if autoeditor_margin := QDoubleSpinBox():
+			autoeditor_margin.setDecimals(2)
+			autoeditor_margin.setMinimum(0)
+			autoeditor_margin.setPrefix(I18n(self).tabs.output.tabs.rendering.autoeditor_margin_prefix)
+			autoeditor_margin.setSuffix(I18n(self).tabs.output.tabs.rendering.autoeditor_margin_suffix)
+			autoeditor_margin.setSingleStep(0.1)
+			self._mapper.addMapping(autoeditor_margin, self.model.get_column_index(f'{content_type}.autoeditor_margin'))
+		layout.addWidget(autoeditor_margin)
 		layout.addStretch()
 		return widget
 

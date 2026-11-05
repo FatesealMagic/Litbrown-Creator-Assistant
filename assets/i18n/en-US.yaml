@@ -429,6 +429,9 @@ LCACSettingsOrganizationSeriesWidget:
           time_on_start_scene: "Time spent on starting OBS scene:"
           time_on_start_scene_prefix: ""
           time_on_start_scene_suffix: " seconds"
+          autoeditor_margin: "<html>Margin for Auto-Editor:<br><i>Dead air kept around talking segments, so one sentence doesn't immediately flow into the next</i></html>"
+          autoeditor_margin_prefix: ""
+          autoeditor_margin_suffix: " seconds"
       membership:
         public: "= Public ="
         and_up: "& Up"

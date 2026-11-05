@@ -25,6 +25,8 @@ import xml.etree.ElementTree
 
 from loguru import logger
 
+from ...Settings import Settings
+
 from ..LCATaskThread import *
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel
@@ -55,7 +57,7 @@ class LCARFootagePreparerTaskThread (LCATaskThread):
 			autoeditor.process_slug(
 				self.__project,
 				self.__segment_slug,
-				margin = 0.23, # TODO margin as setting
+				margin = Settings().series_from_id(self.__project.series_id).video.autoeditor_margin,
 			)
 
 	def __load_shotcut_file (self) -> xml.etree.ElementTree:

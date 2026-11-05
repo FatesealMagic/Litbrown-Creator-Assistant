@@ -350,24 +350,28 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	@tracked_task
 	def __obs_prepare_first_segment_video (self) -> None:
 		segment_slug = self.__project.all_segment_slugs()[0]
-		segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
-		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
-		scene_name = f'{segment.obs_scene_name} | {segment_slug}'
-		input_name = f'{segment.recording_source_name} | {segment_slug}'
 		with LCAProjectState() as state:
 			state.overwrite(list(self.__state_data[segment_slug].values())[0])
-		self.__obs.req_client.set_current_program_scene(scene_name)
-		self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART')
-		time.sleep(1)
-		self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PAUSE')
-		time.sleep(1)
-		self.__obs.req_client.set_media_input_cursor(input_name, 0)
-		time.sleep(1)
+		if starting_scene := Settings().series_from_id(self.__project.series_id).video.starting_obs_scene:
+			self.__obs.req_client.set_current_program_scene(starting_scene)
+		else:
+			segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
+			segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
+			scene_name = f'{segment.obs_scene_name} | {segment_slug}'
+			input_name = f'{segment.recording_source_name} | {segment_slug}'
+			self.__obs.req_client.set_current_program_scene(scene_name)
+			self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART')
+			time.sleep(1)
+			self.__obs.req_client.trigger_media_input_action(input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PAUSE')
+			time.sleep(1)
+			self.__obs.req_client.set_media_input_cursor(input_name, 0)
+		time.sleep(2)
 
 	@tracked_task
 	def __obs_render_video (self) -> None:
 		LCAFoobarIntegration().play_music()
 		self.__obs.req_client.start_record()
+		time.sleep(Settings().series_from_id(self.__project.series_id).video.time_on_starting_obs_scene)
 		for segment_slug in self.__project.all_segment_slugs():
 			self.__render_segment(segment_slug)
 		self.__obs.req_client.stop_record()
@@ -379,6 +383,8 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		segment = Settings().series_segment_from_id(self.__project.series_id, segment_id)
 		obs_scene_name = f'{segment.obs_scene_name} | {segment_slug}'
 		obs_input_name = f'{segment.recording_source_name} | {segment_slug}'
+		with LCAProjectState() as state:
+			state.overwrite(list(self.__state_data[segment_slug].values())[0])
 		self.__obs.req_client.set_current_program_scene(obs_scene_name)
 		self.__obs.req_client.trigger_media_input_action(obs_input_name, 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY')
 		start_lcats = int(1e6 * time.time())

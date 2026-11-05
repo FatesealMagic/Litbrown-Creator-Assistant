@@ -80,7 +80,6 @@ class LCARSegmentPreparerWidget (QStackedWidget):
 		self.addWidget(autoeditor_widget)
 
 	def launch_autoeditor (self) -> None:
-		logger.warning(self.__segment_slug)
 		self.widget(0).execute()
 		if self.widget(0).status == LCATaskTrackerWidget.Status.SKIPPED:
 			self.complete.emit(True)

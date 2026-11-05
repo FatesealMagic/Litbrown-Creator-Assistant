@@ -27,11 +27,12 @@ from loguru import logger
 import requests
 import tzlocal
 
-from ..LCAIntegration import *
+from ..LCAIntegration import LCAIntegration
 from ..LCAIntegrationErrors import *
 
-from ...Assets import *
-from ...Settings import *
+from ...Assets import Assets
+from ...Config import Config
+from ...Settings import Settings
 
 class LCATwitchIntegration (LCAIntegration):
 	
@@ -80,7 +81,7 @@ class LCATwitchIntegration (LCAIntegration):
 				raise LCAIntegrationUserForbiddenError
 			else:
 				logger.error(f'Unexpected error while contacting Twitch: {rsp.status_code} {rsp.text}')
-				raise LCAIntegrationError
+				raise LCAIntegrationUnexpectedError
 		raise LCAIntegrationNetworkFailureError
 
 	def __execute_paginated_request (self, path: str, /,
@@ -114,7 +115,7 @@ class LCATwitchIntegration (LCAIntegration):
 		if rsp.status_code < 200 or rsp.status_code > 299:
 			logger.error(f'Error refreshing access token: {rsp.status_code}')
 			logger.error(rsp.text)
-			raise LCAIntegrationError # TODO maybe a better error type here?
+			raise LCAIntegrationUnexpectedErrorError
 		with Settings():
 			logger.info('Saving new Twitch access token')
 			Settings().integrations.twitch.auth = rsp.json()
@@ -153,7 +154,7 @@ class LCATwitchIntegration (LCAIntegration):
 	) -> str:
 		return self.__execute_request('schedule/segment',
 			method = 'POST',
-			params = {'broadcaster_id': Settings().integrations.twitch.remote_id},
+			params = { 'broadcaster_id': Settings().integrations.twitch.remote_id },
 			body_json = {
 				'start_time': self._apply_bounds_to_timestamp(start),
 				'timezone': tzlocal.get_localzone_name(),
@@ -162,4 +163,14 @@ class LCATwitchIntegration (LCAIntegration):
 				'title': title,
 			},
 		).json()['data']['segments'][0]['id']
+
+	@LCAIntegration.in_context
+	def set_stream_title (self,
+		title: str,
+	) -> None:
+		self.__execute_request('channels',
+			method = 'PATCH',
+			params = { 'broadcaster_id': Settings().integrations.twitch.remote_id },
+			body_json = { 'title': title },
+		)
 

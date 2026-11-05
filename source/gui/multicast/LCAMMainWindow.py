@@ -32,27 +32,28 @@ from PySide6.QtGui import *
 from PySide6.QtWebEngineWidgets import *
 from PySide6.QtWidgets import *
 
-from ...Assets import *
-from ...Config import *
-from ...I18n import *
-from ...Settings import *
-from ...Util import *
+from ...Assets import Assets
+from ...Config import Config
+from ...I18n import I18n
+from ...Settings import Settings
+from ...Util import Util
 
-from ..LCAComboBox import *
-from ..LCALabel import *
-from ..LCAMainWindow import *
-from ..LCAPluginWidget import *
-from ..LCAPopupMessage import *
-from ..LCASeparator import *
-from ...common.LCAPluginManager import *
-from ...common.LCAProjectState import *
-from ...common.LCAKeySequence import *
+from ..LCAComboBox import LCAComboBox
+from ..LCALabel import LCALabel
+from ..LCAMainWindow import LCAMainWindow
+from ..LCAPluginWidget import LCAPluginWidget
+from ..LCAPopupMessage import LCAPopupMessage
+from ..LCASeparator import LCASeparator
+from ...common.LCAPluginManager import LCAPluginManager
+from ...common.LCAProjectState import LCAProjectState
+from ...common.LCAKeySequence import LCAKeySequence
 from ...integrations.LCAIntegrationErrors import *
-from ...models.LCAProjectFileModel import *
-from ...threads.LCAWorkerThread import *
-from ...threads.multicast.LCACFoobarControllerTaskThread import *
-from ...threads.multicast.LCACMtgosdkObserveTaskThread import *
-from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import *
+from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...threads.LCAWorkerThread import LCAWorkerThread
+from ...threads.multicast.LCACFoobarControllerTaskThread import LCACFoobarControllerTaskThread
+from ...threads.multicast.LCACMtgosdkObserveTaskThread import LCACMtgosdkObserveTaskThread
+from ...threads.multicast.LCAMObsRecordPuppeteerWorkerObject import LCAMObsRecordPuppeteerWorkerObject
+from ...threads.multicast.LCACTwitchInitializationTaskThread import LCACTwitchInitializationTaskThread
 
 class LCAMMainWindow (LCAMainWindow):
 
@@ -68,9 +69,10 @@ class LCAMMainWindow (LCAMainWindow):
 	__status_lbl: LCALabel
 	__plugins_menu: QMenu
 
-	__obs_thread: LCAWorkerThread
+	__obs_thread: LCAWorkerThread[LCAMObsRecordPuppeteerWorkerObject]
 	__mtgosdk_thread: LCACMtgosdkObserveTaskThread
 	__foobar_thread: LCACFoobarControllerTaskThread
+	__twitch_thread: LCACTwitchInitializationTaskThread
 
 	__BUTTONS_STYLESHEET = 'font-size: 13pt; font-weight: bold; padding: 0.3em;'
 	
@@ -84,6 +86,7 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__setup_obs_thread()
 		self.__setup_mtgosdk_thread()
 		self.__setup_foobar_thread()
+		self.__setup_twitch_thread()
 		self.__setup_keyboard_hotkey_signals()
 		self.__setup_keyboard_hotkeys()
 		self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
@@ -129,6 +132,11 @@ class LCAMMainWindow (LCAMainWindow):
 		self.__foobar_thread.error.connect(self.__setup_foobar_thread)
 		self.__foobar_thread.update.connect(lambda _ : self.__update_integration_status('foobar', True))
 		self.__foobar_thread.start()
+
+	def __setup_twitch_thread (self) -> None:
+		self.__twitch_thread = LCACTwitchInitializationTaskThread(project = self.__project)
+		self.__twitch_thread.error.connect(lambda _ : LCAPopupMessage.warning(I18n(self).errors.twitch_stream_title_not_set))
+		self.__twitch_thread.start()
 
 	def __setup_keyboard_hotkey_signals (self) -> None:
 		self.__hotkey_combos = {}
@@ -304,9 +312,9 @@ class LCAMMainWindow (LCAMainWindow):
 					state = base64.b64encode(bytes(self.saveState())),
 					loaded_plugins = LCAPluginManager.list_loaded_plugins(),
 				)
-		self.__obs_thread.wait()
-		self.__mtgosdk_thread.wait()
-		self.__foobar_thread.wait()
+		#self.__obs_thread.wait()
+		#self.__mtgosdk_thread.wait()
+		#self.__foobar_thread.wait()
 		event.accept()
 
 	def __evt_segment_changed (self, segment_info: tuple[str, int | None]) -> None:

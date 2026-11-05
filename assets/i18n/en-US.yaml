@@ -622,6 +622,7 @@ LCAMMainWindow:
     need_slug: Please select a project when opening the Multicast Tool.
     state_server_already_running: Only one instance of either the Multicast or Render Tools can be running at once. Please close out the running Multicast or Render Tool instance and try again.
     plugin_not_loaded: Encoutered an error while loading plugin. See logs for details.
+    twitch_stream_title_not_set: Unable to set Twitch stream title.
   plugins:
     button: Plugins
   segment:

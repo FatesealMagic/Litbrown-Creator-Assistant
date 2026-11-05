@@ -423,9 +423,12 @@ LCACSettingsOrganizationSeriesWidget:
           tab_title: Publishing
           publish_to: "Publish to Member Tiers:"
           playlists: "Add to Youtube Playlists with IDs:"
-        obs:
-          tab_title: OBS
+        rendering:
+          tab_title: Rendering
           start_scene: "Name of OBS scene for renders to start on:"
+          time_on_start_scene: "Time spent on starting OBS scene:"
+          time_on_start_scene_prefix: ""
+          time_on_start_scene_suffix: " seconds"
       membership:
         public: "= Public ="
         and_up: "& Up"

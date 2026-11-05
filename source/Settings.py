@@ -67,6 +67,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		
 		class OutputTypeModel (pydantic.BaseModel, validate_assignment = True):
 			starting_obs_scene: str = ''
+			time_on_starting_obs_scene: float
 			add_to_playlists: list[str] = []
 			decklist_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			decklist_separator: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
@@ -75,6 +76,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			publish_to_membership_id: str
 			title_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 		stream: OutputTypeModel = OutputTypeModel(
+			time_on_starting_obs_scene = 0.0,
 			decklist_template = '''
 				${decklist_name}
 				Link to decklist: ${decklist_link}
@@ -91,6 +93,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			publish_to_membership_id = '~public',
 			title_template = '${title_hook} ${series_hashtags} ${variant_hashtags}' )
 		video: OutputTypeModel = OutputTypeModel(
+			time_on_starting_obs_scene = 0.5,
 			decklist_template = '''
 				${decklist_name}
 				Link to decklist: ${decklist_link}
@@ -109,6 +112,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			publish_to_membership_id = '~public',
 			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}' )
 		clip: OutputTypeModel = OutputTypeModel(
+			time_on_starting_obs_scene = 0.1,
 			decklist_template = '''
 				${decklist_link}
 				'''.strip().replace('\t', ''),

@@ -121,7 +121,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 					content_layout = QVBoxLayout(content_widget)
 					if content_tabwidget := QTabWidget():
 						for content_tab_name in (
-							('metadata', 'publishing', 'obs') if content_type in ('video', 'clip')
+							('metadata', 'publishing', 'rendering') if content_type in ('video', 'clip')
 							else ('metadata', 'publishing')
 						):
 							content_tabwidget.addTab(
@@ -187,13 +187,23 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		layout.addStretch()
 		return widget
 
-	def __build_content_obs_tab (self, content_type: str) -> QWidget:
+	def __build_content_rendering_tab (self, content_type: str) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.obs.start_scene))
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.rendering.start_scene))
 		if start_scene := QLineEdit():
 			self._mapper.addMapping(start_scene, self.model.get_column_index(f'{content_type}.starting_obs_scene'))
 		layout.addWidget(start_scene)
+		layout.addSpacing(layout.spacing())
+		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.rendering.time_on_start_scene))
+		if start_scene_time := QDoubleSpinBox():
+			start_scene_time.setDecimals(2)
+			start_scene_time.setMinimum(0)
+			start_scene_time.setPrefix(I18n(self).tabs.output.tabs.rendering.time_on_start_scene_prefix)
+			start_scene_time.setSuffix(I18n(self).tabs.output.tabs.rendering.time_on_start_scene_suffix)
+			start_scene_time.setSingleStep(0.1)
+			self._mapper.addMapping(start_scene_time, self.model.get_column_index(f'{content_type}.time_on_starting_obs_scene'))
+		layout.addWidget(start_scene_time)
 		layout.addStretch()
 		return widget
 

@@ -77,16 +77,16 @@ LCASideTabWidget >QListView, LCASideTabWidget >QListView:focus {
 	background-color: ${background_med};
 }
 
-QComboBox, QDateEdit, QLineEdit, QListWidget, QPlainTextEdit, QSpinBox, QTimeEdit {
+QComboBox, QDateEdit, QDoubleSpinBox, QLineEdit, QListWidget, QPlainTextEdit, QSpinBox, QTimeEdit {
 	background-color: ${background_lgt};
 	border: 0.05em solid palette(light);
 	padding: 0.15em;
 	placeholder-text-color: ${foreground_drk};
 	selection-background-color: palette(dark);
-} QComboBox:disabled, QDateEdit:disabled, QLineEdit:disabled, QListWidget:disabled, QPlainTextEdit:disabled, QSpinBox:disabled, QTimeEdit:disabled {
+} QComboBox:disabled, QDateEdit:disabled, QDoubleSpinBox:disabled, QLineEdit:disabled, QListWidget:disabled, QPlainTextEdit:disabled, QSpinBox:disabled, QTimeEdit:disabled {
 	background-color: ${background_drk};
 	border-color: ${background_drk};
-} QComboBox:focus, QDateEdit:focus, QLineEdit:focus, QListWidget:focus, QPlainTextEdit:focus, QSpinBox:focus, QTimeEdit:focus {
+} QComboBox:focus, QDateEdit:focus, QDoubleSpinBox:focus, QLineEdit:focus, QListWidget:focus, QPlainTextEdit:focus, QSpinBox:focus, QTimeEdit:focus {
 	border-color: ${foreground_lgt};
 }
 
@@ -226,25 +226,25 @@ QSlider::groove:horizontal {
 	background: palette(mid);
 }
 
-QSpinBox {
-} QSpinBox::down-button {
+QSpinBox, QDoubleSpinBox {
+} QSpinBox::down-button, QDoubleSpinBox::down-button {
 	width: 1.0em;
 	border-left: 0.05em solid palette(mid);
-} QSpinBox::down-arrow {
+} QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
 	image: url("assets/style/downarrow.svg");
 	width: 0.5em;
 	height: 0.25em;
-} QSpinBox::up-button {
+} QSpinBox::up-button, QDoubleSpinBox::up-button {
 	width: 1.0em;
 	border-left: 0.05em solid palette(mid);
 	border-bottom: 0.05em solid palette(mid);
-} QSpinBox::up-arrow {
+} QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
 	image: url("assets/style/uparrow.svg");
 	width: 0.5em;
 	height: 0.25em;
-} QSpinBox::down-button:hover, QSpinBox::up-button:hover {
+} QSpinBox::down-button:hover, QSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover, QDoubleSpinBox::up-button:hover {
 	background: ${background_hilgt};
-} QSpinBox::down-button:pressed, QSpinBox::up-button:pressed {
+} QSpinBox::down-button:pressed, QSpinBox::up-button:pressed, QDoubleSpinBox::down-button:pressed, QDoubleSpinBox::up-button:pressed {
 	background: ${background_drk};
 }
 

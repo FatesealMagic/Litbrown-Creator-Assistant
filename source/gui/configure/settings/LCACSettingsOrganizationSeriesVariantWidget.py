@@ -26,28 +26,41 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ....Config import *
-from ....I18n import *
-from ....Assets import *
-from ....Settings import *
-from ....Util import *
+from ....Assets import Assets
+from ....Config import Config
+from ....I18n import I18n
+from ....Settings import Settings
+from ....Util import Util
 
-from ...LCAFilePickerWidget import *
-from ...LCALabel import *
-from ...LCATabbedDataViewPanelWidget import *
+from ...LCAFilePickerWidget import LCAFilePickerWidget
+from ...LCALabel import LCALabel
+from ...LCAListCreatorWidget import LCAListCreatorWidget
+from ...LCATabbedDataViewPanelWidget import LCATabbedDataViewPanelWidget
 
 class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget):
 
 	def _setup_layout (self) -> None:
-		layout = QFormLayout(self)
+		layout = QHBoxLayout(self)
+		tab_widget = QTabWidget()
+		for tab in ('metadata', 'publishing'):
+			tab_widget.addTab(
+				getattr(self, f'__build_{tab}_tab')(),
+				I18n(self).tabs[tab].title,
+			)
+		layout.addWidget(tab_widget)
+		self._finalize_mapper()
+
+	def __build_metadata_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QFormLayout(widget)
 		layout.setSpacing(layout.spacing() * 2)
 		if name_input := QLineEdit():
 			self._mapper.addMapping(name_input, self.model.get_column_index('name'))
-		layout.addRow(LCALabel(I18n(self).name), name_input)
+		layout.addRow(LCALabel(I18n(self).tabs.metadata.name), name_input)
 		if id_input := QLineEdit():
 			id_input.setReadOnly(True)
 			self._mapper.addMapping(id_input, self.model.get_column_index('id'))
-		layout.addRow(LCALabel(I18n(self).id), id_input)
+		layout.addRow(LCALabel(I18n(self).tabs.metadata.id), id_input)
 		if mtgformat := QComboBox():
 			mtgformat.setEditable(True)
 			mtgformat.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
@@ -58,13 +71,30 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 					mtgformat.insertSeparator(mtgformat.count())
 			self._mapper.addMapping(mtgformat, self.model.get_column_index('mtgformat'), b'currentText')
 			mtgformat.currentTextChanged.connect(self._mapper.submit)
-		layout.addRow(LCALabel(I18n(self).mtgformat), mtgformat)
+		layout.addRow(LCALabel(I18n(self).tabs.metadata.mtgformat), mtgformat)
 		if desc_edit := QPlainTextEdit():
-			# TODO this is a hack, figure out why the description is overwritten to '' when the next statement is removed
 			desc_edit.setPlainText(self.model.data(self.model.createIndex(
 				self._mapper.currentIndex(), self.model.get_column_index('description')
 			)))
 			self._mapper.addMapping(desc_edit, self.model.get_column_index('description'))
-		layout.addRow(LCALabel(I18n(self).desc), desc_edit)
-		self._finalize_mapper()
+		layout.addRow(LCALabel(I18n(self).tabs.metadata.desc), desc_edit)
+		return widget
+
+	def __build_publishing_tab (self) -> QWidget:
+		widget = QWidget()
+		layout = QHBoxLayout(widget)
+		if tab_widget := QTabWidget():
+			get_playlists = lambda : { playlist.id: playlist.title for playlist in Settings().integrations.youtube.playlists }
+			for output_type in ('stream', 'video', 'clip'):
+				output_widget = QWidget()
+				output_layout = QVBoxLayout(output_widget)
+				output_layout.addWidget(LCALabel(I18n(self).tabs.publishing.playlist_ids))
+				if playlists_widget := LCAListCreatorWidget(LCAListCreatorWidget.Mode.COMBO, get_playlists()):
+					self._mapper.addMapping(playlists_widget, self.model.get_column_index(f'publishing.{output_type}.youtube_playlist_ids'))
+					Settings().signals().changed.connect(lambda : playlists_widget.set_possible_selections(get_playlists()))
+					playlists_widget.changed.connect(self._mapper.submit)
+				output_layout.addWidget(playlists_widget)
+				tab_widget.addTab( output_widget, getattr(I18n(self).tabs.publishing.output_types, output_type) )
+		layout.addWidget(tab_widget)
+		return widget
 

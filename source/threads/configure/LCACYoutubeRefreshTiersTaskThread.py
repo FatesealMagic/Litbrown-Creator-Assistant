@@ -30,6 +30,8 @@ class LCACYoutubeRefreshTiersTaskThread (LCATaskThread):
 	def _run (self) -> None:
 		with LCAYoutubeIntegration() as youtube:
 			tiers = youtube.get_membertiers_info()
+			playlists = youtube.get_playlists()
 		with Settings():
 			Settings().integrations.youtube.remote_membership_tiers = tiers
+			Settings().integrations.youtube.playlists = playlists
 

@@ -35,19 +35,27 @@ class LCASYoutubeBroadcastPublishTaskThread (LCATaskThread):
 
 	def _run (self, data: list[LCAProjectFileModel], schedule_title: str, schedule_desc: str) -> None:
 		operables = [ p for p in data if p.stream.membertier_id != '~nostream' ]
-		for i, project in enumerate(operables):
-			self._emit_progress( i / len(operables) )
-			with LCAYoutubeIntegration() as yt:
+		with LCAYoutubeIntegration() as yt:
+			for i, project in enumerate(operables):
+				self._emit_progress( i / len(operables) )
 				broadcast_id = yt.create_broadcast(
 					title       = project.stream.full_title,
 					description = project.stream.full_description,
 					start       = project.stream.start,
 					public      = (project.stream.membertier_id == '~public'),
 				)
-			if project.stream.thumbnail:
-				self._emit_progress( i / len(operables) + (0.5 / len(operables)) )
-				with LCAYoutubeIntegration() as yt:
+				self._emit_progress( i / len(operables) + ((1 / 3) / len(operables)) )
+				if project.stream.thumbnail:
 					yt.set_thumbnail( video_id = broadcast_id, thumbnail_path = project.stream.thumbnail )
-			with project:
-				project.stream.remote_ids.youtube = broadcast_id
+				self._emit_progress( i / len(operables) + ((2 / 3) / len(operables)) )
+				series_playlists = Settings().series_from_id(project.series_id).stream.add_to_playlists
+				variant_playlists = []
+				try:
+					variant_playlists = Settings().series_variant_from_id(project.series_id, project.variant_id).publishing.stream.youtube_playlist_ids
+				except ValueError:
+					pass
+				for playlist_id in ( series_playlists + variant_playlists ):
+					yt.add_to_playlist( video_id = broadcast_id, playlist_id = playlist_id )
+				with project:
+					project.stream.remote_ids.youtube = broadcast_id
 

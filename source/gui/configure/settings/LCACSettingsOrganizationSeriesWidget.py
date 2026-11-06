@@ -180,10 +180,12 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		layout.addWidget(content_to)
 		layout.addSpacing(layout.spacing())
 		layout.addWidget(LCALabel(I18n(self).tabs.output.tabs.publishing.playlists))
-		if playlists := LCAListCreatorWidget():
-			self._mapper.addMapping(playlists, self.model.get_column_index(f'{content_type}.add_to_playlists'))
-			playlists.changed.connect(self._mapper.submit)
-		layout.addWidget(playlists)
+		get_playlists = lambda : { playlist.id: playlist.title for playlist in Settings().integrations.youtube.playlists }
+		if playlists_widget := LCAListCreatorWidget(LCAListCreatorWidget.Mode.COMBO, get_playlists()):
+			self._mapper.addMapping(playlists_widget, self.model.get_column_index(f'{content_type}.add_to_playlists'))
+			Settings().signals().changed.connect(lambda : playlists_widget.set_possible_selections(get_playlists()))
+			playlists_widget.changed.connect(self._mapper.submit)
+		layout.addWidget(playlists_widget)
 		layout.addStretch()
 		return widget
 
@@ -237,6 +239,10 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 									(doc.documentMargin() + decklist_separator_widget.frameWidth()) * 2 +
 									margins.top() + margins.bottom()
 								)
+								decklist_separator_widget.setPlainText(self.model.data((
+									self._model_row,
+									f'{decklists_type}.decklist_separator'
+								)))
 								self._mapper.addMapping(
 									decklist_separator_widget,
 									self.model.get_column_index(f'{decklists_type}.decklist_separator')
@@ -259,6 +265,10 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 										Qt.Orientation.Vertical,
 									) )
 									decklist_templatelbl_layout.addStretch()
+								decklist_template.setPlainText(self.model.data((
+									self._model_row,
+									f'{decklists_type}.decklist_template'
+								)))
 								self._mapper.addMapping(decklist_template, self.model.get_column_index(f'{decklists_type}.decklist_template'))
 							decklist_layout.addRow(decklist_templatelbl_widget, decklist_template)
 						decklists_tabwidget.addTab(decklist_widget, I18n(self).tabs.formatting.decklists[decklists_type].tab_title)

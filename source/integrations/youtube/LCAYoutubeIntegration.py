@@ -33,11 +33,12 @@ import googleapiclient.discovery
 import googleapiclient.errors
 import googleapiclient.http
 
-from ..LCAIntegration import *
+from ..LCAIntegration import LCAIntegration
 from ..LCAIntegrationErrors import *
 
-from ...Assets import *
-from ...Settings import *
+from ...Assets import Assets
+from ...Config import Config
+from ...Settings import Settings
 
 class LCAYoutubeIntegration (LCAIntegration):
 	
@@ -217,5 +218,32 @@ class LCAYoutubeIntegration (LCAIntegration):
 		self.__execute_chunked_request( self.yt().thumbnails().set(
 			videoId = video_id,
 			media_body = self.__create_media_file_upload(thumbnail_path),
+		) )
+
+	@LCAIntegration.in_context
+	def get_playlists (self) -> list[Settings().IntegrationsModel.YoutubeRemoteIntegrationModel.PlaylistModel]:
+		return [ Settings().IntegrationsModel.YoutubeRemoteIntegrationModel.PlaylistModel(
+			title      = playlist['snippet']['title'],
+			id         = playlist['id'],
+			privacy    = playlist['status']['privacyStatus'],
+			item_count = playlist['contentDetails']['itemCount'],
+		) for playlist in self.__execute_paginated_request( lambda : self.yt().playlists().list(
+			part = 'contentDetails,snippet,status',
+			mine = True,
+			maxResults = 50,
+		) ) ]
+
+	@LCAIntegration.in_context
+	def add_to_playlist (self,
+		/, *,
+		video_id: str,
+		playlist_id: str,
+	) -> None:
+		self.__execute_request( lambda : self.yt().playlistItems().insert(
+			part = 'snippet',
+			body = { 'snippet': {
+				'playlistId': playlist_id,
+				'resourceId': { 'kind': 'youtube#video', 'videoId': video_id },
+			} },
 		) )
 

@@ -20,6 +20,8 @@
   "
   """
 
+import enum
+
 from loguru import logger
 
 from PySide6.QtCore import *
@@ -27,15 +29,32 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from ..Assets import Assets
+from ..I18n import I18n
 
-from .LCAWidget import *
+from .LCAComboBox import LCAComboBox
+from .LCAWidget import LCAWidget
 
 class LCAListCreatorWidget (LCAWidget):
 
-	__text_input: str
+	class Mode (enum.Enum):
+		TEXT = 'text'
+		COMBO = 'combo'
+
+	__data_to_label: dict[str, str]
+	__text_input: QLineEdit
+	__combo_input: LCAComboBox
 	__list_widget: QListWidget
 
 	changed = Signal(list) # list[str]
+
+	def __init__ (self,
+		mode: Mode = Mode.TEXT,
+		data_to_label: dict | None = None,
+		*args, **kwargs,
+	):
+		self.__mode = mode
+		self.__data_to_label = data_to_label or {}
+		super().__init__()
 
 	def _setup_layout (self) -> None:
 		layout = QVBoxLayout(self)
@@ -43,18 +62,26 @@ class LCAListCreatorWidget (LCAWidget):
 		if top_widget := QWidget():
 			top_layout = QHBoxLayout(top_widget)
 			top_layout.setContentsMargins(0, 0, 0, 0)
-			if text_input := QLineEdit():
-				self.__text_input = text_input
-				text_input.returnPressed.connect(self.__evt_add_item)
-			top_layout.addWidget(text_input)
-			if add_btn := QPushButton():
-				add_btn.setIcon(Assets.QIcon('icons/plus.png'))
-				add_btn.clicked.connect(self.__evt_add_item)
-			top_layout.addWidget(add_btn)
+			if self.__mode is self.Mode.TEXT:
+				if text_input := QLineEdit():
+					self.__text_input = text_input
+					text_input.returnPressed.connect(self.__evt_add_item)
+				top_layout.addWidget(text_input, 1)
+				if add_btn := QPushButton():
+					add_btn.setIcon(Assets.QIcon('icons/plus.png'))
+					add_btn.clicked.connect(self.__evt_add_item)
+				top_layout.addWidget(add_btn, 0)
+			elif self.__mode is self.Mode.COMBO:
+				if combo_input := LCAComboBox():
+					self.__combo_input = combo_input
+					combo_input.setPlaceholderText(I18n(self).combo_placeholder)
+					combo_input.currentIndexChanged.connect(self.__evt_add_item)
+					self.set_possible_selections(self.__data_to_label)
+				top_layout.addWidget(combo_input, 1)
 			if del_btn := QPushButton():
 				del_btn.setIcon(Assets.QIcon('icons/close.png'))
 				del_btn.clicked.connect(self.__evt_del_item)
-			top_layout.addWidget(del_btn)
+			top_layout.addWidget(del_btn, 0)
 		layout.addWidget(top_widget)
 		if list_widget := QListWidget():
 			self.__list_widget = list_widget
@@ -65,20 +92,55 @@ class LCAListCreatorWidget (LCAWidget):
 			list_widget.model().rowsMoved.connect(lambda *_ : self.changed.emit(self.get_value()))
 		layout.addWidget(list_widget)
 
-	def get_value (self) -> list[str]:
-		return [ self.__list_widget.item(i).text() for i in range(self.__list_widget.count()) ]
+	def set_possible_selections (self,
+		data_to_label: dict[str, str],
+		/,
+	) -> None:
+		self.__data_to_label = data_to_label
+		with QSignalBlocker(self.__combo_input):
+			self.__combo_input.clear()
+			for data, label in data_to_label.items():
+				self.__combo_input.addItem(label, data)
+			self.__combo_input.setCurrentIndex(-1)
 
-	def set_value (self, val: list[str]) -> None:
-		if self.get_value() == val:
+	def get_value (self) -> list[str]:
+		val = [ self.__list_widget.item(i).data(Qt.UserRole) for i in range(self.__list_widget.count()) ]
+		logger.debug(val)
+		return val
+
+	def set_value (self, values: list[str]) -> None:
+		if self.get_value() == values:
 			return
 		self.__list_widget.clear()
-		for item in val:
+		for val in values:
+			if self.__mode is self.Mode.TEXT:
+				label = val
+			elif self.__mode is self.Mode.COMBO:
+				label = self.__data_to_label.get(val, None)
+				if label is None:
+					continue
+			item = QListWidgetItem(label)
+			item.setData(Qt.UserRole, val)
 			self.__list_widget.addItem(item)
 		self.changed.emit(val)
 
-	def __evt_add_item (self) -> None:
-		self.__list_widget.addItem(self.__text_input.text())
-		self.__text_input.clear()
+	def __evt_add_item (self, *_) -> None:
+		if self.__mode is self.Mode.TEXT:
+			text = self.__text_input.text()
+			if not text:
+				return
+			item = QListWidgetItem(text)
+			item.setData(Qt.UserRole, text)
+			self.__list_widget.addItem(item)
+			self.__text_input.clear()
+		elif self.__mode is self.Mode.COMBO:
+			if self.__combo_input.currentIndex() == -1:
+				return
+			item = QListWidgetItem(self.__combo_input.currentText())
+			item.setData(Qt.UserRole, self.__combo_input.currentData())
+			self.__list_widget.addItem(item)
+			with QSignalBlocker(self.__combo_input):
+				self.__combo_input.setCurrentIndex(-1)
 		self.changed.emit(self.get_value())
 
 	def __evt_del_item (self, *_) -> None:

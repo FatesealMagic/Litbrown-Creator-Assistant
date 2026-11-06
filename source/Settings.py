@@ -137,6 +137,17 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			id: str = 'newvariant'
 			mtgformat: str = ''
 			name: str = 'New Variant'
+
+			class PublishingModel (pydantic.BaseModel, validate_assignment = True):
+
+				class PublishingOutputTypeModel (pydantic.BaseModel, validate_assignment = True):
+					youtube_playlist_ids: list[str] = []
+				stream: PublishingOutputTypeModel = PublishingOutputTypeModel()
+				video: PublishingOutputTypeModel = PublishingOutputTypeModel()
+				clip: PublishingOutputTypeModel = PublishingOutputTypeModel()
+
+			publishing: PublishingModel = PublishingModel()
+
 		variants: list[VariantModel] = []
 
 		class SegmentModel (pydantic.BaseModel, validate_assignment = True):
@@ -148,7 +159,6 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			segue_scene_names: list[str] = []
 			segue_selection_behavior: typing.Literal['in_order', 'random'] = 'in_order'
 			chapter_name: str = '${segment_name}'
-			# TODO implement ad reads, link here, account for pluralability
 		segments: list[SegmentModel] = []
 		
 	series: list[SeriesModel] = []
@@ -201,9 +211,19 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 						v = []
 					setattr(self, attr, v)
 
-		youtube: RemoteIntegrationModel = RemoteIntegrationModel()
 		twitch: RemoteIntegrationModel = RemoteIntegrationModel()
 		patreon: RemoteIntegrationModel = RemoteIntegrationModel()
+
+		class YoutubeRemoteIntegrationModel (RemoteIntegrationModel):
+
+			class PlaylistModel (pydantic.BaseModel, validate_assignment = True):
+				title: str
+				id: str
+				privacy: typing.Literal['public', 'unlisted', 'private']
+				item_count: int
+			playlists: list[PlaylistModel] = []
+
+		youtube: YoutubeRemoteIntegrationModel = YoutubeRemoteIntegrationModel()
 
 		class DiscordIntegrationModel (pydantic.BaseModel, validate_assignment = True):
 			token: str = ''

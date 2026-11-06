@@ -55,6 +55,9 @@ LCAContentDetailsEditingWidget:
 LCAFilePickerWidget:
   picker_btn: Choose File
 
+LCAListCreatorWidget:
+  combo_placeholder: Make a selection...
+
 LCAMagicCardSelectorWidget:
   search_placeholder: Search Scryfall...
 
@@ -422,7 +425,7 @@ LCACSettingsOrganizationSeriesWidget:
         publishing:
           tab_title: Publishing
           publish_to: "Publish to Member Tiers:"
-          playlists: "Add to Youtube Playlists with IDs:"
+          playlists: "Add to these Youtube playlists:"
         rendering:
           tab_title: Rendering
           start_scene: "Name of OBS scene for renders to start on:"
@@ -488,11 +491,20 @@ LCACSettingsOrganizationSeriesSegmentWidget:
       chapter: '<html>Chapter Name:<br/><i>Used to name this segment in video timestamps</i></html>'
 
 LCACSettingsOrganizationSeriesVariantWidget:
-  mtgformat: Default MTG Format
-  name: Name
-  id: Id (immutable)
-  desc: Description
-  thumbnail: Thumbnail
+  tabs:
+    metadata:
+      title: Metadata
+      mtgformat: Default MTG Format
+      name: Name
+      id: Id (immutable)
+      desc: Description
+    publishing:
+      title: Publishing
+      output_types:
+        stream: Stream
+        video: Video
+        clip: Clip
+      playlist_ids: "Add to these Youtube playlists:"
 
 LCACObsWidget:
   info: LCA puppeteers OBS to record raw footage and to render edited videos and clips resulting from that footage. You may use one OBS install for all of these tasks, or may split them up into any combination of portable installs as you see fit. Please ensure the Websocket servers for each of these instances are properly configured, then enter their Connect Info below. You will not need to change the Host unless you are running OBS and LCA on separate machines.
@@ -517,7 +529,7 @@ LCACTwitchWidget:
 
 LCACYoutubeWidget:
   info: LCA connects to your Youtube account to set up your livestreams, upload your videos, and manage your playlists.
-  refresh_tiers: Refresh Membership Tiers Info from Youtube
+  refresh_tiers: Refresh Channel Information from Youtube
 
 LCACDiscordWidget:
   info: LCA connects to your Discord server to manage roles, read membership information, and promote content.

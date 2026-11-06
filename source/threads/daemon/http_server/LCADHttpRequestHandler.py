@@ -110,6 +110,11 @@ class LCADHttpRequestHandler (http.server.SimpleHTTPRequestHandler):
 					tiers = integration.get_membertiers_info()
 				with Settings():
 					getattr(Settings().integrations, integration_name).remote_membership_tiers = tiers
+			if integration_name in ('youtube',):
+				with IntegrationClass() as integration:
+					playlists = integration.get_playlists()
+				with Settings():
+					getattr(Settings().integrations, integration_name).playlists = playlists
 			self._send_response(200, I18n(self).oauth_successful)
 		except Exception as e:
 			logger.exception(e)

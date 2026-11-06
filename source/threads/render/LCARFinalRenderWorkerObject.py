@@ -40,6 +40,7 @@ from ...Settings import Settings
 
 from .LCARFoobarListenerTaskThread import LCARFoobarListenerTaskThread
 from ..LCAWorkerObject import LCAWorkerObject
+from ..common.LCADeckFetcherTaskThread import LCADeckFetcherTaskThread
 from ...common.LCAProjectState import LCAProjectState
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel
@@ -98,6 +99,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				self.__obs_create_scenes_from_templates()
 				self.__obs_prepare_first_segment_video()
 				self.__obs_render_video()
+				self.__update_project_metadata()
 			finally:
 				self.__cleanup_foobar()
 				self.__obs_remove_scenes()
@@ -414,6 +416,19 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		if not self.__segues.get(segment_id, None):
 			return None
 		return self.__segues[segment_id].pop(0)
+
+	@tracked_task
+	def __update_project_metadata (self) -> None:
+		self.__update_decklists()
+
+	def __update_decklists (self) -> None:
+		decklist_threads = []
+		for i in range(len(self.__project.decklists)):
+			thread = LCADeckFetcherTaskThread(project = project, deck_index = i)
+			decklist_threads.append(thread)
+			thread.start()
+		for thread in decklist_threads:
+			thread.wait()
 
 	def __cleanup_foobar (self) -> None:
 		self.__foobar_listener_thread.requestInterruption()

@@ -729,7 +729,8 @@ LCARMainWindow:
         organize_project_state_data: Reading and organizing recorded stream data
         obs_create_scenes_from_templates: Creating OBS scenes from templates
         obs_prepare_first_segment_video: Preparing first segment
-        obs_render_video: Rendering video -- this is done in real time, it will take a while...
+        obs_render_video: "<html>RENDERING VIDEO &emdash; This is done in real time and will take a while...</html>"
+        update_project_metadata: Updating project metadata
         obs_remove_scenes: Cleaning up duplicated scenes
     review:
       name: Review

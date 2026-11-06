@@ -25,14 +25,14 @@ import re
 
 from loguru import logger
 
-from ...Config import *
-from ...Assets import *
-from ...Settings import *
+from ...Assets import Assets
+from ...Config import Config
+from ...Settings import Settings
 
-from ..LCATaskThread import *
-from ...integrations.moxfield.LCAMoxfieldIntegration import *
-from ...models.LCAProjectFileModel import *
-from ...models.LCADecklistModel import *
+from ..LCATaskThread import LCATaskThread
+from ...integrations.moxfield.LCAMoxfieldIntegration import LCAMoxfieldIntegration
+from ...models.LCAProjectFileModel import LCAProjectFileModel
+from ...models.LCADecklistModel import LCADecklistModel
 
 class LCADeckFetcherTaskThread (LCATaskThread):
 	

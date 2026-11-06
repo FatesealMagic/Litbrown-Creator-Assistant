@@ -216,6 +216,7 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		name: str
 		discord_remote_role_names: list[str] = []
 		discord_managed_role_name: str = ''
+		discord_members: list[str] = []
 		
 		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
 			youtube: str | None = None

@@ -20,6 +20,7 @@
   "
   """
 
+import collections
 import time
 
 from loguru import logger
@@ -46,14 +47,22 @@ class LCADDiscordBotTaskThread (LCATaskThread):
 			if not len(Settings().membership_tiers):
 				logger.info('No membership tiers to manage')
 				return
-			tier_roles = [
-				discord.utils.get(self.guilds[0].roles, name = tier.discord_managed_role_name)
+			members_by_tier_role = collections.OrderedDict({
+				discord.utils.get(self.guilds[0].roles, name = tier.discord_managed_role_name): []
 				for tier in Settings().membership_tiers
-			]
+			})
 			for member in self.guilds[0].members:
 				member_tier_index = self.__get_user_tier_index(member)
-				await self.__assign_roles_to_member(member, tier_roles[:member_tier_index])
-				await self.__unassign_roles_from_member(member, tier_roles[member_tier_index:])
+				if member_tier_index:
+					members_by_tier_role[ list(members_by_tier_role.keys())[member_tier_index - 1] ].append(member.display_name)
+				await self.__assign_roles_to_member(member, list(members_by_tier_role.keys())[:member_tier_index])
+				await self.__unassign_roles_from_member(member, list(members_by_tier_role.keys())[member_tier_index:])
+			for members, settings_tier in zip(members_by_tier_role.values(), Settings().membership_tiers):
+				members.sort()
+				if settings_tier.discord_members != members:
+					logger.info(f'Updating stored members for tier {settings_tier.name}: {members}')
+					with Settings():
+						settings_tier.discord_members = members
 
 		def __get_user_tier_index (self, member: discord.Member) -> int:
 			ret = 0

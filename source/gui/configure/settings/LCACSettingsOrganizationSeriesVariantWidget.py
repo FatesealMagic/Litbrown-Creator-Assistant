@@ -73,9 +73,6 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 			mtgformat.currentTextChanged.connect(self._mapper.submit)
 		layout.addRow(LCALabel(I18n(self).tabs.metadata.mtgformat), mtgformat)
 		if desc_edit := QPlainTextEdit():
-			desc_edit.setPlainText(self.model.data(self.model.createIndex(
-				self._mapper.currentIndex(), self.model.get_column_index('description')
-			)))
 			self._mapper.addMapping(desc_edit, self.model.get_column_index('description'))
 		layout.addRow(LCALabel(I18n(self).tabs.metadata.desc), desc_edit)
 		return widget
@@ -90,7 +87,10 @@ class LCACSettingsOrganizationSeriesVariantWidget (LCATabbedDataViewPanelWidget)
 				output_layout = QVBoxLayout(output_widget)
 				output_layout.addWidget(LCALabel(I18n(self).tabs.publishing.playlist_ids))
 				if playlists_widget := LCAListCreatorWidget(LCAListCreatorWidget.Mode.COMBO, get_playlists()):
-					self._mapper.addMapping(playlists_widget, self.model.get_column_index(f'publishing.{output_type}.youtube_playlist_ids'))
+					self._mapper.addMapping(
+						playlists_widget,
+						self.model.get_column_index(f'publishing.{output_type}.youtube_playlist_ids')
+					)
 					Settings().signals().changed.connect(lambda : playlists_widget.set_possible_selections(get_playlists()))
 					playlists_widget.changed.connect(self._mapper.submit)
 				output_layout.addWidget(playlists_widget)

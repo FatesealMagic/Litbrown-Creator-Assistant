@@ -49,7 +49,6 @@ class LCACSettingsMembershipTierWidget (LCATabbedDataViewPanelWidget):
 		self.__remote_platform_cbos = {}
 		for platform in ('youtube', 'twitch', 'patreon'):
 			if cbo := LCAComboBox():
-				cbo.currentDataChanged.connect( lambda data, platform = platform : self.__evt_remote_tier_changed(data, platform) )
 				self._mapper.addMapping(cbo, self.model.get_column_index(f'remote_ids.{platform}'))
 				self.__remote_platform_cbos[platform] = cbo
 			layout.addRow(getattr(I18n(self).remote_tiers, platform), cbo)
@@ -63,7 +62,6 @@ class LCACSettingsMembershipTierWidget (LCATabbedDataViewPanelWidget):
 		layout.addRow(LCALabel(I18n(self).other_discord_roles))
 		if other_discord_roles := LCAListCreatorWidget():
 			self._mapper.addMapping(other_discord_roles, self.model.get_column_index('discord_remote_role_names'))
-			other_discord_roles.set_value(self.model.data((self._model_row, 'discord_remote_role_names')))
 			other_discord_roles.changed.connect(self._mapper.submit)
 		layout.addRow(other_discord_roles)
 		self._finalize_mapper()
@@ -78,7 +76,4 @@ class LCACSettingsMembershipTierWidget (LCATabbedDataViewPanelWidget):
 				cbo.setCurrentIndex(cbo.findData(self.model.data([self._model_row, f'remote_ids.{platform}'])))
 			except IndexError:
 				pass # Tab was just deleted
-
-	def __evt_remote_tier_changed (self, remote_id: str, platform_name: str) -> None:
-		pass # logger.debug(f'{remote_id} {platform_name}')
 

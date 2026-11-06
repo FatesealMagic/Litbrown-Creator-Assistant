@@ -20,6 +20,9 @@
   "
   """
 
+import contextlib
+import typing
+
 from PySide6.QtWidgets import *
 
 class LCAWidget (QWidget):
@@ -31,3 +34,28 @@ class LCAWidget (QWidget):
 	def _setup_layout (self) -> None:
 		raise NotImplementedError
 
+	@contextlib.contextmanager
+	def block_signals_recursively (self) -> typing.Self:
+		original_block_states = self.__set_signals_blocked_recursive(self)
+		try:
+			yield self
+		finally:
+			for obj, blocked in original_block_states.items():
+				try:
+					obj.blockSignals(blocked)
+				except RuntimeError:
+					pass
+
+	@classmethod
+	def __set_signals_blocked_recursive (cls,
+		obj: QObject,
+		/,
+		block = True,
+		*,
+		_original_block_states: dict = None,
+	) -> dict:
+		_original_block_states = _original_block_states or {}
+		_original_block_states[obj] = obj.blockSignals(True)
+		for child in obj.children():
+			cls.__set_signals_blocked_recursive(child, block = block, _original_block_states = _original_block_states)
+		return _original_block_states

@@ -64,7 +64,6 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		layout = QFormLayout(widget)
 		layout.setSpacing(layout.spacing() * 2)
 		if name_edit := QLineEdit():
-			name_edit.setReadOnly(False)
 			self._mapper.addMapping(name_edit, self.model.get_column_index('name'))
 		layout.addRow(I18n(self).tabs.general.name, name_edit)
 		if id_edit := QLineEdit():
@@ -189,6 +188,12 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 		layout.addStretch()
 		return widget
 
+	def __content_to_index_changed (self, i: int, content_type: str) -> None:
+		self.model.setData(
+			self.model.index(self._model_row, self.model.get_column_index(f'{content_type}.publish_to_membership_id')),
+			self.__content_to_cbos[content_type].currentData()
+		)
+
 	def __build_content_rendering_tab (self, content_type: str) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
@@ -239,10 +244,6 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 									(doc.documentMargin() + decklist_separator_widget.frameWidth()) * 2 +
 									margins.top() + margins.bottom()
 								)
-								decklist_separator_widget.setPlainText(self.model.data((
-									self._model_row,
-									f'{decklists_type}.decklist_separator'
-								)))
 								self._mapper.addMapping(
 									decklist_separator_widget,
 									self.model.get_column_index(f'{decklists_type}.decklist_separator')
@@ -265,10 +266,6 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 										Qt.Orientation.Vertical,
 									) )
 									decklist_templatelbl_layout.addStretch()
-								decklist_template.setPlainText(self.model.data((
-									self._model_row,
-									f'{decklists_type}.decklist_template'
-								)))
 								self._mapper.addMapping(decklist_template, self.model.get_column_index(f'{decklists_type}.decklist_template'))
 							decklist_layout.addRow(decklist_templatelbl_widget, decklist_template)
 						decklists_tabwidget.addTab(decklist_widget, I18n(self).tabs.formatting.decklists[decklists_type].tab_title)
@@ -298,10 +295,4 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 				i = 0
 			combobox.setCurrentIndex(i)
 			combobox.blockSignals(False)
-
-	def __content_to_index_changed (self, i: int, content_type: str) -> None:
-		self.model.setData(
-			self.model.index(self._model_row, self.model.get_column_index(f'{content_type}.publish_to_membership_id')),
-			self.__content_to_cbos[content_type].currentData()
-		)
 

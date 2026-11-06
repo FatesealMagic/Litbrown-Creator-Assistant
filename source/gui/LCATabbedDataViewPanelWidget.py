@@ -24,14 +24,8 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from ..Config import *
-from ..I18n import *
-from ..Assets import *
-from ..Settings import *
-from ..Util import *
-
-from .LCATableModel import *
-from .LCAWidget import *
+from .LCATableModel import LCATableModel
+from .LCAWidget import LCAWidget
 
 class LCATabbedDataViewPanelWidget (LCAWidget):
 
@@ -44,11 +38,12 @@ class LCATabbedDataViewPanelWidget (LCAWidget):
 		self._mapper = QDataWidgetMapper()
 		self._model_row = row
 		self._mapper.setModel(self.model)
-		self._mapper.setCurrentModelIndex(self.model.index(row, 0))
+		self._mapper.setCurrentIndex(row)
 		super().__init__(*args, **kwargs)
 
 	def _finalize_mapper (self) -> None:
-		self._mapper.setCurrentIndex(self._model_row)
+		with self.block_signals_recursively():
+			self._mapper.revert()
 
 	def set_model_row (self, row: int) -> None:
 		self._model_row = row

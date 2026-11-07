@@ -46,7 +46,11 @@ class LCASYoutubeBroadcastPublishTaskThread (LCATaskThread):
 				)
 				self._emit_progress( i / len(operables) + ((1 / 3) / len(operables)) )
 				if project.stream.thumbnail:
-					yt.set_thumbnail( video_id = broadcast_id, thumbnail_path = project.stream.thumbnail )
+					for _ in yt.set_thumbnail(
+						video_id = broadcast_id,
+						thumbnail_path = project.stream.thumbnail.resolve(),
+					):
+						pass
 				self._emit_progress( i / len(operables) + ((2 / 3) / len(operables)) )
 				series_playlists = Settings().series_from_id(project.series_id).stream.add_to_playlists
 				variant_playlists = []

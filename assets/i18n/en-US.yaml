@@ -756,8 +756,14 @@ LCARMainWindow:
       name: Review
       placeholder_title_hook: Title hook
       placeholder_description_hook: Description hook
+      publish: FINALIZE && Review Publish Settings
     publish:
       name: Publish
+      publish: PUBLISH VIDEO
+      youtube_publish_private:
+        title: Publish (Private)
+      youtube_publish_unlisted:
+        title: Publish (Unlisted)
 
 LCARSegmentPreparerWidget:
   autoeditor_task: Auto-Edit

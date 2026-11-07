@@ -24,10 +24,8 @@ from loguru import logger
 
 from PySide6.QtCore import *
 
-from ..Config import *
-
 class LCATaskThread (QThread):
-	
+
 	complete = Signal(bool)
 	error    = Signal(Exception)
 	result   = Signal(object)

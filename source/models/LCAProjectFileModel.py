@@ -54,32 +54,37 @@ class LCAProjectFileModel (pydantic.BaseModel, validate_assignment = True):
 	
 	decklists: list[LCADecklistModel] = []
 
-	class StreamModel (pydantic.BaseModel, validate_assignment = True):
-		start: str = ''
+	class OutputTypeModel (pydantic.BaseModel, validate_assignment = True):
 		membertier_id: str = ''
+		thumbnail: pathlib.Path | None = None
 		title_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
 		description_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
-		thumbnail: pathlib.Path | None = None
 		full_title: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 100))] = ''
 		full_description: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 5000))] = ''
+
+	class StreamModel (OutputTypeModel):
+		start: str = ''
 		
-		class RemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
+		class StreamRemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
 			youtube: str = ''
 			twitch: str = ''
 			patreon: str = ''
-		remote_ids: RemoteIdsModel = RemoteIdsModel()
+		remote_ids: StreamRemoteIdsModel = StreamRemoteIdsModel()
 
 	stream: StreamModel = StreamModel()
 	
-	class VideoModel (pydantic.BaseModel, validate_assignment = True):
+	class VideoModel (OutputTypeModel):
 		timestamps: str = ''
-		thumbnail: pathlib.Path | None = None
-		membertier_id: str = ''
-		title_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
-		description_hook: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())] = ''
-		thumbnail: pathlib.Path | None = None
-		full_title: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 100))] = ''
-		full_description: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator(max_len = 5000))] = ''
+
+		class VideoRemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
+
+			class YoutubeVideoRemoteIdsModel (pydantic.BaseModel, validate_assignment = True):
+				unlisted: str = ''
+				private: str = ''
+			youtube: YoutubeVideoRemoteIdsModel = YoutubeVideoRemoteIdsModel()
+
+		remote_ids: VideoRemoteIdsModel = VideoRemoteIdsModel()
+
 	video: VideoModel = VideoModel()
 
 	class EventsModel (pydantic.BaseModel, validate_assignment = True):

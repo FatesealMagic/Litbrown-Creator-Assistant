@@ -31,12 +31,11 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from ...Assets import Assets
-from ...Config import Config
 from ...I18n import I18n
 from ...Settings import Settings
-from ...Util import Util
 
 from .LCARSegmentPreparerWidget import LCARSegmentPreparerWidget
+from ..LCAConnectionLabelWidget import LCAConnectionLabelWidget
 from ..LCAContentDetailsEditingWidget import LCAContentDetailsEditingWidget
 from ..LCALabel import LCALabel
 from ..LCAMainWindow import LCAMainWindow
@@ -46,10 +45,12 @@ from ..LCASideTabWidget import LCASideTabWidget
 from ..LCATableModel import LCATableModel
 from ..LCATaskTrackerWidget import LCATaskTrackerWidget
 from ...integrations.autoeditor.LCAAutoeditorIntegration import LCAAutoeditorIntegration
+from ...integrations.youtube.LCAYoutubeIntegration import LCAYoutubeIntegration
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...threads.LCAWorkerThread import LCAWorkerThread
 from ...threads.render.LCARFinalRenderWorkerObject import LCARFinalRenderWorkerObject
 from ...threads.render.LCARFootagePreparerTaskThread import LCARFootagePreparerTaskThread
+from ...threads.render.LCARYoutubeVideoPublishTaskThread import LCARYoutubeVideoPublishTaskThread
 
 class LCARMainWindow (LCAMainWindow):
 
@@ -64,6 +65,8 @@ class LCARMainWindow (LCAMainWindow):
 	__start_review_btn: QPushButton
 	__render_thread: LCAWorkerThread[LCARFinalRenderWorkerObject] | None = None
 	__details_widget: LCAContentDetailsEditingWidget
+	__youtube_publish_private: LCATaskTrackerWidget
+	__youtube_publish_unlisted: LCATaskTrackerWidget | None = None
 
 	def _initialize_window (self) -> None:
 		if len(sys.argv) <= 2:
@@ -268,6 +271,11 @@ class LCARMainWindow (LCAMainWindow):
 		if details_widget := LCAContentDetailsEditingWidget(self.__model, 'video'):
 			self.__details_widget = details_widget
 		layout.addWidget(details_widget)
+		if publish_btn := QPushButton(I18n(self).tabs.review.publish):
+			publish_btn.setProperty('css_class', 'big')
+			publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
+			publish_btn.clicked.connect(self.__evt_display_publish_clicked)
+		layout.addWidget(publish_btn)
 		mapper.revert()
 		self.__regenerate_video_texts()
 		return widget
@@ -277,6 +285,81 @@ class LCARMainWindow (LCAMainWindow):
 			self.__project.generate_content_texts('video')
 		self.__details_widget.reload_content_texts()
 
+	def __evt_display_publish_clicked (self) -> None:
+		self.centralWidget().setCurrentIndex(3)
+
 	def __build_publish_tab (self) -> QWidget:
-		return QLabel('publish')
+		widget = QWidget()
+		layout = QVBoxLayout(widget)
+		layout.setContentsMargins(0, 0, 0, 0)
+		if publish_scrollarea := QScrollArea():
+			publish_scrollarea.setWidgetResizable(True)
+			publish_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+			publish_scrollarea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+			if publish_widget := QWidget():
+				publish_layout = QVBoxLayout(publish_widget)
+				if youtube_widget := QWidget():
+					youtube_layout = QVBoxLayout(youtube_widget)
+					youtube_layout.setSpacing(youtube_layout.spacing() * 2)
+					youtube_layout.addWidget(LCAConnectionLabelWidget('youtube'))
+					if youtube_publish_private := LCATaskTrackerWidget(
+						label = I18n(self).tabs.publish.youtube_publish_private.title,
+						thread_factory = lambda : LCARYoutubeVideoPublishTaskThread(
+							project = self.__project,
+							privacy = 'private',
+						),
+						integration = LCAYoutubeIntegration,
+					):
+						self.__youtube_publish_private = youtube_publish_private
+						youtube_publish_private.error.connect(
+							lambda e : self.__evt_publish_error(e, 'youtube_publish_private')
+						)
+						youtube_publish_private.result.connect(
+							lambda r : self.__evt_publish_result(r,  'youtube_publish_private')
+						)
+					youtube_layout.addWidget(youtube_publish_private)
+					if Settings().series_from_id(self.__project.series_id).video.publish_to_membership_id != '~public':
+						if youtube_publish_unlisted := LCATaskTrackerWidget(
+							label = I18n(self).tabs.publish.youtube_publish_unlisted.title,
+							thread_factory = lambda : LCARYoutubeVideoPublishTaskThread(
+								project = self.__project,
+								privacy = 'unlisted',
+							),
+							integration = LCAYoutubeIntegration,
+						):
+							self.__youtube_publish_unlisted = youtube_publish_unlisted
+							youtube_publish_unlisted.error.connect(
+								lambda e : self.__evt_publish_error(e, 'youtube_publish_unlisted')
+							)
+							youtube_publish_unlisted.result.connect(
+								lambda r : self.__evt_publish_result(r,  'youtube_publish_unlisted')
+							)
+						youtube_layout.addWidget(youtube_publish_unlisted)
+				publish_layout.addWidget(youtube_widget)
+				publish_layout.addStretch()
+			publish_scrollarea.setWidget(publish_widget)
+		layout.addWidget(publish_scrollarea)
+		if publish_btn := QPushButton(I18n(self).tabs.publish.publish):
+			publish_btn.setProperty('css_class', 'big')
+			publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
+			publish_btn.clicked.connect(self.__evt_start_publish)
+		layout.addWidget(publish_btn)
+		return widget
+
+	def __evt_start_publish (self) -> None:
+		self.__youtube_publish_private.execute()
+		if self.__youtube_publish_unlisted:
+			self.__youtube_publish_unlisted.execute()
+
+	def __evt_publish_error (self,
+		e: Exception,
+		key: str,
+	) -> None:
+		logger.warning(key)
+
+	def __evt_publish_result (self,
+		result: object,
+		key: str,
+	) -> None:
+		logger.info(key)
 

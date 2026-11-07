@@ -21,6 +21,7 @@
   """
 
 import json
+import pathlib
 import sys
 
 from loguru import logger
@@ -101,8 +102,8 @@ class LCAYoutubeIntegration (LCAIntegration):
 					self.__refresh_token()
 				else:
 					raise LCAIntegrationBadCredentialsError
-			except googleapiclient.errors.HttpError as e:
-				if e.resp.status in (401,):
+			except (googleapiclient.errors.HttpError, google.auth.exceptions.RefreshError) as e:
+				if (type(e) is google.auth.exceptions.RefreshError) or (e.resp.status in (401,)):
 					if not caught_401:
 						logger.debug('caught 401 as httperror')
 						caught_401 = True
@@ -128,11 +129,33 @@ class LCAYoutubeIntegration (LCAIntegration):
 				break
 		return ret
 
-	def __execute_chunked_request (self, req: googleapiclient.http.HttpRequest) -> dict:
+	def __execute_chunked_request (self,
+		req: typing.Callable[[], googleapiclient.http.HttpRequest],
+	) -> typing.Generator[float, None, dict]:
 		rsp = None
+		caught_401 = False
+		req_obj = req()
 		while rsp is None:
-			status, rsp = req.next_chunk()
-		return rsp # TODO exponential backoff
+			for attempt in range(10):
+				try:
+					status, rsp = req_obj.next_chunk()
+					if status is not None:
+						yield status.progress()
+					break
+				except (googleapiclient.errors.HttpError, google.auth.exceptions.RefreshError) as e:
+					if (type(e) is google.auth.exceptions.RefreshError) or (e.resp.status in (401,)):
+						if not caught_401:
+							logger.debug('caught 401')
+							caught_401 = True
+							self.__refresh_token()
+						else:
+							raise LCAIntegrationBadCredentialsError
+					elif e.resp.status in self._RETRIABLE_STATUS_CODES:
+						self._exponential_wait(attempt, e.resp.status)
+					else:
+						raise LCAIntegrationNetworkFailureError
+				raise LCAIntegrationNetworkFailureError
+		return rsp
 
 	def __create_media_file_upload (self, path: str) -> googleapiclient.http.MediaFileUpload:
 		return googleapiclient.http.MediaFileUpload(
@@ -211,11 +234,40 @@ class LCAYoutubeIntegration (LCAIntegration):
 		) )['id']
 
 	@LCAIntegration.in_context
+	def upload_video (self, *,
+		filename: str | pathlib.Path,
+		title: str,
+		description: str,
+		privacy: typing.Literal['private', 'unlisted'],
+	) -> typing.Generator[float, None, str]:
+		for _ in range(3):
+			try:
+				return ( yield from self.__execute_chunked_request(
+					lambda : self.yt().videos().insert(
+						part = 'snippet,status',
+						media_body = self.__create_media_file_upload(str(filename)),
+						body = {
+							'snippet': {
+								'title': title,
+								'description': description,
+								'categoryId': '20',
+							},
+							'status': {
+								'privacyStatus': privacy,
+							},
+						},
+					)
+				) )['id']
+			except Exception as e:
+				logger.warning(f'Encountered exception during video upload: {e}')
+		raise LCAIntegrationUnexpectedError
+
+	@LCAIntegration.in_context
 	def set_thumbnail (self, /,
 		video_id: str,
 		thumbnail_path: str,
-	) -> None:
-		self.__execute_chunked_request( self.yt().thumbnails().set(
+	) -> typing.Generator[float, None, None]:
+		yield from self.__execute_chunked_request( lambda : self.yt().thumbnails().set(
 			videoId = video_id,
 			media_body = self.__create_media_file_upload(thumbnail_path),
 		) )

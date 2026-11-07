@@ -68,6 +68,7 @@ class LCACSettingsOrganizationSeriesSegmentWidget (LCATabbedDataViewPanelWidget)
 		if repeatable_input := LCAToggleButtonGroupWidget(rows = 1):
 			repeatable_input.addButton(I18n(self).tabs.general.repeatable.option_yes, True)
 			repeatable_input.addButton(I18n(self).tabs.general.repeatable.option_no,  False)
+			repeatable_input.set_value(self.model.data((self._model_row, 'repeatable')))
 			self._mapper.addMapping(repeatable_input, self.model.get_column_index('repeatable'))
 			repeatable_input.changed.connect(self._mapper.submit)
 		layout.addRow(LCALabel(I18n(self).tabs.general.repeatable.label), repeatable_input)

@@ -104,9 +104,7 @@ class LCAListCreatorWidget (LCAWidget):
 			self.__combo_input.setCurrentIndex(-1)
 
 	def get_value (self) -> list[str]:
-		val = [ self.__list_widget.item(i).data(Qt.UserRole) for i in range(self.__list_widget.count()) ]
-		logger.debug(val)
-		return val
+		return [ self.__list_widget.item(i).data(Qt.UserRole) for i in range(self.__list_widget.count()) ]
 
 	def set_value (self, values: list[str]) -> None:
 		if self.get_value() == values:

@@ -65,7 +65,6 @@ class LCACMainWindow (LCAMainWindow):
 				I18n(self).tabs[tab],
 				f'external/icons/{tab}.png'
 			)
-		logger.debug(Util.app_args())
 		if Util.app_args() and (tab_name := Util.app_args()[0].lower()) in self.__TAB_NAMES:
 			central_widget.setCurrentIndex(self.__TAB_NAMES.index(tab_name) + 1)
 		else:

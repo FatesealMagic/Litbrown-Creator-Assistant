@@ -73,7 +73,7 @@ class LCARMainWindow (LCAMainWindow):
 		self.__project = LCAProjectFileModel.from_slug(sys.argv[2])
 		self.__model = LCATableModel(LCAProjectFileModel, lambda : [self.__project], self.__project)
 		self.setWindowTitle(f'{I18n(self).title} | {Settings().series_from_id(self.__project.series_id).name} #{self.__project.entry_number}')
-		self.resize(710, 850)
+		self.resize(710, 900)
 
 	def _setup_layout (self) -> None:
 		central_widget = LCASideTabWidget(orientation = Qt.Orientation.Horizontal, enabled = False, headers = False)
@@ -224,6 +224,7 @@ class LCARMainWindow (LCAMainWindow):
 			self.__evt_start_render()
 
 	def __evt_start_review_clicked (self) -> None:
+		self.__regenerate_video_texts()
 		self.__details_widget.refresh()
 		self.centralWidget().setCurrentIndex(2)
 

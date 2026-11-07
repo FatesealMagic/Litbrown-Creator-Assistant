@@ -154,6 +154,11 @@ LCATextTemplate:
         The variant description for the content piece, as set in the variant's Description field.
       variant_name:
         The variant name for the content piece, as shown in the tab bar under the content series's Variant tab.
+    timestamps:
+      chapter_name:
+        The segment's chapter name, as set in the segment's video settings.
+      timestamp:
+        The timestamp for this segment's chapter in the video, in H:MM:SS format.
     video:
       decklists:
         Formatted decklists associated with the content piece. Additional formatting options for this variable are located under the content series's Formatting tab.
@@ -457,6 +462,9 @@ LCACSettingsOrganizationSeriesWidget:
           decklist: Decklist
       timestamps:
         tab_title: ${timestamps}
+        info: "This form creates the ${timestamps} variable used by the video publishing functionality of LCA's text templating system. Segments correspond to video chapters, each of which will be displayed using the value of the Timestamp field below, and joined together by the Separator field. Make sure to add adequate line breaks in the Separator field!"
+        separator: Separator
+        timestamp: Timestamp
   add_series: Add
   del_series: Remove
   id_lbl: Id
@@ -741,7 +749,7 @@ LCARMainWindow:
         organize_project_state_data: Reading and organizing recorded stream data
         obs_create_scenes_from_templates: Creating OBS scenes from templates
         obs_prepare_first_segment_video: Preparing first segment
-        obs_render_video: "<html>RENDERING VIDEO &emdash; This is done in real time and will take a while...</html>"
+        obs_render_video: "RENDERING VIDEO \u2014 This is done in real time and will take a while..."
         update_project_metadata: Updating project metadata
         obs_remove_scenes: Cleaning up duplicated scenes
     review:

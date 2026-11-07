@@ -66,9 +66,6 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 		stream_duration: int = 180
 		
 		class OutputTypeModel (pydantic.BaseModel, validate_assignment = True):
-			starting_obs_scene: str = ''
-			time_on_starting_obs_scene: float
-			autoeditor_margin: float
 			add_to_playlists: list[str] = []
 			decklist_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
 			decklist_separator: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
@@ -76,7 +73,10 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 			enabled: bool
 			publish_to_membership_id: str
 			title_template: typing.Annotated[str, pydantic.AfterValidator(LCAIntegrationSafeTextValidator())]
-		stream: OutputTypeModel = OutputTypeModel(
+
+		class StreamOutputTypeModel (OutputTypeModel):
+			pass
+		stream: StreamOutputTypeModel = StreamOutputTypeModel(
 			time_on_starting_obs_scene = 0.0,
 			autoeditor_margin = 0.0,
 			decklist_template = '''
@@ -93,10 +93,16 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 				'''.strip().replace('\t', ''),
 			enabled = True,
 			publish_to_membership_id = '~public',
-			title_template = '${title_hook} ${series_hashtags} ${variant_hashtags}' )
-		video: OutputTypeModel = OutputTypeModel(
-			time_on_starting_obs_scene = 0.5,
-			autoeditor_margin = 0.25,
+			title_template = '${title_hook} ${series_hashtags} ${variant_hashtags}',
+		)
+
+		class VideoOutputTypeModel (OutputTypeModel):
+			starting_obs_scene: str = ''
+			time_on_starting_obs_scene: float = 0.5
+			autoeditor_margin: float = 0.25
+			timestamp_template: str = '${timestamp} ${chapter_name}'
+			timestamp_separator: str = '\n'
+		video: VideoOutputTypeModel = VideoOutputTypeModel(
 			decklist_template = '''
 				${decklist_name}
 				Link to decklist: ${decklist_link}
@@ -113,10 +119,14 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 				'''.strip().replace('\t', ''),
 			enabled = True,
 			publish_to_membership_id = '~public',
-			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}' )
-		clip: OutputTypeModel = OutputTypeModel(
-			time_on_starting_obs_scene = 0.1,
-			autoeditor_margin = 0.1,
+			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}',
+		)
+
+		class ClipOutputTypeModel (OutputTypeModel):
+			starting_obs_scene: str = ''
+			time_on_starting_obs_scene: float = 0.1
+			autoeditor_margin: float = 0.1
+		clip: ClipOutputTypeModel = ClipOutputTypeModel(
 			decklist_template = '''
 				${decklist_link}
 				'''.strip().replace('\t', ''),
@@ -130,7 +140,8 @@ class _SettingsModel (pydantic.BaseModel, validate_assignment = True):
 				'''.strip().replace('\t', ''),
 			enabled = False,
 			publish_to_membership_id = '~public',
-			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}' )
+			title_template = '${title_hook} | ${series_name} #${entry_number}: ${variant_name} in ${mtg_format}',
+		)
 
 		class VariantModel (pydantic.BaseModel, validate_assignment = True):
 			description: str = ''

@@ -42,6 +42,7 @@ from .LCARFoobarListenerTaskThread import LCARFoobarListenerTaskThread
 from ..LCAWorkerObject import LCAWorkerObject
 from ..common.LCADeckFetcherTaskThread import LCADeckFetcherTaskThread
 from ...common.LCAProjectState import LCAProjectState
+from ...common.LCATextTemplate import LCATextTemplate
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel
 from ...integrations.foobar.LCAFoobarIntegration import LCAFoobarIntegration
@@ -70,6 +71,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 	__ass_event: threading.Event
 	__segues: dict[ typing.Annotated[str, 'segment id'], list[ typing.Annotated[str, 'obs segue scene name'] ] ]
 	__foobar_listener_thread: LCARFoobarListenerTaskThread
+	__segment_lengths: dict[ typing.Annotated[str, 'segment slug'], typing.Annotated[str, 'length, microseconds'] ]
 
 	def __init__ (self,
 		project: LCAProjectFileModel,
@@ -78,6 +80,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		self.__state_data = {}
 		self.__ass_event = threading.Event()
 		self.__segues = {}
+		self.__segment_lengths = {}
 		for segment in Settings().series_from_id(self.__project.series_id).segments:
 			match segment.segue_selection_behavior:
 				case 'in_order':
@@ -379,7 +382,7 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		self.__obs.req_client.start_record()
 		time.sleep(Settings().series_from_id(self.__project.series_id).video.time_on_starting_obs_scene)
 		for segment_slug in self.__project.all_segment_slugs():
-			self.__render_segment(segment_slug)
+			self.__segment_lengths[segment_slug] = self.__render_segment(segment_slug)
 		self.__obs.req_client.stop_record()
 		time.sleep(1)
 		LCAFoobarIntegration().stop_music()
@@ -419,12 +422,47 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 
 	@tracked_task
 	def __update_project_metadata (self) -> None:
+		self.__update_timestamps()
 		self.__update_decklists()
+
+	def __update_timestamps (self) -> None:
+		timestamps = {}
+		total_runtime = 0
+		for segment_slug, length in self.__segment_lengths.items():
+			total_seconds = int(total_runtime // 1e6)
+			h = total_seconds // 3600
+			m = (total_seconds // 60) % 60
+			s = total_seconds % 60
+			timestamps[segment_slug] = f'{h}:{m:02}:{s:02}'
+			total_runtime += length
+		timestamps_texts = []
+		series = Settings().series_from_id(self.__project.series_id)
+		for segment_slug, timestamp in timestamps.items():
+			segment_id, segment_number = LCAProjectFileModel.split_slug(segment_slug)
+			segment = Settings().series_segment_from_id(series, segment_id)
+			timestamps_texts.append(
+				LCATextTemplate(
+					series.video.timestamp_template,
+					LCATextTemplate.VariableGroup.TIMESTAMPS,
+				).substitute(
+					timestamp = timestamp,
+					chapter_name = LCATextTemplate(
+						segment.chapter_name,
+						LCATextTemplate.VariableGroup.CHAPTERS,
+					).substitute(
+						segment_name = segment.name,
+						segment_count = segment_number,
+					),
+				)
+			)
+		timestamp_text = Settings().series_from_id(self.__project.series_id).video.timestamp_separator.join(timestamps_texts)
+		with self.__project:
+			self.__project.video.timestamps = timestamp_text
 
 	def __update_decklists (self) -> None:
 		decklist_threads = []
 		for i in range(len(self.__project.decklists)):
-			thread = LCADeckFetcherTaskThread(project = project, deck_index = i)
+			thread = LCADeckFetcherTaskThread(project = self.__project, deck_index = i)
 			decklist_threads.append(thread)
 			thread.start()
 		for thread in decklist_threads:

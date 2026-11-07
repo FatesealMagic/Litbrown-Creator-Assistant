@@ -240,9 +240,7 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 								fm = QFontMetrics(doc.defaultFont())
 								margins = decklist_separator_widget.contentsMargins()
 								decklist_separator_widget.setFixedHeight(
-									fm.lineSpacing() * 5 +
-									(doc.documentMargin() + decklist_separator_widget.frameWidth()) * 2 +
-									margins.top() + margins.bottom()
+									6 * QFontMetrics(decklist_separator_widget.document().defaultFont()).lineSpacing()
 								)
 								self._mapper.addMapping(
 									decklist_separator_widget,
@@ -271,9 +269,30 @@ class LCACSettingsOrganizationSeriesWidget (LCATabbedDataViewPanelWidget):
 						decklists_tabwidget.addTab(decklist_widget, I18n(self).tabs.formatting.decklists[decklists_type].tab_title)
 					decklists_layout.addWidget(decklists_tabwidget)
 			tab_widget.addTab(decklists_widget, I18n(self).tabs.formatting.decklists.tab_title)
-			if timestamps_widget := QWidget():
-				timestamps_layout = QFormLayout(timestamps_widget)
-			tab_widget.addTab(timestamps_widget, I18n(self).tabs.formatting.timestamps.tab_title)
+			if timestamp_widget := QWidget():
+				timestamp_layout = QFormLayout(timestamp_widget)
+				timestamp_layout.addRow(LCALabel(I18n(self).tabs.formatting.timestamps.info))
+				if timestamp_separator_input := QPlainTextEdit():
+					timestamp_separator_input.setFixedHeight(
+						6 * QFontMetrics(timestamp_separator_input.document().defaultFont()).lineSpacing()
+					)
+					self._mapper.addMapping(timestamp_separator_input, self.model.get_column_index('video.timestamp_separator'))
+				timestamp_layout.addRow(I18n(self).tabs.formatting.timestamps.separator, timestamp_separator_input)
+				if timestamp_template_input := QPlainTextEdit():
+					if timestamp_templatelbl_widget := QWidget():
+						timestamp_templatelbl_layout = QVBoxLayout(timestamp_templatelbl_widget)
+						timestamp_templatelbl_layout.setContentsMargins(0, 0, 0, 0)
+						timestamp_templatelbl_layout.addWidget(QLabel(I18n(self).tabs.formatting.timestamps.timestamp))
+						timestamp_templatelbl_layout.addSpacing(timestamp_templatelbl_layout.spacing() / 2)
+						timestamp_templatelbl_layout.addWidget( LCACFormatHelperWidget(
+							LCATextTemplate.VariableGroup.TIMESTAMPS,
+							timestamp_template_input,
+							Qt.Orientation.Vertical,
+						) )
+						timestamp_templatelbl_layout.addStretch()
+					self._mapper.addMapping(timestamp_template_input, self.model.get_column_index('video.timestamp_template'))
+				timestamp_layout.addRow(timestamp_templatelbl_widget, timestamp_template_input)
+			tab_widget.addTab(timestamp_widget, I18n(self).tabs.formatting.timestamps.tab_title)
 		layout.addWidget(tab_widget)
 		return widget
 

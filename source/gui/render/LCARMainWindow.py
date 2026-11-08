@@ -271,7 +271,7 @@ class LCARMainWindow (LCAMainWindow):
 		if details_widget := LCAContentDetailsEditingWidget(self.__model, 'video'):
 			self.__details_widget = details_widget
 		layout.addWidget(details_widget)
-		if publish_btn := QPushButton(I18n(self).tabs.review.publish):
+		if publish_btn := QPushButton(' ' + I18n(self).tabs.review.publish):
 			publish_btn.setProperty('css_class', 'big')
 			publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
 			publish_btn.clicked.connect(self.__evt_display_publish_clicked)
@@ -291,7 +291,6 @@ class LCARMainWindow (LCAMainWindow):
 	def __build_publish_tab (self) -> QWidget:
 		widget = QWidget()
 		layout = QVBoxLayout(widget)
-		layout.setContentsMargins(0, 0, 0, 0)
 		if publish_scrollarea := QScrollArea():
 			publish_scrollarea.setWidgetResizable(True)
 			publish_scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -339,7 +338,7 @@ class LCARMainWindow (LCAMainWindow):
 				publish_layout.addStretch()
 			publish_scrollarea.setWidget(publish_widget)
 		layout.addWidget(publish_scrollarea)
-		if publish_btn := QPushButton(I18n(self).tabs.publish.publish):
+		if publish_btn := QPushButton(' ' + I18n(self).tabs.publish.publish):
 			publish_btn.setProperty('css_class', 'big')
 			publish_btn.setIcon(Assets.QIcon('icons/advance.png'))
 			publish_btn.clicked.connect(self.__evt_start_publish)

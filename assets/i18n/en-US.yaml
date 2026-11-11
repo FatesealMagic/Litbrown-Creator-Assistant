@@ -770,3 +770,11 @@ LCARSegmentPreparerWidget:
   open_shotcut: Edit
   melt_task: Render
 
+LCARFootagePreparerTaskThread:
+  markers:
+    mute:
+      prefix: "Mute #"
+      suffix: ""
+    mistake:
+      prefix: "Mistake #"
+      suffix: ""

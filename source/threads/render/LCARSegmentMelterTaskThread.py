@@ -25,6 +25,8 @@ import subprocess
 
 from loguru import logger
 
+from ...Config import Config
+
 from ..LCATaskThread import *
 from ...models.LCAProjectFileModel import LCAProjectFileModel
 from ...models.LCAProjectStateModel import LCAProjectStateModel

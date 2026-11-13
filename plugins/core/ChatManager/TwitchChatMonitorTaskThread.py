@@ -19,7 +19,7 @@
   " along with this program.  If not, see <https://www.gnu.org/licenses/>.
   "
   """
-'stateNode.__reactFiber$3ha5n4xzuur.stateNode.__reactFiber$3ha5n4xzuur.return.return.stateNode.props.40d90ce0-8f18-4128-9827-ff0b457ec3ef'
+
 from loguru import logger
 import playwright.sync_api
 
@@ -50,7 +50,7 @@ class TwitchChatMonitorTaskThread (ChatMonitorTaskThread):
 		}
 
 		div.scrollable-area >div >div >div >div:not(.chat-line__message),
-		div.chat-room__content >:not(:nth-child(4)),
+		div.chat-room__content >:not([aria-label="Chat messages"]),
 		div.snackbar-list__container.snackbar-overlay__list,
 		div.stream-chat-header,
 		div[data-a-target='chat-welcome-message'] {

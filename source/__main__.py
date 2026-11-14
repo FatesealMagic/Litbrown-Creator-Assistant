@@ -59,8 +59,8 @@ class LCA:
 			{ 'sink': './logs/{time}.log', 'format': self.__LOGGER_FORMAT, 'rotation': '5 MB' },
 		] )
 		self.__register_self_package()
-		# TODO can't get this working well with multiple instances running
-		# os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = str(Config().network.chromium_debug_port)
+		if Util.app_name() == 'thumbnail':
+			os.environ['QTWEBENGINE_REMOTE_DEBUGGING'] = str(Config().network.chromium_debug_port)
 
 	def __register_self_package (self) -> None:
 		current_module = importlib.import_module(__name__)

@@ -161,6 +161,7 @@ class LCATwitchIntegration (LCAIntegration):
 				'duration': str(duration),
 				'is_recurring': False,
 				'title': title,
+				'category_id': 2748,
 			},
 		).json()['data']['segments'][0]['id']
 

@@ -60,6 +60,7 @@ class LCATBottomControlsWidget (LCAWidget):
 	def _setup_layout (self) -> None:
 		self.__mapper = QDataWidgetMapper(self)
 		self.__mapper.setModel(self.__model)
+		self.__mapper.setCurrentIndex(0)
 		layout = QHBoxLayout(self)
 		layout.setSpacing(layout.spacing() * 2)
 		if method_btns := LCAToggleButtonGroupWidget(rows = 2):
@@ -76,8 +77,8 @@ class LCATBottomControlsWidget (LCAWidget):
 		layout.addWidget(LCASeparator.vertical())
 		if format_btns := LCAToggleButtonGroupWidget(rows = 2):
 			format_btns.setStyleSheet(self.__BUTTONS_STYLESHEET)
-			format_btns.addButton(I18n(self).formats.stream, 'stream')
 			format_btns.addButton(I18n(self).formats.video,  'video')
+			format_btns.addButton(I18n(self).formats.stream, 'stream')
 			self.__mapper.addMapping(format_btns, self.__model.get_column_index('format'))
 			format_btns.changed.connect(lambda _ : self.__mapper.submit())
 			format_btns.changed.connect(self.__refresh_bottom_controls)
@@ -122,7 +123,6 @@ class LCATBottomControlsWidget (LCAWidget):
 			save_btn.clicked.connect(self.__save_callback)
 		layout.addWidget(save_btn)
 		layout.addSpacing(layout.spacing())
-		self.__mapper.setCurrentIndex(0)
 		self.__project_watcher = LCAProjectWatcher()
 		self.__project_watcher.directoryChanged.connect(self.__refresh_bottom_controls)
 		self.__project_watcher.fileChanged.connect(self.__refresh_bottom_controls)
@@ -130,6 +130,7 @@ class LCATBottomControlsWidget (LCAWidget):
 		logger.debug(self.__project_watcher.directories())
 		Settings().signals().changed.connect(self.__refresh_bottom_controls)
 		self.__refresh_bottom_controls()
+		self.__mapper.revert()
 		with QSignalBlocker(self.__multicast_cbo):
 			self.__multicast_cbo.setCurrentIndex(-1)
 		with QSignalBlocker(self.__series_cbo):

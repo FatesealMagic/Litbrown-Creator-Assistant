@@ -57,6 +57,7 @@ class LCATaskTrackerWidget (LCAWidget):
 		RUNNING  = 'running'
 		SUCCESS  = 'success'
 		ERROR    = 'error'
+		READY    = 'ready'
 
 	PROGRESS_STYLE = string.Template('''
 		QProgressBar {
@@ -92,12 +93,14 @@ class LCATaskTrackerWidget (LCAWidget):
 		thread_factory: Callable[[], [LCATaskThread]],
 		integration: type[LCAIntegration] | None = None,
 		not_unstagable: bool = False,
+		click_to_start: bool = False,
 		*args, **kwargs
 	):
 		self.__label = label
 		self.__thread_factory = thread_factory
 		self.__integration = integration or self.LCANullIntegration
 		self.__not_unstagable = not_unstagable
+		self.__click_to_start = click_to_start
 		super().__init__(*args, **kwargs)
 
 	def _setup_layout (self) -> None:
@@ -129,7 +132,14 @@ class LCATaskTrackerWidget (LCAWidget):
 				self.__set_progressbar_stopped()
 			status_layout.addWidget(progressbar)
 		layout.addWidget(status_widget, 4)
-		self.__set_status(self.Status.STAGED if self.__integration.is_initialized() else self.Status.DISABLED)
+		self.__set_status(
+			(
+				self.Status.READY
+				if self.__click_to_start
+				else self.Status.STAGED
+			) if self.__integration.is_initialized()
+			else self.Status.DISABLED
+		)
 		Settings().signals().changed.connect(self.__keep_status_consistent_with_integration_state)
 		
 	def __get_progress_style_params (self, status: Status) -> None:
@@ -176,6 +186,12 @@ class LCATaskTrackerWidget (LCAWidget):
 				'color':  'white',
 				'chunk':  '#a80813',
 			},
+			self.Status.READY: {
+				'bg':     '#8F8FDC',
+				'border': '#8F8FDC',
+				'color':  'black',
+				'chunk':  '#8F8FDC',
+			},
 		}[status]
 
 	def __set_progressbar_stopped (self) -> None:
@@ -196,11 +212,16 @@ class LCATaskTrackerWidget (LCAWidget):
 				self.__set_status(self.Status.STAGED)
 			case self.Status.ERROR:
 				self.__set_status(self.Status.RUNNING)
+			case self.Status.READY:
+				self.execute()
 
 	def __keep_status_consistent_with_integration_state (self) -> None:
 		logger.debug('new settings update')
 		if self.__status == self.Status.DISABLED and self.__integration.is_initialized():
-			self.__set_status(self.Status.STAGED)
+			if self.__click_to_start:
+				self.__set_status(self.Status.READY)
+			else:
+				self.__set_status(self.Status.STAGED)
 		elif self.__status in (self.Status.STAGED, self.Status.UNSTAGED) and not self.__integration.is_initialized():
 			self.__set_status(self.Status.DISABLED)
 		else:
@@ -216,7 +237,7 @@ class LCATaskTrackerWidget (LCAWidget):
 		self.__progressbar.setStyleSheet(self.PROGRESS_STYLE.substitute(**self.__get_progress_style_params(status)))
 		self.__actionbtn.setEnabled(status not in (self.Status.SKIPPED, self.Status.RUNNING, self.Status.SUCCESS))
 		if self.__not_unstagable:
-			self.__actionbtn.setVisible(status in (self.Status.DISABLED, self.Status.ERROR))
+			self.__actionbtn.setVisible(status in (self.Status.DISABLED, self.Status.ERROR, self.Status.READY))
 		if status == self.Status.RUNNING:
 			self.__set_progressbar_running()
 			self.__start_task_thread()
@@ -224,7 +245,7 @@ class LCATaskTrackerWidget (LCAWidget):
 	def execute (self) -> None:
 		if self.__status in (self.Status.DISABLED, self.Status.UNSTAGED):
 			self.__set_status(self.Status.SKIPPED)
-		elif self.__status == self.Status.STAGED:
+		elif self.__status in (self.Status.STAGED, self.Status.READY):
 			self.__set_status(self.Status.RUNNING)
 
 	def __start_task_thread (self) -> None:

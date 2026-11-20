@@ -91,6 +91,7 @@ LCATaskTrackerWidget:
     running: Running
     success: Success!
     error: Retry
+    ready: Start
   progressbar:
     disabled: DISABLED
     staged: Staged
@@ -99,6 +100,7 @@ LCATaskTrackerWidget:
     running: ''
     success: Success!
     error: ERROR
+    ready: Ready
 
 LCATextTemplate:
   variables:

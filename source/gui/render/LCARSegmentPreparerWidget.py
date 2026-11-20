@@ -136,9 +136,9 @@ class LCARSegmentPreparerWidget (QStackedWidget):
 			),
 			integration = LCAShotcutIntegration,
 			not_unstagable = True,
+			click_to_start = True,
 		):
 			melt_widget.result.connect(self.__evt_melt_success)
-			melt_widget.execute()
 		self.addWidget(melt_widget)
 		self.setCurrentIndex(2)
 

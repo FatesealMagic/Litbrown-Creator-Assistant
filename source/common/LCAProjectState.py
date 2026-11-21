@@ -116,8 +116,6 @@ class LCAProjectState (metaclass = LCASingleton):
 	@in_context
 	def set_behaviors (self, **kwargs) -> None:
 		behaviors = LCAProjectStateModel.Behaviors(**(self.model.behaviors.model_dump(mode = 'json') | kwargs))
-		logger.warning(self.model.behaviors)
-		logger.warning(behaviors)
 		if behaviors.ws_broadcasting != self.model.behaviors.ws_broadcasting:
 			if behaviors.ws_broadcasting:
 				self.__start_ws_server()

@@ -20,11 +20,13 @@
   "
   """
 
+import itertools
+
 from loguru import logger
 
-from ..LCATaskThread import *
-from ...integrations.scryfall.LCAScryfallIntegration import *
-from ...models.LCAScryfallCardModel import *
+from ..LCATaskThread import LCATaskThread
+from ...integrations.scryfall.LCAScryfallIntegration import LCAScryfallIntegration
+from ...models.LCAScryfallCardModel import LCAScryfallCardModel
 
 class LCAScryfallSearchTaskThread (LCATaskThread):
 	
@@ -34,7 +36,7 @@ class LCAScryfallSearchTaskThread (LCATaskThread):
 	) -> list[LCAScryfallCardModel]:
 		logger.debug(query)
 		with LCAScryfallIntegration() as scryfall:
-			results = scryfall.search_by_name(query, unique = unique)
+			results = list(itertools.chain.from_iterable( scryfall.remote_query(query, unique = unique) ))
 			self._emit_update(results)
 			return results
 

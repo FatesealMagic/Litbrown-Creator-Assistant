@@ -36,9 +36,14 @@ class LCAProjectStateModel (pydantic.BaseModel, validate_assignment = True):
 	last_modified_ts: int
 	segment_id: str | None = None
 	segment_number: int = 0
-	active: bool = False
 	mistake_count: int = 0
 	muted: bool = False
+
+	class Behaviors (pydantic.BaseModel, validate_assignment = True):
+		obs_recording: bool = False
+		writing_to_disk: bool = False
+		ws_broadcasting: bool = False
+	behaviors: Behaviors = Behaviors()
 
 	class Music (pydantic.BaseModel, validate_assignment = True):
 		artist: str = ''

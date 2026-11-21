@@ -116,27 +116,27 @@ class LCAMObsRecordPuppeteerWorkerObject (LCAWorkerObject):
 			)
 		):
 			self.__handle_segment_updated(state)
-		if old_state['active'] != state.active:
+		if old_state['behaviors']['obs_recording'] != state.behaviors.obs_recording:
 			self.__handle_active_toggle(state)
 
 	def __handle_segment_updated (self, state: LCAProjectStateModel) -> None:
 		scene_name = Settings().series_segment_from_id(state.project.series_id, state.segment_id).obs_scene_name
-		if state.active:
+		if state.behaviors.obs_recording:
 			self.__stop_recording()
 		self.__set_segment_recording_filename(state)
 		self.__obs.req_client.set_current_program_scene(scene_name)
-		if state.active:
+		if state.behaviors.obs_recording:
 			self.__start_recording()
 			self.__update_recording_start_time(state)
 		self.on_scene_changed.emit(scene_name)
 
 	def __handle_active_toggle (self, state: LCAProjectStateModel) -> None:
 		self.__stop_recording()
-		if state.active:
+		if state.behaviors.obs_recording:
 			self.__set_segment_recording_filename(state)
 			self.__start_recording()
 			self.__update_recording_start_time(state)
-		self.on_active_toggled.emit(state.active)
+		self.on_active_toggled.emit(state.behaviors.obs_recording)
 
 	def __stop_recording (self) -> None:
 		try:

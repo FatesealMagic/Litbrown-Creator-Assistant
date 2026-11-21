@@ -102,7 +102,12 @@ class LCAMMainWindow (LCAMainWindow):
 
 	def __initialize_project_state (self) -> None:
 		try:
-			LCAProjectState(self.__project)
+			with LCAProjectState(self.__project) as state:
+				state.set_behaviors(
+					obs_recording = False,
+					writing_to_disk = True,
+					ws_broadcasting = True,
+				)
 		except RuntimeError:
 			LCAPopupMessage.error(I18n(self).errors.state_server_already_running)
 			sys.exit()
@@ -301,7 +306,12 @@ class LCAMMainWindow (LCAMainWindow):
 		return actions
 
 	def closeEvent (self, event: QCloseEvent) -> None:
-		LCAProjectState().shutdown()
+		with LCAProjectState() as state:
+			state.set_behaviors(
+				obs_recording = False,
+				writing_to_disk = False,
+				ws_broadcasting = False,
+			)
 		self.__obs_thread.quit()
 		self.__mtgosdk_thread.requestInterruption()
 		self.__foobar_thread.requestInterruption()
@@ -326,17 +336,17 @@ class LCAMMainWindow (LCAMainWindow):
 			state.set_segment(segment_id, segment_number)
 
 	def __evt_startstop_clicked (self) -> None:
-		if not LCAProjectState().model.segment_id and not LCAProjectState().model.active:
+		if not LCAProjectState().model.segment_id and not LCAProjectState().model.behaviors.obs_recording:
 			return
 		if LCAPopupMessage.info(
-			I18n(self).confirm.stop if LCAProjectState().model.active else I18n(self).confirm.start,
+			I18n(self).confirm.stop if LCAProjectState().model.behaviors.obs_recording else I18n(self).confirm.start,
 			QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
 		) != QMessageBox.StandardButton.Ok:
 			return
 		self.setEnabled(False)
 		with LCAProjectState() as state:
-			state.model.active = not state.model.active
-			if not state.model.active:
+			state.set_behaviors( obs_recording = not state.model.behaviors.obs_recording )
+			if not state.model.behaviors.obs_recording:
 				state.set_segment(None, 0)
 
 	def __update_integration_status (self, integration: str, status: bool | None) -> None:
@@ -357,14 +367,22 @@ class LCAMMainWindow (LCAMainWindow):
 	def __slot_obs_on_scene_changed (self, scene_name: str) -> None:
 		self.setEnabled(True)
 		self.__rebuild_segment_cbo()
-		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
+		self.__startstop_btn.setText(
+			I18n(self).buttons.stop
+			if LCAProjectState().model.behaviors.obs_recording
+			else I18n(self).buttons.start
+		)
 		self.__startstop_btn.setEnabled(True)
 
 	@Slot(bool)
 	def __slot_obs_on_active_toggled (self, active: bool) -> None:
 		self.setEnabled(True)
 		self.__rebuild_segment_cbo()
-		self.__startstop_btn.setText(I18n(self).buttons.stop if LCAProjectState().model.active else I18n(self).buttons.start)
+		self.__startstop_btn.setText(
+			I18n(self).buttons.stop
+			if LCAProjectState().model.behaviors.obs_recording
+			else I18n(self).buttons.start
+		)
 
 	def __evt_mistake_clicked (self) -> None:
 		logger.info('Marking a mistake')

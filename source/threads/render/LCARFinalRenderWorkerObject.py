@@ -148,7 +148,8 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 		while True:
 			self.__check_for_interruption_request()
 			try:
-				LCAProjectState(self.__project)
+				with LCAProjectState(self.__project) as state:
+					state.set_behaviors( ws_broadcasting = True )
 				break
 			except RuntimeError as e:
 				time.sleep(2)
@@ -485,5 +486,6 @@ class LCARFinalRenderWorkerObject (LCAWorkerObject):
 				logger.debug(f'Could not remove scene {scene_name}')
 
 	def __deinitialize_state (self) -> None:
-		LCAProjectState().shutdown()
+		with LCAProjectState() as state:
+			state.set_behaviors( ws_broadcasting = False )
 

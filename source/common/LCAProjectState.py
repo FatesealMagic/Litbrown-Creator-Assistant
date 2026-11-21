@@ -37,8 +37,6 @@ from ..threads.LCAWorkerThread import *
 from ..threads.common.LCAProjectStateWebsocketWorkerObject import *
 
 class LCAProjectState (metaclass = LCASingleton):
-
-	frozen: bool = False
 	
 	class _LCAProjectStateSignals (QObject):
 		updated_model = Signal(LCAProjectStateModel)
@@ -46,6 +44,7 @@ class LCAProjectState (metaclass = LCASingleton):
 
 	__NONOVERWRITABLE_FIELDS = (
 		'music',
+		'behaviors',
 	)
 
 	__project: LCAProjectFileModel
@@ -61,32 +60,20 @@ class LCAProjectState (metaclass = LCASingleton):
 		self.__mutex = threading.Lock()
 		self.__model = LCAProjectStateModel( **( self.__load_previous_state() | {
 			'project': project,
-			'active': False,
 			'segment_id': None,
 			'segment_number': 0,
 			'last_modified_ts': int(time.time() * 1e6),
 		} ) )
-		self.__start_ws_server()
 
 	def __load_previous_state (self) -> dict:
 		state_paths = self.__project.path_state_all()
 		if not state_paths:
 			return {}
-		return json.loads(self.__project.read_file(state_paths[-1], text = True))
-
-	def __start_ws_server (self) -> None:
-		loop = QEventLoop()
-		self.__thread = LCAWorkerThread(LCAProjectStateWebsocketWorkerObject(
-			self.__project.slug(),
-			self.__model.model_dump(mode = 'json'),
-		))
-		self.__thread.worker.on_listen.connect(lambda success : loop.exit(0 if success else 1))
-		self.__signals.updated_dict.connect(self.__thread.worker.slot_project_state_updated)
-		self.__thread.start()
-		if ret := loop.exec():
-			self.__thread.quit()
-			self.__thread.wait()
-			raise RuntimeError('Project state server already running')
+		return {
+			k: v
+			for k, v in json.loads(self.__project.read_file(state_paths[-1], text = True)).items()
+			if k not in self.__NONOVERWRITABLE_FIELDS
+		}
 
 	@property
 	def updated_dict (self) -> Signal:
@@ -100,25 +87,15 @@ class LCAProjectState (metaclass = LCASingleton):
 	def model (self) -> LCAProjectStateModel:
 		return self.__model
 
-	def shutdown (self) -> None:
-		self.frozen = True
-		logger.debug('Shutting down state server thread')
-		self.__thread.quit()
-		self.__thread.wait()
-		logger.debug('State server thread is shut down')
-
 	def __enter__ (self) -> None:
 		self.__mutex.acquire()
 		self.__model.last_modified_ts = int(1e6 * time.time())
 		return self
 
 	def __exit__ (self, exc_type, exc_val, exc_tb):
-		if self.frozen:
-			self.__mutex.release()
-			return
 		logger.debug('\n' + ''.join(traceback.format_stack()))
 		model_dict = self.__model.model_dump(mode = 'json')
-		if self.__model.active:
+		if self.model.behaviors.writing_to_disk:
 			self.__project.overwrite_file(
 				self.__project.path_state(),
 				json.dumps({k: v for k, v in model_dict.items() if k not in ('project',)}),
@@ -135,6 +112,38 @@ class LCAProjectState (metaclass = LCASingleton):
 				raise RuntimeError(f'Method not called within context manager: {method}')
 			return method(self, *args, **kwargs)
 		return wrapper
+
+	@in_context
+	def set_behaviors (self, **kwargs) -> None:
+		behaviors = LCAProjectStateModel.Behaviors(**(self.model.behaviors.model_dump(mode = 'json') | kwargs))
+		logger.warning(self.model.behaviors)
+		logger.warning(behaviors)
+		if behaviors.ws_broadcasting != self.model.behaviors.ws_broadcasting:
+			if behaviors.ws_broadcasting:
+				self.__start_ws_server()
+			else:
+				self.__stop_ws_server()
+		self.model.behaviors = behaviors
+
+	def __start_ws_server (self) -> None:
+		loop = QEventLoop()
+		self.__thread = LCAWorkerThread(LCAProjectStateWebsocketWorkerObject(
+			self.__project.slug(),
+			self.__model.model_dump(mode = 'json'),
+		))
+		self.__thread.worker.on_listen.connect(lambda success : loop.exit(0 if success else 1))
+		self.__signals.updated_dict.connect(self.__thread.worker.slot_project_state_updated)
+		self.__thread.start()
+		if ret := loop.exec():
+			self.__thread.quit()
+			self.__thread.wait()
+			raise RuntimeError('Project state server already running')
+
+	def __stop_ws_server (self) -> None:
+		logger.debug('Shutting down state server thread')
+		self.__thread.quit()
+		self.__thread.wait()
+		logger.debug('State server thread is shut down')
 
 	@in_context
 	def set_segment (self, segment_id: str | None, segment_number: int) -> None:
